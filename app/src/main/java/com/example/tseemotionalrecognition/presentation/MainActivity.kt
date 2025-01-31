@@ -3,7 +3,7 @@
  * most up to date changes to the libraries and their usages.
  */
 
-package com.example.tse_emotionalrecognition.presentation
+package com.example.tseemotionalrecognition.presentation
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -23,8 +23,8 @@ import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
 import androidx.wear.tooling.preview.devices.WearDevices
-import com.example.tse_emotionalrecognition.R
-import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
+import com.example.tseemotionalrecognition.R
+import com.example.tseemotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

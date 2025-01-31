@@ -1,4 +1,4 @@
-package com.example.tse_emotionalrecognition.presentation.theme
+package com.example.tseemotionalrecognition.presentation.theme
 
 import androidx.compose.runtime.Composable
 import androidx.wear.compose.material.MaterialTheme

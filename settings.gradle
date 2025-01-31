@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "TSE - Emotional Recognition"
-include(":app")
+rootProject.name = "TSEEmotionalRecognition"
+include ':app'
