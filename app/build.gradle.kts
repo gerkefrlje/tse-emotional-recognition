@@ -9,7 +9,6 @@ plugins {
     id("com.google.devtools.ksp")
 }
 
-
 android {
     namespace = "com.example.tse_emotionalrecognition"
     compileSdk = 35
@@ -68,15 +67,14 @@ dependencies {
     debugImplementation(libs.ui.test.manifest)
     debugImplementation(libs.tiles.tooling)
 
-    //Room Datenbank
-    implementation("androidx.room:room-runtime:$roomVersion")
-    ksp("androidx.room:room-compiler:$roomVersion")
-    implementation("androidx.room:room-ktx:$roomVersion")
-
-    //TODO klappt nicht
-
+    implementation("androidx.room:room-runtime:2.6.1")
+    annotationProcessor("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
 
     //App Navigatio
     implementation(libs.navigation.compose)
     implementation(libs.compose.navigation)
+
+    // Samsung Health SDK
+    implementation(files("${projectDir}/libs/samsung-health-sensor-api-1.3.0.aar"))
 }

@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.example.teamprojekttest.data.database.UserDatabase
+import com.example.tse_emotionalrecognition.data.database.UserDatabase
 import com.example.tse_emotionalrecognition.data.database.entities.UserRepository
 
 object UserDataStore {

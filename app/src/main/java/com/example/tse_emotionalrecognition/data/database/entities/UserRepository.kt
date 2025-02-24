@@ -1,9 +1,9 @@
 package com.example.tse_emotionalrecognition.data.database.entities
 
 import android.util.Log
-import com.example.teamprojekttest.data.database.UserDatabase
-import com.example.teamprojekttest.data.database.entities.HeartRateMeasurement
-import com.example.teamprojekttest.data.database.entities.SkinTemperature
+import com.example.tse_emotionalrecognition.data.database.UserDatabase
+import com.example.tse_emotionalrecognition.data.database.entities.HeartRateMeasurement
+import com.example.tse_emotionalrecognition.data.database.entities.SkinTemperatureMeasurement
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -32,8 +32,8 @@ class UserRepository(db: UserDatabase) {
 
     fun insertSkinTemperatureList(
         scope: CoroutineScope,
-        entities: MutableList<SkinTemperature>,
-        onFinished: (entity: MutableList<SkinTemperature>) -> Unit = {}
+        entities: MutableList<SkinTemperatureMeasurement>,
+        onFinished: (entity: MutableList<SkinTemperatureMeasurement>) -> Unit = {}
     ) {
         scope.launch(Dispatchers.IO) {
             val listOfIds: List<Long> = skinTemperatureDao.insertAll(entities)

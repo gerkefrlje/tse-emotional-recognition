@@ -1,10 +1,10 @@
-package com.example.teamprojekttest.data.database.entities
+package com.example.tse_emotionalrecognition.data.database.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity
-data class SkinTemperature(
+data class SkinTemperatureMeasurement(
 
     @PrimaryKey(autoGenerate = true)
     var id: Long = 0L,
