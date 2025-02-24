@@ -68,6 +68,12 @@
             android:name=".presentation.BreathingActivity"
             android:exported="true"
             android:taskAffinity=""/>
+
+        <activity
+            android:name=".presentation.LabelActivity"
+            android:exported="true"
+            android:taskAffinity=""/>
+
     </application>
 
 </manifest>

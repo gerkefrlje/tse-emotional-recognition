@@ -1,8 +1,14 @@
+val roomVersion = "2.6.1"
+
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    //Todo Vgl mit eis
+    id("com.google.devtools.ksp")
 }
+
 
 android {
     namespace = "com.example.tse_emotionalrecognition"
@@ -61,4 +67,16 @@ dependencies {
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
     debugImplementation(libs.tiles.tooling)
+
+    //Room Datenbank
+    implementation("androidx.room:room-runtime:$roomVersion")
+    ksp("androidx.room:room-compiler:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+
+    //TODO klappt nicht
+
+
+    //App Navigatio
+    implementation(libs.navigation.compose)
+    implementation(libs.compose.navigation)
 }

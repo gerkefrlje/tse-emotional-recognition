@@ -7,6 +7,7 @@ package com.example.tse_emotionalrecognition.presentation
 
 import android.content.Intent
 import android.os.Bundle
+import android.provider.Settings.Global
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -24,6 +25,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.MaterialTheme
@@ -31,9 +33,19 @@ import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
 import androidx.wear.tooling.preview.devices.WearDevices
 import com.example.tse_emotionalrecognition.R
+import com.example.tse_emotionalrecognition.data.database.UserDataStore
+import com.example.tse_emotionalrecognition.data.database.entities.AffectData
+import com.example.tse_emotionalrecognition.data.database.entities.AffectType
+import com.example.tse_emotionalrecognition.data.database.entities.UserRepository
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 
 class MainActivity : ComponentActivity() {
+    private val userRepository by lazy { UserDataStore.getUserRepository(application) }
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
 
@@ -43,7 +55,19 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             //WearApp("Android")
-            SelectIntervention()
+            SelectIntervention(userRepository)
+        }
+    }
+
+    private fun triggerLable() {
+        userRepository.insertAffect(
+            CoroutineScope(Dispatchers.IO)
+            , AffectData(sessionId = 1, affect = AffectType.HAPPY_RELAXED)
+        ){
+            var affectDataID = it.id
+            val intent = Intent(this, LabelActivity::class.java)
+            intent.putExtra("affectDataId", affectDataID)
+            startActivity(intent)
         }
     }
 }
@@ -79,9 +103,8 @@ fun DefaultPreview() {
     WearApp("Preview Android")
 }
 
-@Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true)
 @Composable
-fun SelectIntervention() {
+fun SelectIntervention(userRepository: UserRepository) {
 
     val context = LocalContext.current
     TSEEmotionalRecognitionTheme {
@@ -107,12 +130,25 @@ fun SelectIntervention() {
                             .wrapContentWidth(Alignment.CenterHorizontally))
                 }
                 Button(
-                    onClick = { /*TODO*/ },
+                    onClick = {
+
+                        userRepository.insertAffect(
+                            CoroutineScope(Dispatchers.IO)
+                            , AffectData(sessionId = 1, affect = AffectType.HAPPY_RELAXED)
+                        ){
+                            var affectDataID = it.id
+                            val intent = Intent(context, LabelActivity::class.java)
+                            intent.putExtra("affectDataId", affectDataID)
+                            context.startActivity(intent)
+                        }
+                    },
                     modifier = Modifier
                         .padding(top = 16.dp)
                         .fillMaxWidth(1f)
                 ) {
-                    Text(text = "TODO")
+                    Text(text = "Label Activity",
+                        modifier = Modifier
+                            .wrapContentWidth(Alignment.CenterHorizontally))
                 }
             }
         }
