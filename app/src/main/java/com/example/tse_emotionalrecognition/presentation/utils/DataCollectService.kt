@@ -13,8 +13,8 @@ import androidx.core.app.NotificationCompat
 import com.example.tse_emotionalrecognition.R
 import com.example.tse_emotionalrecognition.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.data.database.UserRepository
-import com.example.tse_emotionalrecognition.data.database.entities.SkinTemperatureMeasurement
 import com.example.tse_emotionalrecognition.data.database.entities.HeartRateMeasurement
+import com.example.tse_emotionalrecognition.data.database.entities.SkinTemperatureMeasurement
 import com.samsung.android.service.health.tracking.ConnectionListener
 import com.samsung.android.service.health.tracking.HealthTracker
 import com.samsung.android.service.health.tracking.HealthTrackerException
@@ -30,8 +30,7 @@ class DataCollectService : Service() {
     private lateinit var userRepository: UserRepository
     private lateinit var healthTrackingService: HealthTrackingService
     private lateinit var heartRateTracker: HealthTracker
-    private lateinit var ppgGreenTracker: HealthTracker
-    private lateinit var accelerometerTracker: HealthTracker
+    private lateinit var skinTemperatureTracker: HealthTracker
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
@@ -40,8 +39,8 @@ class DataCollectService : Service() {
             object : ConnectionListener {
             override fun onConnectionSuccess() {
                 Log.v("data", "connected")
-                heartRateTracker = healthTrackingService.getHealthTracker(HealthTrackerType.HEART_RATE)
-                skinTemperatureTracker= healthTrackingService.getHealthTracker(HealthTrackerType.SKIN_TEMPERATURE)
+                heartRateTracker = healthTrackingService.getHealthTracker(HealthTrackerType.HEART_RATE_CONTINUOUS)
+                skinTemperatureTracker = healthTrackingService.getHealthTracker(HealthTrackerType.SKIN_TEMPERATURE_CONTINUOUS)
             }
             override fun onConnectionEnded() {
                 Log.v("connect","ended")
@@ -62,15 +61,13 @@ class DataCollectService : Service() {
         CoroutineScope(Dispatchers.IO).launch {
             while (
                 !this@DataCollectService::heartRateTracker.isInitialized ||
-                !this@DataCollectService::ppgGreenTracker.isInitialized ||
-                !this@DataCollectService::accelerometerTracker.isInitialized
+                !this@DataCollectService::skinTemperatureTracker.isInitialized
             ) {
                 Log.v("HealthTrackingService", "Waiting for trackers to initialize...")
                 kotlinx.coroutines.delay(100L) // Warte auf Initialisierung
             }
-            heartRateTracker.setEventListener(buildTrackerEventListener(userRepository,sessionId, HealthTrackerType.HEART_RATE, applicationContext))
-            ppgGreenTracker.setEventListener(buildTrackerEventListener(userRepository,sessionId, HealthTrackerType.PPG_GREEN, applicationContext))
-            accelerometerTracker.setEventListener(buildTrackerEventListener(userRepository,sessionId, HealthTrackerType.ACCELEROMETER, applicationContext))
+            heartRateTracker.setEventListener(buildTrackerEventListener(userRepository,sessionId, HealthTrackerType.HEART_RATE_CONTINUOUS, applicationContext))
+            skinTemperatureTracker.setEventListener(buildTrackerEventListener(userRepository,sessionId, HealthTrackerType.SKIN_TEMPERATURE_CONTINUOUS, applicationContext))
         }
         return START_STICKY
     }
@@ -83,19 +80,16 @@ class DataCollectService : Service() {
         CoroutineScope(Dispatchers.IO).launch {
             while (
                 !this@DataCollectService::heartRateTracker.isInitialized ||
-                !this@DataCollectService::ppgGreenTracker.isInitialized ||
-                !this@DataCollectService::accelerometerTracker.isInitialized
+                !this@DataCollectService::skinTemperatureTracker.isInitialized
             ) {
                 Log.v("HealthTrackingService", "Waiting for trackers to initialize...")
                 kotlinx.coroutines.delay(100L)
             }
             heartRateTracker.flush()
-            ppgGreenTracker.flush()
-            accelerometerTracker.flush()
+            skinTemperatureTracker.flush()
             kotlinx.coroutines.delay(1000L)
             heartRateTracker.unsetEventListener()
-            accelerometerTracker.unsetEventListener()
-            ppgGreenTracker.unsetEventListener()
+            skinTemperatureTracker.unsetEventListener()
             kotlinx.coroutines.delay(1000L)
             healthTrackingService.disconnectService()
             kotlinx.coroutines.delay(1000L)
@@ -132,38 +126,38 @@ fun buildTrackerEventListener(repository: UserRepository, sessionId: Long, type:
         override fun onDataReceived(list: List<DataPoint>) {
             Log.v("data","logged")
 
-            if (type == HealthTrackerType.HEART_RATE && list.isNotEmpty()) {
+            if (type == HealthTrackerType.HEART_RATE_CONTINUOUS && list.isNotEmpty()) {
                 val entries = mutableListOf<HeartRateMeasurement>()
                 for (dataPoint in list) {
-                    val ibiBit = dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE_IBI)
-                    val ibi = ibiBit and 0x7FFF
-                    val ibiStatus = (ibiBit shr 15) and 0x1
                     entries.add(
-                        HeartRateMeasurement(0L, sessionId, dataPoint.timestamp.toLong(), dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE), ibi, dataPoint.getValue(ValueKey.HeartRateSet.STATUS), ibiStatus)
+                        HeartRateMeasurement(
+                            0L,
+                            sessionId,
+                            dataPoint.timestamp.toLong(),
+                            dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE),
+                            dataPoint.getValue(ValueKey.HeartRateSet.IBI_LIST),
+                            dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE_STATUS),
+                            dataPoint.getValue(ValueKey.HeartRateSet.IBI_STATUS_LIST))
                     )
                 }
                 repository.insertHeartRateMeasurementList(
                     CoroutineScope(Dispatchers.IO),
                     entries
                 )
-            } else if (type == HealthTrackerType.PPG_GREEN && list.isNotEmpty()){
-                val entries = mutableListOf<PpgGreenMeasurement>()
+            } else if (type == HealthTrackerType.SKIN_TEMPERATURE_CONTINUOUS && list.isNotEmpty()){
+                val entries = mutableListOf<SkinTemperatureMeasurement>()
                 for (dataPoint in list) {
                     entries.add(
-                        PpgGreenMeasurement(0L, sessionId, dataPoint.timestamp, dataPoint.getValue(ValueKey.PpgGreenSet.PPG_GREEN))
+                        SkinTemperatureMeasurement(0L,
+                            sessionId,
+                            dataPoint.timestamp,
+                            dataPoint.getValue(ValueKey.SkinTemperatureSet.OBJECT_TEMPERATURE),
+                            dataPoint.getValue(ValueKey.SkinTemperatureSet.AMBIENT_TEMPERATURE),
+                            dataPoint.getValue(ValueKey.SkinTemperatureSet.STATUS)
+                            )
                     )
                 }
-                repository.insertPpgGreenMeasurementList(
-                    CoroutineScope(Dispatchers.IO),
-                    entries
-                )
-            } else if (type == HealthTrackerType.ACCELEROMETER && list.isNotEmpty()){
-                val entries = mutableListOf<AccelerometerMeasurement>()
-                for (dataPoint in list) {
-                    entries.add(
-                        AccelerometerMeasurement(0, sessionId, dataPoint.timestamp, dataPoint.getValue(ValueKey.AccelerometerSet.ACCELEROMETER_X),dataPoint.getValue(ValueKey.AccelerometerSet.ACCELEROMETER_Y),dataPoint.getValue(ValueKey.AccelerometerSet.ACCELEROMETER_Z)))
-                }
-                repository.insertAccelerometerMeasurementList(
+                repository.insertSkinTemperatureMeasurementList(
                     CoroutineScope(Dispatchers.IO),
                     entries
                 )

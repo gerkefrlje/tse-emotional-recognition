@@ -3,9 +3,11 @@ package com.example.tse_emotionalrecognition.data.database
 import android.util.Log
 import com.example.tse_emotionalrecognition.data.database.entities.AffectColumns
 import com.example.tse_emotionalrecognition.data.database.entities.AffectData
+import com.example.tse_emotionalrecognition.data.database.entities.AffectType
 import com.example.tse_emotionalrecognition.data.database.entities.HeartRateMeasurement
 import com.example.tse_emotionalrecognition.data.database.entities.SkinTemperatureMeasurement
 import com.example.tse_emotionalrecognition.data.database.entities.SessionData
+import com.example.tse_emotionalrecognition.data.database.entities.SessionDataColumns
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -14,10 +16,9 @@ import kotlinx.coroutines.withContext
 class UserRepository(db: UserDatabase) {
 
     val affectDao = db.getAffectDao()
-    val sessionDao = db.getSessionDataDao()
+    val sessionDao = db.getSessionDao()
     val heartRateDao = db.getHeartRateMeasurementDao()
-    val ppgGreenDao = db.getPpgGreenMeasurementDao()
-    val accelerometerDao = db.getAccelerometerMeasurementDao()
+    val skinTemperatureDao = db.getSkinTemperatureMeasurementDao()
 
     fun getActiveSession(
         scope: CoroutineScope,
@@ -54,28 +55,13 @@ class UserRepository(db: UserDatabase) {
         }
     }
 
-    fun insertPpgGreenMeasurementList(
+    fun insertSkinTemperatureMeasurementList(
         scope: CoroutineScope,
-        entities: MutableList<PpgGreenMeasurement>,
-        onFinished: (entity: MutableList<PpgGreenMeasurement>) -> Unit = {}
+        entities: MutableList<SkinTemperatureMeasurement>,
+        onFinished: (entity: MutableList<SkinTemperatureMeasurement>) -> Unit = {}
     ) {
         scope.launch(Dispatchers.IO) {
-            val listOfIds = ppgGreenDao.insertAll(entities)
-            entities.forEachIndexed() {index, element ->
-                element.id = listOfIds[index]
-            }
-            withContext(Dispatchers.IO) {
-                onFinished(entities)
-            }
-        }
-    }
-    fun insertAccelerometerMeasurementList(
-        scope: CoroutineScope,
-        entities: MutableList<AccelerometerMeasurement>,
-        onFinished: (entity: MutableList<AccelerometerMeasurement>) -> Unit = {}
-    ) {
-        scope.launch(Dispatchers.IO) {
-            val listOfIds = accelerometerDao.insertAll(entities)
+            val listOfIds = skinTemperatureDao.insertAll(entities)
             entities.forEachIndexed() {index, element ->
                 element.id = listOfIds[index]
             }

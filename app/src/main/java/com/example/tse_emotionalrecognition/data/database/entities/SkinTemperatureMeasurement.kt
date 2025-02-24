@@ -10,6 +10,9 @@ data class SkinTemperatureMeasurement(
     var id: Long = 0L,
     var sessionId: Long,
     var timestamp: Long,
+    var objectTemperature: Float,
+    var ambientTemperature: Float,
+    var status: Int,
     var synced: Long = 0L
 
 

@@ -12,9 +12,9 @@ data class HeartRateMeasurement(
     var sessionId: Long,
     var timestamp: Long,
     var hr: Int,
-    var hrIbi: Int,
+    var hrIbi: MutableList<Int>,
     var hrStatus: Int,
-    var ibiStatus: Int,
+    var ibiStatus: MutableList<Int>,
     var synced: Long = 0L
 )
 
