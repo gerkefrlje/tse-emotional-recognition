@@ -135,9 +135,7 @@ fun buildTrackerEventListener(repository: UserRepository, sessionId: Long, type:
                             sessionId,
                             dataPoint.timestamp.toLong(),
                             dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE),
-                            dataPoint.getValue(ValueKey.HeartRateSet.IBI_LIST),
-                            dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE_STATUS),
-                            dataPoint.getValue(ValueKey.HeartRateSet.IBI_STATUS_LIST))
+                            dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE_STATUS))
                     )
                 }
                 repository.insertHeartRateMeasurementList(
