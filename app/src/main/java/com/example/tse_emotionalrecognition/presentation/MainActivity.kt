@@ -36,7 +36,7 @@ import com.example.tse_emotionalrecognition.R
 import com.example.tse_emotionalrecognition.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.data.database.entities.AffectData
 import com.example.tse_emotionalrecognition.data.database.entities.AffectType
-import com.example.tse_emotionalrecognition.data.database.entities.UserRepository
+import com.example.tse_emotionalrecognition.data.database.UserRepository
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -102,6 +102,7 @@ fun Greeting(greetingName: String) {
 fun DefaultPreview() {
     WearApp("Preview Android")
 }
+
 
 @Composable
 fun SelectIntervention(userRepository: UserRepository) {

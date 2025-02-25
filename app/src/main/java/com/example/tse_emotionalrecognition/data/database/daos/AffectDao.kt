@@ -1,4 +1,4 @@
-package com.example.teamprojekttest.data.database.daos
+package com.example.tse_emotionalrecognition.data.database.daos
 
 import androidx.room.Dao
 import androidx.room.Insert

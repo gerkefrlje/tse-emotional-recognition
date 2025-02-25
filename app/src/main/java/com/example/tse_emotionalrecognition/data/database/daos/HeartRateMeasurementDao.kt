@@ -1,11 +1,11 @@
-package com.example.teamprojekttest.data.database.daos
+package com.example.tse_emotionalrecognition.data.database.daos
 
 import androidx.room.Dao
 import androidx.room.Insert
-import com.example.teamprojekttest.data.database.entities.HeartRateMeasurement
+import com.example.tse_emotionalrecognition.data.database.entities.HeartRateMeasurement
 
 @Dao
-interface HeartRateMeassurementDao {
+interface HeartRateMeasurementDao {
 
     @Insert
     suspend fun insert(item: HeartRateMeasurement): Long

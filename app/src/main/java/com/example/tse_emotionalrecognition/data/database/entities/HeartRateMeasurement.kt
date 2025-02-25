@@ -1,4 +1,4 @@
-package com.example.teamprojekttest.data.database.entities
+package com.example.tse_emotionalrecognition.data.database.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -12,9 +12,7 @@ data class HeartRateMeasurement(
     var sessionId: Long,
     var timestamp: Long,
     var hr: Int,
-    var hrIbi: Int,
     var hrStatus: Int,
-    var ibiStatus: Int,
     var synced: Long = 0L
 )
 
