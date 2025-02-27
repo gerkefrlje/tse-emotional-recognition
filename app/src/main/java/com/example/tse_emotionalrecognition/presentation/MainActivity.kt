@@ -6,10 +6,12 @@
 package com.example.tse_emotionalrecognition.presentation
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings.Global
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -18,6 +20,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,7 +29,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.MaterialTheme
@@ -46,15 +49,24 @@ class MainActivity : ComponentActivity() {
     private val userRepository by lazy { UserDataStore.getUserRepository(application) }
 
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private val requestedPermissions = arrayOf(
+        android.Manifest.permission.BODY_SENSORS,
+        android.Manifest.permission.FOREGROUND_SERVICE,
+        android.Manifest.permission.POST_NOTIFICATIONS,
+        android.Manifest.permission.ACTIVITY_RECOGNITION,
+        android.Manifest.permission.HIGH_SAMPLING_RATE_SENSORS,
+    )
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
 
         super.onCreate(savedInstanceState)
-
+        requestPermissions(requestedPermissions, 0)
         setTheme(android.R.style.Theme_DeviceDefault)
 
         setContent {
-            //WearApp("Android")
             SelectIntervention(userRepository)
         }
     }
@@ -103,7 +115,6 @@ fun DefaultPreview() {
     WearApp("Preview Android")
 }
 
-
 @Composable
 fun SelectIntervention(userRepository: UserRepository) {
 
@@ -116,7 +127,9 @@ fun SelectIntervention(userRepository: UserRepository) {
                 .padding(16.dp),
             contentAlignment = Alignment.Center
         ) {
-            Column {
+            Column (
+                modifier = Modifier.verticalScroll(rememberScrollState())
+            ){
                 Button(
                     onClick = {
 
@@ -148,6 +161,20 @@ fun SelectIntervention(userRepository: UserRepository) {
                         .fillMaxWidth(1f)
                 ) {
                     Text(text = "Label Activity",
+                        modifier = Modifier
+                            .wrapContentWidth(Alignment.CenterHorizontally))
+                }
+                Button(
+                    onClick = {
+
+                        val intent = Intent(context, SendDataActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier
+                        .padding(top = 16.dp)
+                        .fillMaxWidth(1f)
+                ) {
+                    Text(text = "Transfer",
                         modifier = Modifier
                             .wrapContentWidth(Alignment.CenterHorizontally))
                 }

@@ -24,7 +24,7 @@ class UserRepository(db: UserDatabase) {
         scope: CoroutineScope,
         onFinished: (entity: SessionData) -> Unit,
         onError: (e: Exception) -> Unit
-        ) {
+    ) {
         scope.launch(Dispatchers.IO) {
             try {
                 val result = sessionDao.getActiveSession()
@@ -39,6 +39,14 @@ class UserRepository(db: UserDatabase) {
         }
     }
 
+    suspend fun getHeartRateMeasurements(): List<HeartRateMeasurement> {
+            return try {
+                heartRateDao.getItemsBySyncedValue()
+            } catch (e: Exception) {
+                emptyList()
+            }
+    }
+
     fun insertHeartRateMeasurementList(
         scope: CoroutineScope,
         entities: MutableList<HeartRateMeasurement>,
@@ -46,7 +54,7 @@ class UserRepository(db: UserDatabase) {
     ) {
         scope.launch(Dispatchers.IO) {
             val listOfIds = heartRateDao.insertAll(entities)
-            entities.forEachIndexed() {index, element ->
+            entities.forEachIndexed() { index, element ->
                 element.id = listOfIds[index]
             }
             withContext(Dispatchers.IO) {
@@ -62,7 +70,7 @@ class UserRepository(db: UserDatabase) {
     ) {
         scope.launch(Dispatchers.IO) {
             val listOfIds = skinTemperatureDao.insertAll(entities)
-            entities.forEachIndexed() {index, element ->
+            entities.forEachIndexed() { index, element ->
                 element.id = listOfIds[index]
             }
             withContext(Dispatchers.IO) {
@@ -85,6 +93,7 @@ class UserRepository(db: UserDatabase) {
             }
         }
     }
+
     fun updateAffectColumn(
         scope: CoroutineScope,
         id: Long,
@@ -98,7 +107,7 @@ class UserRepository(db: UserDatabase) {
                 AffectColumns.TIME_OF_ENGAGEMENT -> entity.timeOfEngagement = value as Long
                 AffectColumns.TIME_OF_FINISHED -> entity.timeOfFinished = value as Long
                 AffectColumns.AFFECT -> {
-                    entity.affect =  value as AffectType
+                    entity.affect = value as AffectType
                     entity.timeOfAffect = System.currentTimeMillis()
                 }
             }
@@ -132,7 +141,7 @@ class UserRepository(db: UserDatabase) {
         onFinished: (entity: SessionData) -> Unit
     ) {
         scope.launch(Dispatchers.IO) {
-            val entity= sessionDao.getSessionById(id)
+            val entity = sessionDao.getSessionById(id)
             when (column) {
                 SessionDataColumns.START_TIME_MILLIS -> entity.startTimeMillis = value as Long
                 SessionDataColumns.END_TIME_MILLIS -> entity.endTimeMillis = value as Long

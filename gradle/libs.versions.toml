@@ -5,6 +5,7 @@ playServicesWearable = "18.0.0"
 composeBom = "2024.04.01"
 composeMaterial = "1.2.1"
 composeFoundation = "1.2.1"
+playServicesWearableVersion = "18.1.0"
 roomCompiler = "2.6.1"
 wearToolingPreview = "1.0.0"
 activityCompose = "1.8.0"
@@ -16,6 +17,11 @@ tilesToolingPreview = "1.4.0"
 horologistComposeTools = "0.6.17"
 horologistTiles = "0.6.17"
 watchfaceComplicationsDataSourceKtx = "1.2.1"
+coreKtx = "1.15.0"
+junit = "4.13.2"
+junitVersion = "1.2.1"
+espressoCore = "3.6.1"
+lifecycleRuntimeKtx = "2.8.7"
 
 [libraries]
 androidx-room-compiler = { module = "androidx.room:room-compiler" }
@@ -23,6 +29,7 @@ compose-navigation = { module = "androidx.wear.compose:compose-navigation" }
 navigation-compose = { module = "androidx.navigation:navigation-compose" }
 play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearable" }
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+play-services-wearable-v1810 = { module = "com.google.android.gms:play-services-wearable", version.ref = "playServicesWearableVersion" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomCompiler" }
 room-ktx = { module = "androidx.room:room-ktx" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomCompiler" }
@@ -44,6 +51,12 @@ tiles-tooling-preview = { group = "androidx.wear.tiles", name = "tiles-tooling-p
 horologist-compose-tools = { group = "com.google.android.horologist", name = "horologist-compose-tools", version.ref = "horologistComposeTools" }
 horologist-tiles = { group = "com.google.android.horologist", name = "horologist-tiles", version.ref = "horologistTiles" }
 watchface-complications-data-source-ktx = { group = "androidx.wear.watchface", name = "watchface-complications-data-source-ktx", version.ref = "watchfaceComplicationsDataSourceKtx" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

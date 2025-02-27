@@ -1,17 +1,14 @@
-val roomVersion = "2.6.1"
-
-
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    //Todo Vgl mit eis
+
     id("com.google.devtools.ksp")
     id("org.jetbrains.kotlin.plugin.serialization") version "1.9.22" //oder die neueste Version
 }
 
 android {
-    namespace = "com.example.tse_emotionalrecognition"
+    namespace = "com.example.phone"
     compileSdk = 35
 
     defaultConfig {
@@ -21,6 +18,7 @@ android {
         versionCode = 1
         versionName = "1.0"
 
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
@@ -46,42 +44,33 @@ android {
 
 dependencies {
 
-    implementation(libs.play.services.wearable)
-    implementation(platform(libs.compose.bom))
-    implementation(libs.ui)
-    implementation(libs.ui.graphics)
-    implementation(libs.ui.tooling.preview)
-    implementation(libs.compose.material)
-    implementation(libs.compose.foundation)
-    implementation(libs.wear.tooling.preview)
-    implementation(libs.activity.compose)
-    implementation(libs.core.splashscreen)
-    implementation(libs.tiles)
-    implementation(libs.tiles.material)
-    implementation(libs.tiles.tooling.preview)
-    implementation(libs.horologist.compose.tools)
-    implementation(libs.horologist.tiles)
-    implementation(libs.watchface.complications.data.source.ktx)
-    androidTestImplementation(platform(libs.compose.bom))
-    androidTestImplementation(libs.ui.test.junit4)
-    debugImplementation(libs.ui.tooling)
-    debugImplementation(libs.ui.test.manifest)
-    debugImplementation(libs.tiles.tooling)
 
-    implementation("androidx.room:room-runtime:2.6.1")
-    ksp("androidx.room:room-compiler:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-
-    //App Navigatio
-    implementation(libs.navigation.compose)
-    implementation(libs.compose.navigation)
-
-    // Samsung Health SDK
-    implementation(files("${projectDir}/libs/samsung-health-sensor-api-1.3.0.aar"))
 
     //für die Übertragung zwischen Handy und Uhr
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2") //wandelt Klassen in String um
 
     // Wearable Data Layer API für Kommunikation mit dem Smartphone
     implementation(libs.play.services.wearable)
+
+    //Room
+    implementation("androidx.room:room-runtime:2.6.1")
+    ksp("androidx.room:room-compiler:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.activity.compose)
+    implementation(platform(libs.compose.bom))
+    implementation(libs.ui)
+    implementation(libs.ui.graphics)
+    implementation(libs.ui.tooling.preview)
+    implementation(libs.androidx.material3)
+    //implementation(project(":app"))
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.compose.bom))
+    androidTestImplementation(libs.ui.test.junit4)
+    debugImplementation(libs.ui.tooling)
+    debugImplementation(libs.ui.test.manifest)
 }

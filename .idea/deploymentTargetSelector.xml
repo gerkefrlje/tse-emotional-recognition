@@ -4,10 +4,24 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-02-23T14:06:38.508885605Z">
+        <DropdownSelection timestamp="2025-02-26T19:28:06.733054972Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=/home/yetam/.android/avd/Wear_OS_Large_Round_API_34.avd" />
+              <DeviceId pluginId="Default" identifier="serial=192.168.0.199:38487;connection=a8fd0aa4" />
+            </handle>
+          </Target>
+        </DropdownSelection>
+        <DialogSelection />
+      </SelectionState>
+      <SelectionState runConfigName="app.companion">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
+      <SelectionState runConfigName="phone">
+        <option name="selectionMode" value="DROPDOWN" />
+        <DropdownSelection timestamp="2025-02-26T11:38:01.936148687Z">
+          <Target type="DEFAULT_BOOT">
+            <handle>
+              <DeviceId pluginId="Default" identifier="serial=192.168.0.46:44077;connection=ad734817" />
             </handle>
           </Target>
         </DropdownSelection>

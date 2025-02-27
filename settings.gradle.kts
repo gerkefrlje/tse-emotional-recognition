@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "TSE - Emotional Recognition"
 include(":app")
+include(":phone")
