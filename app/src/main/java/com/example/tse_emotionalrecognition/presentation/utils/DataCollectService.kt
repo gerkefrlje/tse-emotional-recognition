@@ -137,6 +137,7 @@ fun buildTrackerEventListener(repository: UserRepository, sessionId: Long, type:
                             dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE),
                             dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE_STATUS))
                     )
+                    Log.v("data", "Heart rate: ${dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE)}")
                 }
                 repository.insertHeartRateMeasurementList(
                     CoroutineScope(Dispatchers.IO),

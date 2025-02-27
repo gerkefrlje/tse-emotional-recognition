@@ -1,6 +1,7 @@
 package com.example.tse_emotionalrecognition.presentation
 
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.util.Log
@@ -35,18 +36,25 @@ import androidx.wear.tooling.preview.devices.WearDevices
 import com.example.tse_emotionalrecognition.R
 import com.example.tse_emotionalrecognition.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.data.database.entities.HeartRateMeasurement
+import com.example.tse_emotionalrecognition.data.database.entities.SkinTemperatureMeasurement
+import com.example.tse_emotionalrecognition.presentation.interventions.BreathingActivity
+import com.example.tse_emotionalrecognition.presentation.interventions.CallInterventionActivity
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
+import com.example.tse_emotionalrecognition.presentation.utils.DataCollectService
 import com.google.android.gms.wearable.DataClient
 import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataEventBuffer
 import com.google.android.gms.wearable.DataMapItem
+import com.google.android.gms.wearable.MessageClient
+import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-class SendDataActivity : ComponentActivity(){
+class SendDataActivity : ComponentActivity(), MessageClient.OnMessageReceivedListener {
 
 
     private val userRepository by lazy { UserDataStore.getUserRepository(application) }
@@ -61,7 +69,9 @@ class SendDataActivity : ComponentActivity(){
         super.onCreate(savedInstanceState)
 
         sharedPreferences = getSharedPreferences("my_prefs", Context.MODE_PRIVATE)
+        startCollection()
 
+        Wearable.getMessageClient(this).addListener(this)
 
         setContent {
             var wearCount by remember { mutableIntStateOf(0) }
@@ -77,21 +87,44 @@ class SendDataActivity : ComponentActivity(){
     }
 
 
+    private fun startCollection() {
+        val collectionServiceIntent = Intent(this, DataCollectService::class.java)
+        collectionServiceIntent.putExtra("sessionId", sessionId)
+        startService(collectionServiceIntent)
+    }
 
 
-//    private fun startCollection() {
-//        val collectionServiceIntent = Intent(this, DataCollectService::class.java)
-//        collectionServiceIntent.putExtra("sessionId", sessionId)
-//        startService(collectionServiceIntent)
-//    }
+    override fun onDestroy() {
+        super.onDestroy()
+        stopService(Intent(this, DataCollectService::class.java))
+        Log.d("WearableReceiver", "DataClient wird deaktiviert...")
+        Wearable.getMessageClient(this)
+            .removeListener(this) // Listener entfernen, um Speicherlecks zu vermeiden
 
+    }
 
-//    override fun onDestroy() {
-//        super.onDestroy()
-//        stopService(Intent(this, DataCollectService::class.java))
-//
-//    }
+    override fun onResume() {
+        super.onResume()
+        Log.d("WearableReceiver", "DataClient wird registriert...")
+        Wearable.getMessageClient(this).addListener(this) // Listener aktivieren
+    }
 
+    override fun onMessageReceived(messageEvent: MessageEvent) {
+        if (messageEvent.path == "/emotion") {
+            val emotion = String(messageEvent.data)
+            Log.d("WearableReceiver", "Empfangene Emotion: $emotion")
+
+            when (emotion) {
+                "sad" -> startActivity(Intent(this, CallInterventionActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                })
+                "angry" -> startActivity(Intent(this, BreathingActivity::class.java).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                })
+            }
+        }
+
+    }
 }
 
 
@@ -118,15 +151,21 @@ fun Greeting(wearCount: Int = 0, onCountChange: (Int) -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val userRepository = UserDataStore.getUserRepository(context.applicationContext)
     var heartRateMeasurements by remember { mutableStateOf<List<HeartRateMeasurement>>(emptyList()) }
+    var skinTemperatureMeasurements by remember {
+        mutableStateOf<List<SkinTemperatureMeasurement>>(
+            emptyList()
+        )
+    }
+    val lifecycleOwner = LocalLifecycleOwner.current
 
-    val lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
 
-    LaunchedEffect(key1 = true) {
-        lifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
+    LaunchedEffect(Unit) {  // `Unit` statt `true`, um unnötige Re-Compositions zu vermeiden
+        lifecycleOwner.lifecycleScope.launch {
             try {
                 heartRateMeasurements = userRepository.getHeartRateMeasurements()
+                skinTemperatureMeasurements = userRepository.getSkinTemperatureMeasurements()
             } catch (e: Exception) {
-                Log.e("Error", "Error fetching heart rate measurements", e)
+                Log.e("HeartRateScreen", "Error fetching heart rate measurements", e)
             }
         }
     }
@@ -148,59 +187,50 @@ fun Greeting(wearCount: Int = 0, onCountChange: (Int) -> Unit) {
                 val count = wearCount + 1
                 onCountChange(count)
 
-//                val nodeClient = Wearable.getNodeClient(context)
-//                nodeClient.connectedNodes.addOnSuccessListener { nodes ->
-//                    if (nodes.isEmpty()) {
-//                        Log.e("WearableDebug", "Keine verbundenen Geräte gefunden!")
-//                    } else {
-//                        for (node in nodes) {
-//                            Wearable.getMessageClient(context)
-//                                .sendMessage(node.id, "/message_path", count.toString().toByteArray())
-//                                .addOnSuccessListener {
-//                                    Log.d("WearableMessage", "Nachricht erfolgreich gesendet: $count")
-//                                }
-//                                .addOnFailureListener {
-//                                    Log.e("WearableMessage", "Fehler beim Senden der Nachricht", it)
-//                                }
-//                        }
-//                    }
-//                }
-
                 // Daten senden
                 val dataClient = Wearable.getDataClient(context)
-//                val putDataRequest = PutDataMapRequest.create("/count").apply {
-//                    dataMap.putInt("count", count)
-//                }.asPutDataRequest().setUrgent()
-//                dataClient.putDataItem(putDataRequest)
-                    val putDataRequest = PutDataMapRequest.create("/button").apply {
-                        dataMap.putInt("count", count)
-                        dataMap.putLong("timeStamp", System.currentTimeMillis())
-                    }.asPutDataRequest().setUrgent()
-                    dataClient.putDataItem(putDataRequest).addOnSuccessListener {
-                        Log.d("MainActivity", "Data sent $count")
-                    }.addOnFailureListener { e ->
-                        Log.e("MainActivity", "Error sending data", e)
-                    }
+                val putDataRequest = PutDataMapRequest.create("/button").apply {
+                    dataMap.putInt("count", count)
+                    dataMap.putLong("timeStamp", System.currentTimeMillis())
+                }.asPutDataRequest().setUrgent()
+                dataClient.putDataItem(putDataRequest).addOnSuccessListener {
+                    Log.d("MainActivity", "Data sent $count")
+                }.addOnFailureListener { e ->
+                    Log.e("MainActivity", "Error sending data", e)
+                }
                 Log.d("MainActivity", "Send Data: $count")
 
 
-//                if (count % 10 == 0) {
-//                    for (measurement in heartRateMeasurements) {
-//                        Log.v("HeartRateMeasurement", "$measurement")
-//                        val sendHR = PutDataMapRequest.create("/hr").apply {
-//                            dataMap.putString(
-//                                "hr",
-//                                Json.encodeToString(
-//                                    HeartRateMeasurement.serializer(),
-//                                    measurement
-//                                )
-//                            )
-//                            dataMap.putString("timeStamp", System.currentTimeMillis().toString())
-//                        }.asPutDataRequest()
-//                        dataClient.putDataItem(sendHR)
-//                    }
-//
-//                }
+
+                Log.v("MainActivity", "count % 10: ${count % 10}")
+                if (count % 10 == 0) {
+
+                    if (heartRateMeasurements.isNotEmpty()) {
+
+                        val jsonString =
+                            Json.encodeToString(heartRateMeasurements.takeLast(20)) // Ganze Liste serialisieren
+
+                        val sendHR = PutDataMapRequest.create("/hr").apply {
+                            dataMap.putString("hr", jsonString) // JSON-String speichern
+                            dataMap.putLong("timeStamp", System.currentTimeMillis())
+                        }.asPutDataRequest()
+
+                        dataClient.putDataItem(sendHR)
+                        Log.d("WearableMessage", "Herzfrequenz-Daten gesendet: $jsonString")
+                    }
+
+                    if (skinTemperatureMeasurements.isNotEmpty()) {
+                        val jsonString =
+                            Json.encodeToString(skinTemperatureMeasurements) // Ganze Liste
+                        val sendSkin = PutDataMapRequest.create("/skin").apply {
+                            dataMap.putString("skin", jsonString) // JSON-String speichern
+                            dataMap.putLong("timeStamp", System.currentTimeMillis())
+                        }.asPutDataRequest()
+                        dataClient.putDataItem(sendSkin)
+                        Log.d("WearableMessage", "Hauttemperatur-Daten gesendet: $jsonString")
+                    }
+
+                }
 
             },
         ) {

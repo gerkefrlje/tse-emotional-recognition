@@ -1,5 +1,6 @@
-package com.example.tse_emotionalrecognition.presentation
+package com.example.tse_emotionalrecognition.presentation.interventions
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,6 +22,7 @@ import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.tooling.preview.devices.WearDevices
+import com.example.tse_emotionalrecognition.presentation.MainActivity
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -45,7 +47,7 @@ class BreathingActivity : ComponentActivity() {
         TSEEmotionalRecognitionTheme {
             val scope = rememberCoroutineScope()
             // Animatable value that controls the size factor; initial value is 1 (full size)
-            val sizeAnim = remember { androidx.compose.animation.core.Animatable(1f)}
+            val sizeAnim = remember { androidx.compose.animation.core.Animatable(0.5f)}
 
             var buttonText by remember { mutableStateOf("Touch") }
 
@@ -56,12 +58,12 @@ class BreathingActivity : ComponentActivity() {
                     // Animate to a smaller size (e.g., 50% of full size) over 1 second
                     for(i in 0..1) {
                         sizeAnim.animateTo(
-                            targetValue = 0.5f,
+                            targetValue = 1f,
                             animationSpec = tween(durationMillis = 2000)
                         )
                         // Animate back to full size over 1 second
                         sizeAnim.animateTo(
-                            targetValue = 1f,
+                            targetValue = 0.5f,
                             animationSpec = tween(durationMillis = 4000)
                         )
                     }
@@ -69,6 +71,8 @@ class BreathingActivity : ComponentActivity() {
 
                     delay(2000)
                     // Return to the previous intent by finishing the current activity
+                    val intent = Intent(this@BreathingActivity, MainActivity::class.java)
+                    startActivity(intent)
                     finish()
                 }
             }

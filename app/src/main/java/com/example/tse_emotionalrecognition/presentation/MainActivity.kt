@@ -8,7 +8,6 @@ package com.example.tse_emotionalrecognition.presentation
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings.Global
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -40,10 +39,11 @@ import com.example.tse_emotionalrecognition.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.data.database.entities.AffectData
 import com.example.tse_emotionalrecognition.data.database.entities.AffectType
 import com.example.tse_emotionalrecognition.data.database.UserRepository
+import com.example.tse_emotionalrecognition.presentation.interventions.BreathingActivity
+import com.example.tse_emotionalrecognition.presentation.interventions.InterventionOverviewActivity
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 
 class MainActivity : ComponentActivity() {
     private val userRepository by lazy { UserDataStore.getUserRepository(application) }
@@ -133,7 +133,7 @@ fun SelectIntervention(userRepository: UserRepository) {
                 Button(
                     onClick = {
 
-                        val intent = Intent(context, BreathingActivity::class.java)
+                        val intent = Intent(context, InterventionOverviewActivity::class.java)
                         context.startActivity(intent)
 
                     },

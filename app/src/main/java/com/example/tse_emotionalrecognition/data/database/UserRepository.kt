@@ -41,10 +41,18 @@ class UserRepository(db: UserDatabase) {
 
     suspend fun getHeartRateMeasurements(): List<HeartRateMeasurement> {
             return try {
-                heartRateDao.getItemsBySyncedValue()
+                heartRateDao.getAll()
             } catch (e: Exception) {
                 emptyList()
             }
+    }
+
+    suspend fun getSkinTemperatureMeasurements(): List<SkinTemperatureMeasurement> {
+        return try {
+            skinTemperatureDao.getAll()
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
     fun insertHeartRateMeasurementList(

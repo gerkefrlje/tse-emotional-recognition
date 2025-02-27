@@ -17,4 +17,8 @@ interface HeartRateMeasurementDao {
     @Query("SELECT * FROM heartRateMeasurement WHERE synced = :syncedValue")
     suspend fun getItemsBySyncedValue(syncedValue: Long=1L): List<HeartRateMeasurement>
 
+    @Query("SELECT * FROM heartRateMeasurement")
+    suspend fun getAll(): List<HeartRateMeasurement>
+
+
 }

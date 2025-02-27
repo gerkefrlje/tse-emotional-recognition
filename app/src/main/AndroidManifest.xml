@@ -83,7 +83,17 @@
         </activity>
 
         <activity
-            android:name=".presentation.BreathingActivity"
+            android:name=".presentation.interventions.InterventionOverviewActivity"
+            android:exported="true"
+            android:taskAffinity="" />
+
+        <activity
+            android:name=".presentation.interventions.BreathingActivity"
+            android:exported="true"
+            android:taskAffinity="" />
+
+        <activity
+            android:name=".presentation.interventions.CallInterventionActivity"
             android:exported="true"
             android:taskAffinity="" />
 
