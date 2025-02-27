@@ -40,7 +40,7 @@ class WearDetectionHelper(private val context: Context): SensorEventListener {
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {
-        TODO("Not yet implemented")
+        Log.d("WearDetectionHelper", "Sensor accuracy changed: ${sensor?.name}, new accuracy: $accuracy")
     }
 
     fun isWatchWorn(): Boolean {

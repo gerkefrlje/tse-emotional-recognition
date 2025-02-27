@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-02-25T15:41:54.941045300Z">
+        <DropdownSelection timestamp="2025-02-27T17:00:06.656043900Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\Gerke\.android\avd\Wear_OS_Small_Round_API_34.avd" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=RFAW31MPTQV" />
             </handle>
           </Target>
         </DropdownSelection>

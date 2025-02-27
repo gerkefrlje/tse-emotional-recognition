@@ -65,6 +65,11 @@ class DataCollectService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("DataCollectService", "Service started")
 
+        startForeground(
+            123,
+            createNotification("Health data collection is running...")
+        )
+
         sessionId = intent?.getLongExtra("sessionId", 0L) ?: 0L
         val shouldCollectData = intent?.getBooleanExtra("COLLECT_DATA", false) ?: false
 
@@ -101,11 +106,6 @@ class DataCollectService : Service() {
     }
 
     private fun startDataCollection(intent: Intent?) {
-
-        startForeground(
-            123,
-            createNotification("Health data collection is running...")
-        )
 
         CoroutineScope(Dispatchers.IO).launch {
             while (
@@ -184,8 +184,7 @@ class DataCollectService : Service() {
     }
 }
 
-fun buildTrackerEventListener(repository: UserRepository, sessionId: Long, type: HealthTrackerType, context: Context
-): HealthTracker.TrackerEventListener {
+fun buildTrackerEventListener(repository: UserRepository, sessionId: Long, type: HealthTrackerType, context: Context): HealthTracker.TrackerEventListener {
     return object : HealthTracker.TrackerEventListener {
         override fun onDataReceived(list: List<DataPoint>) {
             Log.v("data","logged")

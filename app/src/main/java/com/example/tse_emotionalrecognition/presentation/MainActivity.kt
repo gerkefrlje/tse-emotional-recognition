@@ -5,9 +5,11 @@
 
 package com.example.tse_emotionalrecognition.presentation
 
+import android.Manifest
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.provider.Settings.Global
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -30,6 +32,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.material.Button
@@ -43,11 +46,10 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.example.tse_emotionalrecognition.R
-import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
-import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
-import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
-import com.example.tse_emotionalrecognition.common.data.database.UserRepository
-import com.example.tse_emotionalrecognition.presentation.interventions.InterventionOverviewActivity
+import com.example.tse_emotionalrecognition.data.database.UserDataStore
+import com.example.tse_emotionalrecognition.data.database.entities.AffectData
+import com.example.tse_emotionalrecognition.data.database.entities.AffectType
+import com.example.tse_emotionalrecognition.data.database.UserRepository
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
 import com.example.tse_emotionalrecognition.presentation.utils.DataCollectWorker
 import java.util.concurrent.TimeUnit
@@ -56,17 +58,18 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 
 class MainActivity : ComponentActivity() {
-    private val userRepository by lazy { com.example.tse_emotionalrecognition.common.data.database.UserDataStore.getUserRepository(application) }
-
+    private val userRepository by lazy { UserDataStore.getUserRepository(application) }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private val requestedPermissions = arrayOf(
-        android.Manifest.permission.BODY_SENSORS,
-        android.Manifest.permission.FOREGROUND_SERVICE,
-        android.Manifest.permission.POST_NOTIFICATIONS,
-        android.Manifest.permission.ACTIVITY_RECOGNITION,
-        android.Manifest.permission.HIGH_SAMPLING_RATE_SENSORS,
-        android.Manifest.permission.READ_CONTACTS
+        Manifest.permission.BODY_SENSORS,
+        Manifest.permission.FOREGROUND_SERVICE,
+        Manifest.permission.POST_NOTIFICATIONS,
+        Manifest.permission.ACCESS_NETWORK_STATE,
+        Manifest.permission.WAKE_LOCK,
+        Manifest.permission.POST_NOTIFICATIONS,
+        Manifest.permission.READ_CONTACTS
+
     )
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -74,23 +77,22 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
 
         super.onCreate(savedInstanceState)
-        requestPermissions(requestedPermissions, 0)
+
         setTheme(android.R.style.Theme_DeviceDefault)
+        requestPermissions(requestedPermissions, 0)
 
         setContent {
             SelectIntervention(userRepository)
         }
+
+        scheduleDataCollection()
     }
 
     private fun triggerLable() {
         userRepository.insertAffect(
-            CoroutineScope(Dispatchers.IO)
-            ,
-            com.example.tse_emotionalrecognition.common.data.database.entities.AffectData(
-                sessionId = 1,
-                affect = com.example.tse_emotionalrecognition.common.data.database.entities.AffectType.HAPPY_RELAXED
-            )
-        ){
+            CoroutineScope(Dispatchers.IO),
+            AffectData(sessionId = 1, affect = AffectType.HAPPY_RELAXED)
+        ) {
             var affectDataID = it.id
             val intent = Intent(this, LabelActivity::class.java)
             intent.putExtra("affectDataId", affectDataID)
@@ -99,11 +101,18 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun scheduleDataCollection() {
-        val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.NOT_REQUIRED).build()
+        val constraints =
+            Constraints.Builder().setRequiredNetworkType(NetworkType.NOT_REQUIRED).build()
 
-        val dataCollectionRequest = PeriodicWorkRequest.Builder(DataCollectWorker::class.java, 30, TimeUnit.MINUTES).setConstraints(constraints).build()
+        val dataCollectionRequest =
+            PeriodicWorkRequest.Builder(DataCollectWorker::class.java, 30, TimeUnit.MINUTES)
+                .setConstraints(constraints).build()
 
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork("DataCollectionWork", ExistingPeriodicWorkPolicy.KEEP, dataCollectionRequest)
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "DataCollectionWork",
+            ExistingPeriodicWorkPolicy.KEEP,
+            dataCollectionRequest
+        )
     }
 }
 
@@ -138,10 +147,8 @@ fun DefaultPreview() {
     WearApp("Preview Android")
 }
 
-
 @Composable
-fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.common.data.database.UserRepository) {
-
+fun SelectIntervention(userRepository: UserRepository) {
     val context = LocalContext.current
 
     TSEEmotionalRecognitionTheme {
@@ -157,7 +164,6 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
 
                         val intent = Intent(context, InterventionOverviewActivity::class.java)
                         context.startActivity(intent)
-
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -171,14 +177,10 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                 Button(
                     onClick = {
                         userRepository.insertAffect(
-                            CoroutineScope(Dispatchers.IO)
-                            ,
-                            com.example.tse_emotionalrecognition.common.data.database.entities.AffectData(
-                                sessionId = 1,
-                                affect = com.example.tse_emotionalrecognition.common.data.database.entities.AffectType.HAPPY_RELAXED
-                            )
-                        ){
-                            var affectDataID = it.id
+                            CoroutineScope(Dispatchers.IO),
+                            AffectData(sessionId = 1, affect = AffectType.HAPPY_RELAXED)
+                        ) {
+                            val affectDataID = it.id
                             val intent = Intent(context, LabelActivity::class.java)
                             intent.putExtra("affectDataId", affectDataID)
                             context.startActivity(intent)
