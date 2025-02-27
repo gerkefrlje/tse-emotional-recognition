@@ -35,12 +35,19 @@ import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
 import androidx.wear.tooling.preview.devices.WearDevices
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequest
+import androidx.work.WorkManager
 import com.example.tse_emotionalrecognition.R
 import com.example.tse_emotionalrecognition.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.data.database.entities.AffectData
 import com.example.tse_emotionalrecognition.data.database.entities.AffectType
 import com.example.tse_emotionalrecognition.data.database.UserRepository
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
+import com.example.tse_emotionalrecognition.presentation.utils.DataCollectWorker
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -72,6 +79,14 @@ class MainActivity : ComponentActivity() {
             intent.putExtra("affectDataId", affectDataID)
             startActivity(intent)
         }
+    }
+
+    private fun scheduleDataCollection() {
+        val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.NOT_REQUIRED).build()
+
+        val dataCollectionRequest = PeriodicWorkRequest.Builder(DataCollectWorker::class.java, 30, TimeUnit.MINUTES).setConstraints(constraints).build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork("DataCollectionWork", ExistingPeriodicWorkPolicy.KEEP, dataCollectionRequest)
     }
 }
 

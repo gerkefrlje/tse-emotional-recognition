@@ -8,6 +8,8 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.IBinder
+import android.os.CountDownTimer
+import androidx.core.content.ContextCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.tse_emotionalrecognition.R
@@ -15,6 +17,7 @@ import com.example.tse_emotionalrecognition.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.data.database.UserRepository
 import com.example.tse_emotionalrecognition.data.database.entities.HeartRateMeasurement
 import com.example.tse_emotionalrecognition.data.database.entities.SkinTemperatureMeasurement
+import com.example.tse_emotionalrecognition.presentation.LabelActivity
 import com.samsung.android.service.health.tracking.ConnectionListener
 import com.samsung.android.service.health.tracking.HealthTracker
 import com.samsung.android.service.health.tracking.HealthTrackerException
@@ -24,6 +27,7 @@ import com.samsung.android.service.health.tracking.data.HealthTrackerType
 import com.samsung.android.service.health.tracking.data.ValueKey
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class DataCollectService : Service() {
@@ -31,10 +35,18 @@ class DataCollectService : Service() {
     private lateinit var healthTrackingService: HealthTrackingService
     private lateinit var heartRateTracker: HealthTracker
     private lateinit var skinTemperatureTracker: HealthTracker
+    private lateinit var wearDetectionHelper: WearDetectionHelper
+
+    private var countDownTimer: CountDownTimer? = null
+    private val dataCollectionInterval: Long = 2L * 60L * 1000L // 2 Minutes
+    private var isWatchWorn: Boolean = false
+    private var sessionId: Long = 0L
+
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
         userRepository = UserDataStore.getUserRepository(applicationContext)
+        wearDetectionHelper = WearDetectionHelper(this)
         healthTrackingService = HealthTrackingService(
             object : ConnectionListener {
             override fun onConnectionSuccess() {
@@ -51,8 +63,45 @@ class DataCollectService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.v("HealthTrackingService", "Service started")
-        val sessionId = intent?.getLongExtra("sessionId", 0L) ?: 0L
+        Log.d("DataCollectService", "Service started")
+
+        sessionId = intent?.getLongExtra("sessionId", 0L) ?: 0L
+        val shouldCollectData = intent?.getBooleanExtra("COLLECT_DATA", false) ?: false
+
+        if (shouldCollectData) {
+            wearDetectionHelper.start { isWorn ->
+                isWatchWorn = isWorn
+                if (isWatchWorn) {
+                    startDataCollection(intent)
+                    startTimer()
+                } else {
+                    Log.d("DataCollectService", "Watch is not worn, skipping data collection")
+                    stopSelf()
+                }
+            }
+        } else {
+            Log.d("DataCollectService", "Service started without data collection")
+            stopSelf()
+        }
+
+        return START_STICKY
+    }
+
+    override fun onBind(intent: Intent?): IBinder? {
+        return null // Da dies ein ungebundener Service ist, wird null zurückgegeben
+    }
+
+    override fun onDestroy() {
+        Log.v("HealthTrackingService", "Service stopped")
+        super.onDestroy()
+        stopDataCollection()
+        countDownTimer?.cancel()
+        wearDetectionHelper.stop()
+        stopForeground(true)
+    }
+
+    private fun startDataCollection(intent: Intent?) {
+
         startForeground(
             123,
             createNotification("Health data collection is running...")
@@ -69,32 +118,49 @@ class DataCollectService : Service() {
             heartRateTracker.setEventListener(buildTrackerEventListener(userRepository,sessionId, HealthTrackerType.HEART_RATE_CONTINUOUS, applicationContext))
             skinTemperatureTracker.setEventListener(buildTrackerEventListener(userRepository,sessionId, HealthTrackerType.SKIN_TEMPERATURE_CONTINUOUS, applicationContext))
         }
-        return START_STICKY
+
+        Log.d("DataCollectService", "Data collection started")
     }
-    override fun onBind(intent: Intent?): IBinder? {
-        return null // Da dies ein ungebundener Service ist, wird null zurückgegeben
-    }
-    override fun onDestroy() {
-        Log.v("HealthTrackingService", "Service stopped")
-        super.onDestroy()
+
+    private fun stopDataCollection() {
         CoroutineScope(Dispatchers.IO).launch {
-            while (
-                !this@DataCollectService::heartRateTracker.isInitialized ||
-                !this@DataCollectService::skinTemperatureTracker.isInitialized
-            ) {
-                Log.v("HealthTrackingService", "Waiting for trackers to initialize...")
-                kotlinx.coroutines.delay(100L)
+            if(this@DataCollectService::heartRateTracker.isInitialized) {
+                heartRateTracker.flush()
+                heartRateTracker.unsetEventListener()
             }
-            heartRateTracker.flush()
-            skinTemperatureTracker.flush()
-            kotlinx.coroutines.delay(1000L)
-            heartRateTracker.unsetEventListener()
-            skinTemperatureTracker.unsetEventListener()
-            kotlinx.coroutines.delay(1000L)
+            if(this@DataCollectService::skinTemperatureTracker.isInitialized) {
+                skinTemperatureTracker.flush()
+                skinTemperatureTracker.unsetEventListener()
+            }
+
+            delay(1000L)
             healthTrackingService.disconnectService()
-            kotlinx.coroutines.delay(1000L)
+            delay(1000L)
         }
-        stopForeground(true)
+        Log.d("DataCollectService", "Data collection stopped")
+    }
+
+    private fun startTimer() {
+        countDownTimer = object : CountDownTimer(dataCollectionInterval, 1000) {
+            override fun onTick(millisUntilFinished: Long) {
+                Log.v("DataCollectService", "Time remaining: ${millisUntilFinished / 1000}")
+            }
+
+            override fun onFinish() {
+                Log.v("DataCollectService", "Data collection finished")
+                stopDataCollection()
+                launchLabelActivity()
+                stopSelf()
+            }
+        }
+
+        countDownTimer?.start()
+    }
+
+    private fun launchLabelActivity() {
+        val intent = Intent(this, LabelActivity::class.java)
+        intent.putExtra("sessionId", sessionId)
+        ContextCompat.startActivity(this, intent, null)
     }
 
     private fun createNotification(contentText: String): Notification {
@@ -117,8 +183,6 @@ class DataCollectService : Service() {
         }
     }
 }
-
-
 
 fun buildTrackerEventListener(repository: UserRepository, sessionId: Long, type: HealthTrackerType, context: Context
 ): HealthTracker.TrackerEventListener {
