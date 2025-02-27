@@ -5,11 +5,14 @@
 
 package com.example.tse_emotionalrecognition.presentation
 
+import android.Manifest
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings.Global
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -55,18 +58,29 @@ import kotlinx.coroutines.GlobalScope
 class MainActivity : ComponentActivity() {
     private val userRepository by lazy { UserDataStore.getUserRepository(application) }
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private val requestedPermissions = arrayOf(
+        Manifest.permission.BODY_SENSORS,
+        Manifest.permission.FOREGROUND_SERVICE,
+        Manifest.permission.POST_NOTIFICATIONS,
+        Manifest.permission.ACCESS_NETWORK_STATE,
+        Manifest.permission.WAKE_LOCK
+    )
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
 
         super.onCreate(savedInstanceState)
-
         setTheme(android.R.style.Theme_DeviceDefault)
+        requestPermissions(requestedPermissions, 0)
 
         setContent {
             //WearApp("Android")
             SelectIntervention(userRepository)
         }
+
+        scheduleDataCollection()
     }
 
     private fun triggerLable() {
