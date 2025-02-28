@@ -38,6 +38,14 @@ import kotlinx.serialization.json.Json
 
 class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
 
+    /**
+     * Todo for communication between phone and watch:
+     *  create "common" module which contains classes needed fro both phone and watch app
+     *  check if data can be send in background, right now it is mandatory to have both activity open
+     *  create database on phone to be able to save the sent data from the watch
+     *  chose better communication between phone and watch f.e MessageClient, DataClient or other options -> look in documentation
+     */
+
     var wearCount by mutableIntStateOf(0) // State in der Activity deklarieren
     private val heartRateList = mutableStateListOf<HeartRateMeasurement>()
     private val skinTemperatureList = mutableStateListOf<SkinTemperatureMeasurement>()
@@ -46,9 +54,9 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-
+        //Necessary for recieving data from watch
         Wearable.getDataClient(this).addListener(this)
-
+        //look in app/SendDataActivity for watch implementation
 
         enableEdgeToEdge()
         setContent {
@@ -75,6 +83,8 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
             }
 
         }
+        // for debug purposes
+        // checks if there is a phone connected to the watch
         Wearable.getNodeClient(this).connectedNodes
             .addOnSuccessListener { nodes ->
                 Log.d("WearableReceiver", "Verbundene Geräte: ${nodes.map { it.displayName }}")
@@ -89,15 +99,16 @@ class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
 
     }
 
+    // when data from phone is recieved this function is called
     override fun onDataChanged(dataEvents: DataEventBuffer) {
         Log.d("WearableReceiver", "DataEventBuffer received!")
         for (event in dataEvents) {
-            if (event.type == DataEvent.TYPE_CHANGED) {
-                val dataItem = event.dataItem
+            if (event.type == DataEvent.TYPE_CHANGED) {// checks for data event. look in documention for different options
+                val dataItem = event.dataItem // gets data from event -> data which was send
                 val dataMap = DataMapItem.fromDataItem(dataItem).dataMap
-                when (dataItem.uri.path) {
+                when (dataItem.uri.path) { // now checks which data was send
                     "/button" -> {
-                        val count = dataMap.getInt("count")
+                        val count = dataMap.getInt("count") // compare to data send
                         wearCount = count
                         Log.d("WearableReceiver", "Empfangene Count-Daten: $count")
                     }
@@ -149,7 +160,6 @@ fun Greeting(modifier: Modifier = Modifier, count: Int, context: Context) {
 
     val SAD = "sad"
     val ANGRY = "angry"
-    val dataClient = Wearable.getDataClient(context)
 
     Column(
         modifier = modifier

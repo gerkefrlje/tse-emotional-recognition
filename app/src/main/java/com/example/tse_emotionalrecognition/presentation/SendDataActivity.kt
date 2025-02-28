@@ -57,7 +57,14 @@ import kotlinx.serialization.json.Json
 class SendDataActivity : ComponentActivity(), MessageClient.OnMessageReceivedListener {
 
 
-    private val userRepository by lazy { UserDataStore.getUserRepository(application) }
+    /**
+     * Todo for communication between phone and watch:
+     *  create "common" module which contains classes needed fro both phone and watch app
+     *  check if data can be send in background, right now it is mandatory to have both activity open
+     *  create database on phone to be able to save the sent data from the watch
+     *  chose better communication between phone and watch f.e MessageClient, DataClient or other options -> look in documentation
+     */
+
     private val sessionId = 1
 
     // State in der Activity deklarieren
@@ -71,7 +78,9 @@ class SendDataActivity : ComponentActivity(), MessageClient.OnMessageReceivedLis
         sharedPreferences = getSharedPreferences("my_prefs", Context.MODE_PRIVATE)
         startCollection()
 
+        //Necessary for recieving messages from phone
         Wearable.getMessageClient(this).addListener(this)
+        // look in phone/MainActivty for the phone implementation
 
         setContent {
             var wearCount by remember { mutableIntStateOf(0) }
@@ -109,15 +118,19 @@ class SendDataActivity : ComponentActivity(), MessageClient.OnMessageReceivedLis
         Wearable.getMessageClient(this).addListener(this) // Listener aktivieren
     }
 
+    // when message from phone is recieved this function is called
     override fun onMessageReceived(messageEvent: MessageEvent) {
         if (messageEvent.path == "/emotion") {
             val emotion = String(messageEvent.data)
             Log.d("WearableReceiver", "Empfangene Emotion: $emotion")
 
-            when (emotion) {
+            //following code could also be written with if and else statements
+            when (emotion) { // only for development purposes to test different interventions
+                //starts call inbńervention when the sad button is pressed on the phoen
                 "sad" -> startActivity(Intent(this, CallInterventionActivity::class.java).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 })
+                //starts breathing intervention when the angry button is pressed on the phone
                 "angry" -> startActivity(Intent(this, BreathingActivity::class.java).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 })
@@ -187,15 +200,15 @@ fun Greeting(wearCount: Int = 0, onCountChange: (Int) -> Unit) {
                 val count = wearCount + 1
                 onCountChange(count)
 
-                // Daten senden
-                val dataClient = Wearable.getDataClient(context)
+
+                val dataClient = Wearable.getDataClient(context) //dataClient in this case is the phone
                 val putDataRequest = PutDataMapRequest.create("/button").apply {
                     dataMap.putInt("count", count)
                     dataMap.putLong("timeStamp", System.currentTimeMillis())
-                }.asPutDataRequest().setUrgent()
-                dataClient.putDataItem(putDataRequest).addOnSuccessListener {
-                    Log.d("MainActivity", "Data sent $count")
-                }.addOnFailureListener { e ->
+                }.asPutDataRequest().setUrgent() //this request creates a "package" which should be send to phone
+                dataClient.putDataItem(putDataRequest).addOnSuccessListener { // sends data to phone
+                    Log.d("MainActivity", "Data sent $count") // for debug purposes
+                }.addOnFailureListener { e -> // can be removed in when app is finished
                     Log.e("MainActivity", "Error sending data", e)
                 }
                 Log.d("MainActivity", "Send Data: $count")
@@ -207,15 +220,17 @@ fun Greeting(wearCount: Int = 0, onCountChange: (Int) -> Unit) {
 
                     if (heartRateMeasurements.isNotEmpty()) {
 
+                        // Convert the list of HeartRateMeasurement objects to a JSON string
+                        // Use the kotlinx.serialization library for this
                         val jsonString =
-                            Json.encodeToString(heartRateMeasurements.takeLast(20)) // Ganze Liste serialisieren
+                            Json.encodeToString(heartRateMeasurements.takeLast(20)) // currently limited to 20 measurements due to limitations
 
                         val sendHR = PutDataMapRequest.create("/hr").apply {
                             dataMap.putString("hr", jsonString) // JSON-String speichern
-                            dataMap.putLong("timeStamp", System.currentTimeMillis())
-                        }.asPutDataRequest()
+                            dataMap.putLong("timeStamp", System.currentTimeMillis()) //added timestamp because DataClient only sends data when the data has been changed
+                        }.asPutDataRequest() // creates "package" which should be send to phone
 
-                        dataClient.putDataItem(sendHR)
+                        dataClient.putDataItem(sendHR) // sends data to phone
                         Log.d("WearableMessage", "Herzfrequenz-Daten gesendet: $jsonString")
                     }
 
