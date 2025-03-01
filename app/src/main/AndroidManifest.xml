@@ -89,6 +89,12 @@
             android:exported="true"
             android:taskAffinity=""/>
 
+        <activity
+            android:name=".presentation.MusicActivity"
+            android:exported="true"
+            android:taskAffinity=""/>
+
+
     </application>
 
 </manifest>

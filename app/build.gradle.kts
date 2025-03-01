@@ -71,10 +71,13 @@ dependencies {
     ksp("androidx.room:room-compiler:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
 
-    //App Navigatio
+    //App Navigation
     implementation(libs.navigation.compose)
     implementation(libs.compose.navigation)
 
     // Samsung Health SDK
     implementation(files("${projectDir}/libs/samsung-health-sensor-api-1.3.0.aar"))
+
+    //Spotify SDK
+    implementation(files("${projectDir}/libs/spotify-app-remote-release-0.8.0.aar"))
 }
