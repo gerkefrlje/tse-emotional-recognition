@@ -1,5 +1,6 @@
 [versions]
 agp = "8.8.0"
+gson = "2.10.1"
 kotlin = "2.0.0"
 playServicesWearable = "18.0.0"
 composeBom = "2024.04.01"
@@ -20,6 +21,7 @@ watchfaceComplicationsDataSourceKtx = "1.2.1"
 [libraries]
 androidx-room-compiler = { module = "androidx.room:room-compiler" }
 compose-navigation = { module = "androidx.wear.compose:compose-navigation" }
+gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 navigation-compose = { module = "androidx.navigation:navigation-compose" }
 play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearable" }
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }

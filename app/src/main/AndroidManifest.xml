@@ -92,7 +92,17 @@
         <activity
             android:name=".presentation.MusicActivity"
             android:exported="true"
-            android:taskAffinity=""/>
+            android:taskAffinity="">
+                <intent-filter>
+                    <action android:name="android.intent.action.VIEW" />
+                    <category android:name="android.intent.category.DEFAULT" />
+                    <category android:name="android.intent.category.BROWSABLE" />
+                    <data
+                        android:scheme="tse-emotion-recognition"
+                        android:host="callback" />
+                </intent-filter>
+        </activity>
+
 
 
     </application>
