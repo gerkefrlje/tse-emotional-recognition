@@ -81,6 +81,7 @@ class MusicActivity : ComponentActivity() {
     private fun connectToSpotify() {
         // Update state to loading while attempting connection.
         connectionStatus = ConnectionStatus.Loading
+        // setting up all the connection parameters for connection to spotify
         val connectionParams = ConnectionParams.Builder(clientId)
             .setRedirectUri(redirectUri)
             .showAuthView(true)
@@ -90,7 +91,7 @@ class MusicActivity : ComponentActivity() {
             override fun onConnected(appRemote: SpotifyAppRemote) {
                 spotifyAppRemote = appRemote
                 connectionStatus = ConnectionStatus.Connected
-                // Optionally, perform any additional actions after connection
+
             }
 
             override fun onFailure(throwable: Throwable) {
