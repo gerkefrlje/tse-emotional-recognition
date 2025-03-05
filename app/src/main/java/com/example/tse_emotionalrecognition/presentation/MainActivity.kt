@@ -35,18 +35,17 @@ import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
 import androidx.wear.tooling.preview.devices.WearDevices
 import com.example.tse_emotionalrecognition.R
-import com.example.tse_emotionalrecognition.data.database.UserDataStore
-import com.example.tse_emotionalrecognition.data.database.entities.AffectData
-import com.example.tse_emotionalrecognition.data.database.entities.AffectType
-import com.example.tse_emotionalrecognition.data.database.UserRepository
-import com.example.tse_emotionalrecognition.presentation.interventions.BreathingActivity
+import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
+import com.example.tse_emotionalrecognition.common.data.database.UserRepository
 import com.example.tse_emotionalrecognition.presentation.interventions.InterventionOverviewActivity
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 
 class MainActivity : ComponentActivity() {
-    private val userRepository by lazy { UserDataStore.getUserRepository(application) }
+    private val userRepository by lazy { com.example.tse_emotionalrecognition.common.data.database.UserDataStore.getUserRepository(application) }
 
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -74,7 +73,11 @@ class MainActivity : ComponentActivity() {
     private fun triggerLable() {
         userRepository.insertAffect(
             CoroutineScope(Dispatchers.IO)
-            , AffectData(sessionId = 1, affect = AffectType.HAPPY_RELAXED)
+            ,
+            com.example.tse_emotionalrecognition.common.data.database.entities.AffectData(
+                sessionId = 1,
+                affect = com.example.tse_emotionalrecognition.common.data.database.entities.AffectType.HAPPY_RELAXED
+            )
         ){
             var affectDataID = it.id
             val intent = Intent(this, LabelActivity::class.java)
@@ -116,7 +119,7 @@ fun DefaultPreview() {
 }
 
 @Composable
-fun SelectIntervention(userRepository: UserRepository) {
+fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.common.data.database.UserRepository) {
 
     val context = LocalContext.current
     TSEEmotionalRecognitionTheme {
@@ -148,7 +151,11 @@ fun SelectIntervention(userRepository: UserRepository) {
 
                         userRepository.insertAffect(
                             CoroutineScope(Dispatchers.IO)
-                            , AffectData(sessionId = 1, affect = AffectType.HAPPY_RELAXED)
+                            ,
+                            com.example.tse_emotionalrecognition.common.data.database.entities.AffectData(
+                                sessionId = 1,
+                                affect = com.example.tse_emotionalrecognition.common.data.database.entities.AffectType.HAPPY_RELAXED
+                            )
                         ){
                             var affectDataID = it.id
                             val intent = Intent(context, LabelActivity::class.java)

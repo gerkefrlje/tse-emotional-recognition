@@ -24,32 +24,24 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.lifecycleScope
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
-import androidx.wear.tooling.preview.devices.WearDevices
 import com.example.tse_emotionalrecognition.R
-import com.example.tse_emotionalrecognition.data.database.UserDataStore
-import com.example.tse_emotionalrecognition.data.database.entities.HeartRateMeasurement
-import com.example.tse_emotionalrecognition.data.database.entities.SkinTemperatureMeasurement
+import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
+import com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement
+import com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement
 import com.example.tse_emotionalrecognition.presentation.interventions.BreathingActivity
 import com.example.tse_emotionalrecognition.presentation.interventions.CallInterventionActivity
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
 import com.example.tse_emotionalrecognition.presentation.utils.DataCollectService
-import com.google.android.gms.wearable.DataClient
-import com.google.android.gms.wearable.DataEvent
-import com.google.android.gms.wearable.DataEventBuffer
-import com.google.android.gms.wearable.DataMapItem
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -162,10 +154,10 @@ fun Screen(wearCount: Int, onCountChange: (Int) -> Unit) {
 fun Greeting(wearCount: Int = 0, onCountChange: (Int) -> Unit) {
 
     val context = androidx.compose.ui.platform.LocalContext.current
-    val userRepository = UserDataStore.getUserRepository(context.applicationContext)
-    var heartRateMeasurements by remember { mutableStateOf<List<HeartRateMeasurement>>(emptyList()) }
+    val userRepository = com.example.tse_emotionalrecognition.common.data.database.UserDataStore.getUserRepository(context.applicationContext)
+    var heartRateMeasurements by remember { mutableStateOf<List<com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement>>(emptyList()) }
     var skinTemperatureMeasurements by remember {
-        mutableStateOf<List<SkinTemperatureMeasurement>>(
+        mutableStateOf<List<com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement>>(
             emptyList()
         )
     }

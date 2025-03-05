@@ -1,7 +1,7 @@
-package com.example.tse_emotionalrecognition.data.database.daos
+package com.example.tse_emotionalrecognition.common.data.database.daos
 
 import androidx.room.*
-import com.example.tse_emotionalrecognition.data.database.entities.SessionData
+import com.example.tse_emotionalrecognition.common.data.database.entities.SessionData
 
 @Dao
 interface SessionDao {

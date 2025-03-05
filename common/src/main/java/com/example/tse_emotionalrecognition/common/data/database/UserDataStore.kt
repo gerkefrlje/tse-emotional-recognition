@@ -1,4 +1,4 @@
-package com.example.tse_emotionalrecognition.data.database
+package com.example.tse_emotionalrecognition.common.data.database
 
 import android.content.Context
 import androidx.room.Room
@@ -7,12 +7,12 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 
 object UserDataStore {
 
-    private var roomDb: UserDatabase? = null
+    private var roomDb: com.example.tse_emotionalrecognition.common.data.database.UserDatabase? = null
 
-    private fun getDB(context: Context) : UserDatabase {
+    private fun getDB(context: Context) : com.example.tse_emotionalrecognition.common.data.database.UserDatabase {
         if (roomDb == null) {
             roomDb = Room.databaseBuilder(context,
-                UserDatabase::class.java, "data.db")
+                com.example.tse_emotionalrecognition.common.data.database.UserDatabase::class.java, "data.db")
                 .fallbackToDestructiveMigration()
                 .addCallback(object: RoomDatabase.Callback() {
                     override fun onOpen(db: SupportSQLiteDatabase) {

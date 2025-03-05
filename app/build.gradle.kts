@@ -63,6 +63,7 @@ dependencies {
     implementation(libs.horologist.tiles)
     implementation(libs.watchface.complications.data.source.ktx)
     implementation(libs.androidx.material3.android)
+    implementation(project(":common"))
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.tooling)
@@ -85,4 +86,5 @@ dependencies {
 
     // Wearable Data Layer API für Kommunikation mit dem Smartphone
     implementation(libs.play.services.wearable)
+
 }

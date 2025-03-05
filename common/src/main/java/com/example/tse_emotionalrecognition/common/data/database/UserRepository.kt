@@ -1,19 +1,12 @@
-package com.example.tse_emotionalrecognition.data.database
+package com.example.tse_emotionalrecognition.common.data.database
 
 import android.util.Log
-import com.example.tse_emotionalrecognition.data.database.entities.AffectColumns
-import com.example.tse_emotionalrecognition.data.database.entities.AffectData
-import com.example.tse_emotionalrecognition.data.database.entities.AffectType
-import com.example.tse_emotionalrecognition.data.database.entities.HeartRateMeasurement
-import com.example.tse_emotionalrecognition.data.database.entities.SkinTemperatureMeasurement
-import com.example.tse_emotionalrecognition.data.database.entities.SessionData
-import com.example.tse_emotionalrecognition.data.database.entities.SessionDataColumns
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-class UserRepository(db: UserDatabase) {
+class UserRepository(db: com.example.tse_emotionalrecognition.common.data.database.UserDatabase) {
 
     val affectDao = db.getAffectDao()
     val sessionDao = db.getSessionDao()
@@ -22,7 +15,7 @@ class UserRepository(db: UserDatabase) {
 
     fun getActiveSession(
         scope: CoroutineScope,
-        onFinished: (entity: SessionData) -> Unit,
+        onFinished: (entity: com.example.tse_emotionalrecognition.common.data.database.entities.SessionData) -> Unit,
         onError: (e: Exception) -> Unit
     ) {
         scope.launch(Dispatchers.IO) {
@@ -39,7 +32,7 @@ class UserRepository(db: UserDatabase) {
         }
     }
 
-    suspend fun getHeartRateMeasurements(): List<HeartRateMeasurement> {
+    suspend fun getHeartRateMeasurements(): List<com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement> {
             return try {
                 heartRateDao.getAll()
             } catch (e: Exception) {
@@ -47,7 +40,7 @@ class UserRepository(db: UserDatabase) {
             }
     }
 
-    suspend fun getSkinTemperatureMeasurements(): List<SkinTemperatureMeasurement> {
+    suspend fun getSkinTemperatureMeasurements(): List<com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement> {
         return try {
             skinTemperatureDao.getAll()
         } catch (e: Exception) {
@@ -57,8 +50,8 @@ class UserRepository(db: UserDatabase) {
 
     fun insertHeartRateMeasurementList(
         scope: CoroutineScope,
-        entities: MutableList<HeartRateMeasurement>,
-        onFinished: (entity: MutableList<HeartRateMeasurement>) -> Unit = {}
+        entities: MutableList<com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement>,
+        onFinished: (entity: MutableList<com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement>) -> Unit = {}
     ) {
         scope.launch(Dispatchers.IO) {
             val listOfIds = heartRateDao.insertAll(entities)
@@ -73,8 +66,8 @@ class UserRepository(db: UserDatabase) {
 
     fun insertSkinTemperatureMeasurementList(
         scope: CoroutineScope,
-        entities: MutableList<SkinTemperatureMeasurement>,
-        onFinished: (entity: MutableList<SkinTemperatureMeasurement>) -> Unit = {}
+        entities: MutableList<com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement>,
+        onFinished: (entity: MutableList<com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement>) -> Unit = {}
     ) {
         scope.launch(Dispatchers.IO) {
             val listOfIds = skinTemperatureDao.insertAll(entities)
@@ -89,8 +82,8 @@ class UserRepository(db: UserDatabase) {
 
     fun insertAffect(
         scope: CoroutineScope,
-        entity: AffectData,
-        onFinished: (entity: AffectData) -> Unit
+        entity: com.example.tse_emotionalrecognition.common.data.database.entities.AffectData,
+        onFinished: (entity: com.example.tse_emotionalrecognition.common.data.database.entities.AffectData) -> Unit
     ) {
         scope.launch(Dispatchers.IO) {
             entity.id = affectDao.insert(entity)
@@ -105,17 +98,17 @@ class UserRepository(db: UserDatabase) {
     fun updateAffectColumn(
         scope: CoroutineScope,
         id: Long,
-        column: AffectColumns,
+        column: com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns,
         value: Any,
-        onFinished: (entity: AffectData) -> Unit = {}
+        onFinished: (entity: com.example.tse_emotionalrecognition.common.data.database.entities.AffectData) -> Unit = {}
     ) {
         scope.launch(Dispatchers.IO) {
             val entity = affectDao.getAffectById(id)
             when (column) {
-                AffectColumns.TIME_OF_ENGAGEMENT -> entity.timeOfEngagement = value as Long
-                AffectColumns.TIME_OF_FINISHED -> entity.timeOfFinished = value as Long
-                AffectColumns.AFFECT -> {
-                    entity.affect = value as AffectType
+                com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns.TIME_OF_ENGAGEMENT -> entity.timeOfEngagement = value as Long
+                com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns.TIME_OF_FINISHED -> entity.timeOfFinished = value as Long
+                com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns.AFFECT -> {
+                    entity.affect = value as com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
                     entity.timeOfAffect = System.currentTimeMillis()
                 }
             }
@@ -129,8 +122,8 @@ class UserRepository(db: UserDatabase) {
 
     fun insertSession(
         scope: CoroutineScope,
-        entity: SessionData,
-        onFinished: (entity: SessionData) -> Unit
+        entity: com.example.tse_emotionalrecognition.common.data.database.entities.SessionData,
+        onFinished: (entity: com.example.tse_emotionalrecognition.common.data.database.entities.SessionData) -> Unit
     ) {
         scope.launch(Dispatchers.IO) {
             entity.id = sessionDao.insert(entity)
@@ -144,17 +137,17 @@ class UserRepository(db: UserDatabase) {
     fun updateSessionColumn(
         scope: CoroutineScope,
         id: Long,
-        column: SessionDataColumns,
+        column: com.example.tse_emotionalrecognition.common.data.database.entities.SessionDataColumns,
         value: Any,
-        onFinished: (entity: SessionData) -> Unit
+        onFinished: (entity: com.example.tse_emotionalrecognition.common.data.database.entities.SessionData) -> Unit
     ) {
         scope.launch(Dispatchers.IO) {
             val entity = sessionDao.getSessionById(id)
             when (column) {
-                SessionDataColumns.START_TIME_MILLIS -> entity.startTimeMillis = value as Long
-                SessionDataColumns.END_TIME_MILLIS -> entity.endTimeMillis = value as Long
-                SessionDataColumns.SYNCED -> entity.synced = value as Long
-                SessionDataColumns.COUNT -> entity.count = value as Int
+                com.example.tse_emotionalrecognition.common.data.database.entities.SessionDataColumns.START_TIME_MILLIS -> entity.startTimeMillis = value as Long
+                com.example.tse_emotionalrecognition.common.data.database.entities.SessionDataColumns.END_TIME_MILLIS -> entity.endTimeMillis = value as Long
+                com.example.tse_emotionalrecognition.common.data.database.entities.SessionDataColumns.SYNCED -> entity.synced = value as Long
+                com.example.tse_emotionalrecognition.common.data.database.entities.SessionDataColumns.COUNT -> entity.count = value as Int
             }
             sessionDao.insert(entity)
             withContext(Dispatchers.IO) {

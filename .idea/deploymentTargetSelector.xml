@@ -13,15 +13,12 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="app.companion">
-        <option name="selectionMode" value="DROPDOWN" />
-      </SelectionState>
       <SelectionState runConfigName="phone">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-02-26T11:38:01.936148687Z">
+        <DropdownSelection timestamp="2025-03-05T11:53:33.480191Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="Default" identifier="serial=192.168.0.46:44077;connection=ad734817" />
+              <DeviceId pluginId="LocalEmulator" identifier="path=/Users/duong/.android/avd/Medium_Phone.avd" />
             </handle>
           </Target>
         </DropdownSelection>

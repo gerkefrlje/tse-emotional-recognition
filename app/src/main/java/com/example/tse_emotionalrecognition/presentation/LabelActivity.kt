@@ -19,15 +19,15 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import androidx.navigation.compose.*
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
-import com.example.tse_emotionalrecognition.data.database.UserDataStore
-import com.example.tse_emotionalrecognition.data.database.entities.AffectColumns
-import com.example.tse_emotionalrecognition.data.database.entities.AffectType
+import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
 import com.example.tse_emotionalrecognition.presentation.utils.FullText
 import com.example.tse_emotionalrecognition.presentation.utils.RowButton
 
 
 class LabelActivity : ComponentActivity() {
-    private val userRepository by lazy { UserDataStore.getUserRepository(application) }
+    private val userRepository by lazy { com.example.tse_emotionalrecognition.common.data.database.UserDataStore.getUserRepository(application) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -52,13 +52,13 @@ class LabelActivity : ComponentActivity() {
     private fun insertEngagementTime(id: Long) {
         userRepository.updateAffectColumn(
             CoroutineScope(Dispatchers.IO),
-            id, AffectColumns.TIME_OF_ENGAGEMENT, System.currentTimeMillis()
+            id, com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns.TIME_OF_ENGAGEMENT, System.currentTimeMillis()
         )
     }
 
     private fun updateAffect(
         id: Long,
-        column: AffectColumns,
+        column: com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns,
         value: Any,
         finished: (() -> Unit)? = null
     ) {
@@ -108,7 +108,7 @@ class LabelActivity : ComponentActivity() {
                     RowButton(
                         text = "Happy or Relaxed",
                         onClick = {
-                            updateAffect(affectId, AffectColumns.AFFECT, AffectType.HAPPY_RELAXED)
+                            updateAffect(affectId, com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns.AFFECT, com.example.tse_emotionalrecognition.common.data.database.entities.AffectType.HAPPY_RELAXED)
                             navController.navigate("HappyRelaxedIntervention") {
                                 popUpTo(0)
                             }
@@ -118,7 +118,7 @@ class LabelActivity : ComponentActivity() {
                     RowButton(
                         text = "Angry or Sad",
                         onClick = {
-                            updateAffect(affectId, AffectColumns.AFFECT, AffectType.ANGRY_SAD)
+                            updateAffect(affectId, com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns.AFFECT, com.example.tse_emotionalrecognition.common.data.database.entities.AffectType.ANGRY_SAD)
                             navController.navigate("AngrySadIntervention") {
                                 popUpTo(0)
                             }
@@ -132,7 +132,7 @@ class LabelActivity : ComponentActivity() {
                     finished = {
                         updateAffect(
                             affectId,
-                            AffectColumns.TIME_OF_FINISHED,
+                            com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns.TIME_OF_FINISHED,
                             System.currentTimeMillis()
                         )
                         finish()
@@ -145,7 +145,7 @@ class LabelActivity : ComponentActivity() {
                     finished = {
                         updateAffect(
                             affectId,
-                            AffectColumns.TIME_OF_FINISHED,
+                            com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns.TIME_OF_FINISHED,
                             System.currentTimeMillis()
                         )
                         finish()
