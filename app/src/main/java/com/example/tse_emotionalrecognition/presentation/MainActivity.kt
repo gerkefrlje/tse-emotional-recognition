@@ -6,12 +6,16 @@
 package com.example.tse_emotionalrecognition.presentation
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings.Global
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.background
@@ -32,6 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.MaterialTheme
@@ -58,29 +63,70 @@ import kotlinx.coroutines.GlobalScope
 class MainActivity : ComponentActivity() {
     private val userRepository by lazy { UserDataStore.getUserRepository(application) }
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private lateinit var sharedPreferences: SharedPreferences
+    private val FIRST_LAUNCH_KEY = "first_launch_time"
+
+    private val requestPermissionLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
+            val allGranted = permissions.all { it.value }
+            if (allGranted) {
+                scheduleDataCollection()
+            } else {
+                // Handle permission denials (e.g., show a message)
+            }
+        }
+
+
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     private val requestedPermissions = arrayOf(
         Manifest.permission.BODY_SENSORS,
-        Manifest.permission.FOREGROUND_SERVICE,
+        Manifest.permission.FOREGROUND_SERVICE_HEALTH,
         Manifest.permission.POST_NOTIFICATIONS,
         Manifest.permission.ACCESS_NETWORK_STATE,
         Manifest.permission.WAKE_LOCK
     )
 
-    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
-
         super.onCreate(savedInstanceState)
         setTheme(android.R.style.Theme_DeviceDefault)
-        requestPermissions(requestedPermissions, 0)
+
+        sharedPreferences = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+        val firstLaunchTime = sharedPreferences.getLong(FIRST_LAUNCH_KEY, 0L)
+
+        if (firstLaunchTime == 0L) {
+            val currentTime = System.currentTimeMillis()
+            sharedPreferences.edit().putLong(FIRST_LAUNCH_KEY, currentTime).apply()
+        }
+
 
         setContent {
             //WearApp("Android")
             SelectIntervention(userRepository)
         }
 
-        scheduleDataCollection()
+        checkAndRequestPermissions()
+    }
+
+    private fun checkAndRequestPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            val permissionsToRequest = mutableListOf<String>()
+
+            requestedPermissions.forEach { permission ->
+                if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                    permissionsToRequest.add(permission)
+                }
+            }
+
+            if (permissionsToRequest.isNotEmpty()) {
+                requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
+            } else {
+                scheduleDataCollection()
+            }
+        } else {
+            scheduleDataCollection()
+        }
     }
 
     private fun triggerLable() {
@@ -101,6 +147,19 @@ class MainActivity : ComponentActivity() {
         val dataCollectionRequest = PeriodicWorkRequest.Builder(DataCollectWorker::class.java, 30, TimeUnit.MINUTES).setConstraints(constraints).build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork("DataCollectionWork", ExistingPeriodicWorkPolicy.KEEP, dataCollectionRequest)
+    }
+
+    private fun getAppPhase(): AppPhase {
+        val firstLaunchTime = sharedPreferences.getLong(FIRST_LAUNCH_KEY, 0L)
+        val currentTime = System.currentTimeMillis()
+        val elapsedTime = currentTime - firstLaunchTime
+        val daysElapsed = TimeUnit.MILLISECONDS.toDays(elapsedTime)
+
+        return when {
+            daysElapsed < 2 -> AppPhase.INITIAL_COLLECTION
+            daysElapsed < 4 -> AppPhase.PREDICTION_WITH_FEEDBACK
+            else -> AppPhase.PREDICTION_ONLY
+        }
     }
 }
 
@@ -208,4 +267,11 @@ fun SelectIntervention(userRepository: UserRepository) {
             }
         }
     }
+}
+
+
+enum class AppPhase {
+    INITIAL_COLLECTION,
+    PREDICTION_WITH_FEEDBACK,
+    PREDICTION_ONLY
 }

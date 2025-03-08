@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.os.Build
 import android.os.IBinder
 import android.os.CountDownTimer
@@ -17,6 +18,7 @@ import com.example.tse_emotionalrecognition.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.data.database.UserRepository
 import com.example.tse_emotionalrecognition.data.database.entities.HeartRateMeasurement
 import com.example.tse_emotionalrecognition.data.database.entities.SkinTemperatureMeasurement
+import com.example.tse_emotionalrecognition.presentation.AppPhase
 import com.example.tse_emotionalrecognition.presentation.LabelActivity
 import com.samsung.android.service.health.tracking.ConnectionListener
 import com.samsung.android.service.health.tracking.HealthTracker
@@ -41,6 +43,7 @@ class DataCollectService : Service() {
     private val dataCollectionInterval: Long = 2L * 60L * 1000L // 2 Minutes
     private var isWatchWorn: Boolean = false
     private var sessionId: Long = 0L
+    private var phase: AppPhase = AppPhase.INITIAL_COLLECTION
 
     override fun onCreate() {
         super.onCreate()
@@ -69,6 +72,8 @@ class DataCollectService : Service() {
             123,
             createNotification("Health data collection is running...")
         )
+
+        phase = intent?.getStringExtra("PHASE")?.let { AppPhase.valueOf(it) } ?: AppPhase.INITIAL_COLLECTION
 
         sessionId = intent?.getLongExtra("sessionId", 0L) ?: 0L
         val shouldCollectData = intent?.getBooleanExtra("COLLECT_DATA", false) ?: false
@@ -149,7 +154,7 @@ class DataCollectService : Service() {
             override fun onFinish() {
                 Log.v("DataCollectService", "Data collection finished")
                 stopDataCollection()
-                launchLabelActivity()
+                launchNextStep()
                 stopSelf()
             }
         }
@@ -157,10 +162,31 @@ class DataCollectService : Service() {
         countDownTimer?.start()
     }
 
+    private fun launchNextStep() {
+        Log.v("DataCollectService", "Launching next phase: $phase")
+
+        if (phase == AppPhase.INITIAL_COLLECTION) {
+            launchLabelActivity()
+        } else if (phase == AppPhase.PREDICTION_WITH_FEEDBACK) {
+            launchFeedbackActivity()
+        } else if (phase == AppPhase.PREDICTION_ONLY) {
+            launchPredictionService()
+        }
+    }
+
     private fun launchLabelActivity() {
         val intent = Intent(this, LabelActivity::class.java)
         intent.putExtra("sessionId", sessionId)
+        intent.addFlags(FLAG_ACTIVITY_NEW_TASK)
         ContextCompat.startActivity(this, intent, null)
+    }
+
+    private fun launchFeedbackActivity() {
+
+    }
+
+    private fun launchPredictionService() {
+
     }
 
     private fun createNotification(contentText: String): Notification {
