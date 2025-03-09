@@ -7,7 +7,7 @@ import android.content.Intent
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import androidx.work.Worker
+import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import androidx.core.content.ContextCompat
 import androidx.work.ForegroundInfo
@@ -15,14 +15,14 @@ import com.example.tse_emotionalrecognition.presentation.AppPhase
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
-class DataCollectWorker(private val context: Context, workerParams: WorkerParameters) : Worker(context, workerParams) {
+class DataCollectWorker(private val context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
     companion object {
         const val CHANNEL_ID = "DataCollectChannel"
         const val NOTIFICATION_ID = 1
     }
 
 
-    override fun doWork(): Result {
+    override suspend fun doWork(): Result {
         Log.d("DataCollectWorker", "Worker started")
 
         createNotificationChannel()
