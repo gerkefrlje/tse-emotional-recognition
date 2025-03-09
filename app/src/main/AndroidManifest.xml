@@ -109,6 +109,11 @@
                 </intent-filter>
         </activity>
 
+        <activity
+            android:name=".presentation.ContactActivity"
+            android:exported="true"
+            android:taskAffinity=""/>
+
 
 
     </application>

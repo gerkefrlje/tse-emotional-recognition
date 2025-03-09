@@ -67,6 +67,12 @@ dependencies {
     debugImplementation(libs.ui.test.manifest)
     debugImplementation(libs.tiles.tooling)
 
+    implementation(libs.androidx.material)
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.datastore.preferences.v113)
+
+
+
     implementation("androidx.room:room-runtime:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")

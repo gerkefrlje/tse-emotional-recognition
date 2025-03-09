@@ -163,6 +163,20 @@ fun SelectIntervention(userRepository: UserRepository) {
                     Text("Music Activity")
                 }
             }
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            item {
+                Button(
+                    onClick = {
+                        val intent = Intent(context, ContactActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Contact Activity")
+                }
+            }
         }
     }
 }
