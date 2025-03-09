@@ -46,6 +46,12 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.provider.ContactsContract
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 // Create an extension property for DataStore.
 private val Context.dataStore by preferencesDataStore(name = "contact_settings")
@@ -124,97 +130,62 @@ class ContactActivity : ComponentActivity() {
         }
     }
 
+    private suspend fun getContactDetails(context: Context, uri: Uri): Pair<String, String>? {
+        return withContext(Dispatchers.IO) {
+            val cursor = context.contentResolver.query(
+                uri,
+                arrayOf(
+                    ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME,
+                    ContactsContract.CommonDataKinds.Phone.NUMBER
+                ),
+                null,
+                null,
+                null
+            )
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val nameIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME)
+                    val phoneIndex = it.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                    val name = if (nameIndex != -1) it.getString(nameIndex) else ""
+                    val phone = if (phoneIndex != -1) it.getString(phoneIndex) else ""
+                    return@withContext Pair(name, phone)
+                }
+            }
+            return@withContext null
+        }
+    }
+
     @Composable
     fun ConfigureScreen(onSave: (String, String) -> Unit) {
-        var name by remember { mutableStateOf("") }
-        var phone by remember { mutableStateOf("") }
-        val focusManager = LocalFocusManager.current
+        val context = LocalContext.current
+        val scope = rememberCoroutineScope()
+        val contactPickerLauncher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.PickContact()
+        ) { uri: Uri? ->
+            if (uri != null) {
+                scope.launch {
+                    val details = getContactDetails(context, uri)
+                    details?.let { (name, phone) ->
+                        onSave(name, phone)
+                    }
+                }
+            }
+        }
 
-        ScalingLazyColumn(
-            modifier = Modifier.fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+        // Simple UI showing a button to select a contact
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            item {
-                // Alert message box at the top
-                androidx.compose.foundation.layout.Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(color = Color.DarkGray, shape = androidx.compose.foundation.shape.RoundedCornerShape(6.dp))
-                        .padding(8.dp)
-                ) {
-                    Text(
-                        text = "Configure Contact",
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.fillMaxWidth(),
-                        color = Color.White
-                    )
-                }
-            }
-            item { Spacer(modifier = Modifier.padding(8.dp)) }
-            item {
-                // Contact Name TextField
-                OutlinedTextField(
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = MaterialTheme.colors.primary,
-                        unfocusedBorderColor = MaterialTheme.colors.primary,
-                        textColor = Color.White,
-                        cursorColor = Color.White,
-                        focusedLabelColor = MaterialTheme.colors.primary,
-                        unfocusedLabelColor = Color.Gray
-                    ),
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Contact Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    textStyle = TextStyle(color = Color.White),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = ImeAction.Done,
-                        keyboardType = KeyboardType.Text
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = { focusManager.clearFocus() }
-                    )
-                )
-            }
-            item { Spacer(modifier = Modifier.padding(8.dp)) }
-            item {
-                // Phone Number TextField
-                OutlinedTextField(
-                    colors = TextFieldDefaults.outlinedTextFieldColors(
-                        focusedBorderColor = MaterialTheme.colors.primary,
-                        unfocusedBorderColor = MaterialTheme.colors.primary,
-                        textColor = Color.White,
-                        cursorColor = Color.White,
-                        focusedLabelColor = MaterialTheme.colors.primary,
-                        unfocusedLabelColor = Color.Gray
-                    ),
-                    value = phone,
-                    onValueChange = { phone = it },
-                    label = { Text("Phone Number") },
-                    modifier = Modifier.fillMaxWidth(),
-                    textStyle = TextStyle(color = Color.White),
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions.Default.copy(
-                        imeAction = ImeAction.Done,
-                        keyboardType = KeyboardType.Phone
-                    ),
-                    keyboardActions = KeyboardActions(
-                        onDone = { focusManager.clearFocus() }
-                    )
-                )
-            }
-            item { Spacer(modifier = Modifier.padding(16.dp)) }
-            item {
-                // Save Contact Button
-                Button(
-                    onClick = { onSave(name, phone) },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary)
-                ) {
-                    Text("Save Contact", textAlign = TextAlign.Center)
-                }
+            Button(
+                onClick = { contactPickerLauncher.launch(null) },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(backgroundColor = MaterialTheme.colors.primary)
+            ) {
+                Text("Select Contact", textAlign = TextAlign.Center)
             }
         }
     }
@@ -235,7 +206,6 @@ class ContactActivity : ComponentActivity() {
         ) {
             Text(
                 text = "Configured Contact:",
-                style = MaterialTheme.typography.title2,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
