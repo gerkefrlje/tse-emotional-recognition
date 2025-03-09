@@ -154,7 +154,7 @@ class ContactActivity : ComponentActivity() {
             return@withContext null
         }
     }
-
+    
     @Composable
     fun ConfigureScreen(onSave: (String, String) -> Unit) {
         val context = LocalContext.current
