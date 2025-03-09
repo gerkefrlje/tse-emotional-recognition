@@ -19,6 +19,11 @@ horologistComposeTools = "0.6.17"
 horologistTiles = "0.6.17"
 watchfaceComplicationsDataSourceKtx = "1.2.1"
 workRuntimeKtx = "2.10.0"
+datastorePreferences = "1.0.0"
+datastorePreferencesVersion = "1.1.3"
+material = "1.5.0"
+ui = "1.3.3"
+gson = "2.10.1"
 
 [libraries]
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
