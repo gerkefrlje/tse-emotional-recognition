@@ -67,14 +67,24 @@ dependencies {
     debugImplementation(libs.ui.test.manifest)
     debugImplementation(libs.tiles.tooling)
 
+    implementation(libs.androidx.material)
+    implementation(libs.androidx.ui)
+    implementation(libs.androidx.datastore.preferences.v113)
+
+
+
     implementation("androidx.room:room-runtime:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
 
-    //App Navigatio
+    //App Navigation
     implementation(libs.navigation.compose)
     implementation(libs.compose.navigation)
 
     // Samsung Health SDK
     implementation(files("${projectDir}/libs/samsung-health-sensor-api-1.3.0.aar"))
+
+    //Spotify SDK
+    implementation(files("${projectDir}/libs/spotify-app-remote-release-0.8.0.aar"))
+    implementation(libs.gson)
 }

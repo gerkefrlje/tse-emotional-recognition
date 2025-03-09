@@ -14,8 +14,10 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.runtime.Composable
@@ -27,6 +29,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
@@ -103,56 +106,77 @@ fun DefaultPreview() {
     WearApp("Preview Android")
 }
 
-
 @Composable
 fun SelectIntervention(userRepository: UserRepository) {
-
     val context = LocalContext.current
+
     TSEEmotionalRecognitionTheme {
-        Box(
+        ScalingLazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colors.background)
-                .padding(16.dp),
-            contentAlignment = Alignment.Center
+                .padding(16.dp)
         ) {
-            Column {
+            item {
                 Button(
                     onClick = {
-
                         val intent = Intent(context, BreathingActivity::class.java)
                         context.startActivity(intent)
-
                     },
-                    modifier = Modifier.fillMaxWidth(1f)
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(text = "Breathing Intervention",
-                        modifier = Modifier
-                            .wrapContentWidth(Alignment.CenterHorizontally))
+                    Text("Breathing Intervention")
                 }
+            }
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            item {
                 Button(
                     onClick = {
-
                         userRepository.insertAffect(
-                            CoroutineScope(Dispatchers.IO)
-                            , AffectData(sessionId = 1, affect = AffectType.HAPPY_RELAXED)
-                        ){
-                            var affectDataID = it.id
+                            CoroutineScope(Dispatchers.IO),
+                            AffectData(sessionId = 1, affect = AffectType.HAPPY_RELAXED)
+                        ) {
+                            val affectDataID = it.id
                             val intent = Intent(context, LabelActivity::class.java)
                             intent.putExtra("affectDataId", affectDataID)
                             context.startActivity(intent)
                         }
                     },
-                    modifier = Modifier
-                        .padding(top = 16.dp)
-                        .fillMaxWidth(1f)
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(text = "Label Activity",
-                        modifier = Modifier
-                            .wrapContentWidth(Alignment.CenterHorizontally))
+                    Text("Label Activity")
+                }
+            }
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            item {
+                Button(
+                    onClick = {
+                        val intent = Intent(context, MusicActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Music Activity")
+                }
+            }
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            item {
+                Button(
+                    onClick = {
+                        val intent = Intent(context, ContactActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Contact Activity")
                 }
             }
         }
     }
-
 }
