@@ -1,6 +1,9 @@
-  plugins {
+plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
+
+    id("com.google.devtools.ksp")
+
 }
 
 android {
@@ -34,6 +37,10 @@ android {
 
 dependencies {
 
+    implementation(libs.room.runtime)
+    ksp(libs.room.compiler)
+    implementation(libs.androidx.room.ktx)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -44,5 +51,5 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2") //wandelt Klassen in String um
+    implementation(libs.kotlinx.serialization.json) //wandelt Klassen in String um
 }
