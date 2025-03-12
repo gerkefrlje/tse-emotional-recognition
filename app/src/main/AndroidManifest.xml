@@ -118,7 +118,7 @@
             android:taskAffinity="" />
 
         <activity
-            android:name=".presentation.MusicActivity"
+            android:name=".presentation.interventions.MusicActivity"
             android:exported="true"
             android:taskAffinity="">
                 <intent-filter>
@@ -132,7 +132,7 @@
         </activity>
 
         <activity
-            android:name=".presentation.ContactActivity"
+            android:name=".presentation.interventions.ContactActivity"
             android:exported="true"
             android:taskAffinity=""/>
 

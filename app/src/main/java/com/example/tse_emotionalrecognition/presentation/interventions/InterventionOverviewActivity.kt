@@ -7,8 +7,10 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
@@ -17,10 +19,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
+import androidx.wear.tooling.preview.devices.WearDevices
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
 
 class InterventionOverviewActivity : ComponentActivity() {
@@ -34,10 +39,75 @@ class InterventionOverviewActivity : ComponentActivity() {
     }
 }
 
+@Preview(device = WearDevices.LARGE_ROUND, showSystemUi = true)
 @Composable
 fun ChoseIntervention() {
     val context = LocalContext.current
     TSEEmotionalRecognitionTheme {
+        ScalingLazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colors.background)
+                .padding(16.dp)
+        ) {
+            item {
+                Button(//Breathin Intervention
+                    onClick = {
+
+                        val intent = Intent(context, BreathingActivity::class.java)
+                        context.startActivity(intent)
+
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Breathing Intervention")
+                }
+            }
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            } //Spacer zwischen den Buttons
+            item {
+                Button(//Call Intervention
+                    onClick = {
+                        val intent = Intent(context, CallInterventionActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Call Intervention")
+                }
+            }
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            } //Spacer zwischen den Buttons
+            item {
+                Button(//Music Intervention
+                    onClick = {
+                        val intent = Intent(context, MusicActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Musicc Intervention")
+                }
+            }
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            } //Spacer zwischen den Buttons
+            item {
+                Button(//Contact Intervention
+                    onClick = {
+                        val intent = Intent(context, ContactActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Contact Intervention")
+                }
+            }
+        }
+
+        /** alte UI
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -79,6 +149,7 @@ fun ChoseIntervention() {
                 }
             }
         }
+        **/
     }
 
 }

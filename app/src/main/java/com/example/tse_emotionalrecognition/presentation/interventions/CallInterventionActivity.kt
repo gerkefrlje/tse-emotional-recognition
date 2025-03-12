@@ -80,6 +80,12 @@ fun ContactList(modifier: Modifier = Modifier) {
 @Composable
 fun ContactItem(name: String, onClick: () -> Unit) {
     Card (
+//        onClick = { onClick() },
+
+//        contentColor = Color.Cyan,
+//        modifier = Modifier
+//            .fillMaxWidth()
+//            .padding(vertical = 2.dp)
         colors = CardDefaults.cardColors(containerColor = Color.Cyan),
         modifier = Modifier
             .fillMaxWidth()

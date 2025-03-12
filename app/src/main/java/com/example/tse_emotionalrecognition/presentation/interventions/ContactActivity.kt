@@ -1,4 +1,4 @@
-package com.example.tse_emotionalrecognition.presentation
+package com.example.tse_emotionalrecognition.presentation.interventions
 
 import android.content.Context
 import android.content.Intent
@@ -13,9 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.Text
-import androidx.compose.material.Button
-import androidx.compose.material.ButtonDefaults
+
 import androidx.wear.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -38,6 +36,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.provider.ContactsContract
 import androidx.compose.ui.platform.LocalContext
+import androidx.wear.compose.material.Button
+import androidx.wear.compose.material.ButtonDefaults
+import androidx.wear.compose.material.Text
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

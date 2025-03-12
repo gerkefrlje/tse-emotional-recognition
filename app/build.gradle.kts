@@ -62,16 +62,17 @@ dependencies {
     implementation(libs.horologist.compose.tools)
     implementation(libs.horologist.tiles)
     implementation(libs.watchface.complications.data.source.ktx)
-    implementation(libs.androidx.material3.android)
+    implementation(libs.androidx.material3.android) //Kein Plan für was das gebraucht wurde
     implementation(project(":common"))
+    implementation(libs.androidx.material3.android)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
     debugImplementation(libs.tiles.tooling)
 
-    implementation(libs.androidx.material)
-    implementation(libs.androidx.ui)
+//    implementation(libs.androidx.material)
+//    implementation(libs.androidx.ui)
     implementation(libs.androidx.datastore.preferences.v113)
 
 
