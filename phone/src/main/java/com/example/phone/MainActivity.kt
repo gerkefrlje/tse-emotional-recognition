@@ -1,250 +1,313 @@
 package com.example.phone
 
-import android.content.Context
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.phone.data.HeartRateMeasurement
-import com.example.phone.data.SkinTemperatureMeasurement
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.phone.ui.theme.TSEEmotionalRecognitionTheme
-import com.google.android.gms.wearable.DataClient
-import com.google.android.gms.wearable.DataEvent
-import com.google.android.gms.wearable.DataEventBuffer
-import com.google.android.gms.wearable.DataMapItem
-import com.google.android.gms.wearable.MessageClient
-import com.google.android.gms.wearable.MessageEvent
-import com.google.android.gms.wearable.PutDataMapRequest
-import com.google.android.gms.wearable.Wearable
-import kotlinx.serialization.json.Json
-
-class MainActivity : ComponentActivity(), DataClient.OnDataChangedListener {
-
-    /**
-     * Todo for communication between phone and watch:
-     *  create "common" module which contains classes needed fro both phone and watch app
-     *  check if data can be send in background, right now it is mandatory to have both activity open
-     *  create database on phone to be able to save the sent data from the watch
-     *  chose better communication between phone and watch f.e MessageClient, DataClient or other options -> look in documentation
-     */
-
-    var wearCount by mutableIntStateOf(0) // State in der Activity deklarieren
-    private val heartRateList = mutableStateListOf<HeartRateMeasurement>()
-    private val skinTemperatureList = mutableStateListOf<SkinTemperatureMeasurement>()
 
 
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        //Necessary for recieving data from watch
-        Wearable.getDataClient(this).addListener(this)
-        //look in app/SendDataActivity for watch implementation
-
         enableEdgeToEdge()
         setContent {
             TSEEmotionalRecognitionTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    val standardModifier = Modifier.padding(innerPadding)
-
-                    Row {
-
-
-                        Greeting(modifier = standardModifier, count = wearCount, this@MainActivity)
-                        HeartRateView(
-                            modifier = standardModifier.verticalScroll(rememberScrollState()),
-                            heartRateList = heartRateList
-                        )
-                        SkinTemperatureView(
-                            modifier = standardModifier.verticalScroll(rememberScrollState()),
-                            skinTemperatureList = skinTemperatureList
-                        )
-
-
-                    }
-                }
+                MainScreen()
             }
-
         }
-        // for debug purposes
-        // checks if there is a phone connected to the watch
-        Wearable.getNodeClient(this).connectedNodes
-            .addOnSuccessListener { nodes ->
-                Log.d("WearableReceiver", "Verbundene Geräte: ${nodes.map { it.displayName }}")
-            }
-            .addOnFailureListener {
-                Log.e(
-                    "WearableReceiver",
-                    "Fehler beim Abrufen der Nodes",
-                    it
+    }
+}
+
+/**
+ * A donut chart (ring-style pie chart) that takes the completed and missed values.
+ * The full circle represents the sum of both values. The green arc shows the percentage of
+ * completed interventions, and the red arc shows the remaining portion.
+ */
+@Composable
+fun DonutChart(
+    completed: Int,
+    missed: Int,
+    modifier: Modifier = Modifier,
+    donutThickness: Dp = 20.dp
+) {
+    Canvas(modifier = modifier) {
+        val total = completed + missed
+        val strokeWidth = donutThickness.toPx()
+        if (total == 0) {
+            // Draw a placeholder full circle when there is no data.
+            drawArc(
+                color = Color.Gray,
+                startAngle = 0f,
+                sweepAngle = 360f,
+                useCenter = false,
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+            )
+        } else {
+            val completedAngle = (completed / total.toFloat()) * 360f
+            val missedAngle = 360f - completedAngle
+            // Draw completed interventions arc in green.
+            drawArc(
+                color = Color.Green,
+                startAngle = -90f,
+                sweepAngle = completedAngle,
+                useCenter = false,
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+            )
+            // Draw missed interventions arc in red.
+            drawArc(
+                color = Color.Red,
+                startAngle = -90f + completedAngle,
+                sweepAngle = missedAngle,
+                useCenter = false,
+                style = Stroke(width = strokeWidth, cap = StrokeCap.Round)
+            )
+        }
+    }
+}
+
+/**
+ * MainScreen displays the donut chart behind the intervention numbers and titles.
+ * It also includes a Menu button at the bottom center.
+ */
+@Composable
+fun MainScreen() {
+    // Example dynamic values; replace these with dynamic state or repository values as needed.
+    val completed = 1
+    val missed = 2
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .align(Alignment.TopCenter)
+                .padding(top = 70.dp)
+                .background(
+                    color = Color(0xFF202020),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                )
+                .padding(horizontal = 16.dp, vertical = 8.dp), // Adjust this value for your top third position
+            contentAlignment = Alignment.Center // Centers content inside the Box
+        ) {
+            Text(
+                text = "Companion App",
+                color = Color.White,
+                fontSize = 40.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        // Use a Column to stack the text box and the donut chart container vertically.
+        Column(
+            modifier = Modifier.align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // Text Box above the donut chart.
+            Box(
+                modifier = Modifier
+                    .background(
+                        color = Color(0xFF202020),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
+                    )
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(
+                    text = "Your Intervention Statistics",
+                    color = Color.White,
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold
                 )
             }
-
+            Spacer(modifier = Modifier.height(32.dp))
+            // Central Box for the donut chart and the texts.
+            Box(
+                modifier = Modifier.size(250.dp)
+            ) {
+                // Draw the donut chart.
+                DonutChart(
+                    completed = completed,
+                    missed = missed,
+                    modifier = Modifier.fillMaxSize(),
+                    donutThickness = 35.dp
+                )
+                // Overlay the texts in the center.
+                Column(
+                    modifier = Modifier.align(Alignment.Center),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Completed",
+                        color = Color.Green,
+                        fontSize = 18.sp
+                    )
+                    Text(
+                        text = "$completed",
+                        color = Color.Green,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Missed",
+                        color = Color.Red,
+                        fontSize = 18.sp
+                    )
+                    Text(
+                        text = "$missed",
+                        color = Color.Red,
+                        fontSize = 28.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+        }
+        // Menu button placed a bit higher from the bottom.
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(bottom = 32.dp),
+            contentAlignment = Alignment.BottomCenter
+        ) {
+            MenuButton()
+        }
     }
+}
 
-    // when data from phone is recieved this function is called
-    override fun onDataChanged(dataEvents: DataEventBuffer) {
-        Log.d("WearableReceiver", "DataEventBuffer received!")
-        for (event in dataEvents) {
-            if (event.type == DataEvent.TYPE_CHANGED) {// checks for data event. look in documention for different options
-                val dataItem = event.dataItem // gets data from event -> data which was send
-                val dataMap = DataMapItem.fromDataItem(dataItem).dataMap
-                when (dataItem.uri.path) { // now checks which data was send
-                    "/button" -> {
-                        val count = dataMap.getInt("count") // compare to data send
-                        wearCount = count
-                        Log.d("WearableReceiver", "Empfangene Count-Daten: $count")
-                    }
+/**
+ * MenuButton displays a large button. When tapped, it opens a centered pop up dialog.
+ */
+@Composable
+fun MenuButton() {
+    val context = LocalContext.current
+    var expanded by remember { mutableStateOf(false) }
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Button(
+            onClick = { expanded = true },
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color(0xFF202020),
+                contentColor = Color.White
+            ),
+            modifier = Modifier
+                .height(60.dp)      // Bigger height
+                .fillMaxWidth(0.6f) // Wider button
+        ) {
+            Text(text = "Menu", fontSize = 20.sp)
+        }
+        if (expanded) {
 
-                    "/hr" -> {
-                        val hrJson = dataMap.getString("hr")
-                        hrJson?.let {
-                            val list = Json.decodeFromString<List<HeartRateMeasurement>>(it)
-                            heartRateList.clear() // Vorherige Werte löschen
-                            heartRateList.addAll(list)
-                            Log.d("WearableMessage", "Herzfrequenz-Daten empfangen: $list")
-                        }
-                    }
+            CenteredMenuDialog(
+                onDismissRequest = { expanded = false },
+                onContactConfig = {
+                    // TODO: forward to Contact Configuration activity
+                    expanded = false
+                },
+                onMusicConfig = {
+                    // TODO: forward to Music Configuration activity
+                    expanded = false
+                },
+                onLabelConfig = {
+                    context.startActivity(Intent(context, ReceiveDataActivity::class.java))
+                    expanded = false
+                }
+            )
+        }
+    }
+}
 
-                    "/skin" -> {
-                        val skinJson = dataMap.getString("skin")
-                        skinJson?.let {
-                            val list =
-                                Json.decodeFromString<List<SkinTemperatureMeasurement>>(it)
-                            skinTemperatureList.clear() // Vorherige
-                            skinTemperatureList.addAll(list)
-                            Log.d("WearableMessage", "Hauttemperatur-Daten empfangen: $list")
-                        }
-                    }
+/**
+ * CenteredMenuDialog creates a dialog centered in the middle of the screen.
+ * It uses a dark blue background and displays three menu options with dividers between them.
+ */
+@Composable
+fun CenteredMenuDialog(
+    onDismissRequest: () -> Unit,
+    onContactConfig: () -> Unit,
+    onMusicConfig: () -> Unit,
+    onLabelConfig: () -> Unit
+) {
+    Dialog(
+        onDismissRequest = onDismissRequest,
+        properties = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = true)
+    ) {
+        // Wrap the content in a Box that fills the screen.
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.BottomCenter  // Align content at the bottom center.
+        ) {
+            // Use padding or Modifier.offset to move the dialog upward from the very bottom.
+            Surface(
+                modifier = Modifier
+
+                    .padding(bottom = 90.dp)  // Adjust this value to move the dialog up/down.
+                    .clip(androidx.compose.foundation.shape.RoundedCornerShape(8.dp)),
+                color = Color(0xFF202020) // Dark blue background
+            ) {
+                Column(
+                    modifier = Modifier
+                        .padding(16.dp)
+                        .wrapContentWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    MenuDialogItem(text = "Contact Configuration", onClick = onContactConfig)
+                    HorizontalDivider(thickness = 1.dp, color = Color.LightGray)
+                    MenuDialogItem(text = "Music Configuration", onClick = onMusicConfig)
+                    HorizontalDivider(thickness = 1.dp, color = Color.LightGray)
+                    MenuDialogItem(text = "Label Configuration", onClick = onLabelConfig)
                 }
             }
         }
     }
-
-    override fun onResume() {
-        super.onResume()
-        Log.d("WearableReceiver", "DataClient wird registriert...")
-        Wearable.getDataClient(this).addListener(this) // Listener aktivieren
-    }
-
-    override fun onPause() {
-        super.onPause()
-        Log.d("WearableReceiver", "DataClient wird deaktiviert...")
-        Wearable.getDataClient(this)
-            .removeListener(this) // Listener entfernen, um Speicherlecks zu vermeiden
-    }
-
-
 }
 
+/**
+ * MenuDialogItem displays an individual menu option that is clickable.
+ */
 @Composable
-fun Greeting(modifier: Modifier = Modifier, count: Int, context: Context) {
-
-
-    val SAD = "sad"
-    val ANGRY = "angry"
-
-    Column(
-        modifier = modifier
+fun MenuDialogItem(text: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() }
+            .padding(vertical = 12.dp),
+        contentAlignment = Alignment.Center
     ) {
-        Text(
-            text = "presses",
-        )
-        Text(
-            text = count.toString(),
-        )
-        Button(
-            onClick = {
-                Wearable.getNodeClient(context).connectedNodes
-                    .addOnSuccessListener { nodes ->
-                        for (node in nodes) {
-                            Wearable.getMessageClient(context)
-                                .sendMessage(node.id, "/emotion", SAD.toByteArray())
-                                .addOnSuccessListener {
-                                    Log.d("MainActivity", "Emotion gesendet: $SAD")
-                                }
-                                .addOnFailureListener { e ->
-                                    Log.e("MainActivity", "Fehler beim Senden", e)
-                                }
-                        }
-                    }
-            }
-        ) {
-            Text(text = "Sad")
-        }
-        Button(
-            onClick = {
-             Wearable.getNodeClient(context).connectedNodes
-                    .addOnSuccessListener { nodes ->
-                        for (node in nodes) {
-                            Wearable.getMessageClient(context)
-                                .sendMessage(node.id, "/emotion", ANGRY.toByteArray())
-                                .addOnSuccessListener {
-                                    Log.d("MainActivity", "Emotion gesendet: $ANGRY")
-                                }
-                                .addOnFailureListener { e ->
-                                    Log.e("MainActivity", "Fehler beim Senden", e)
-                                }
-                        }
-                    }
-            }
-        ) {
-            Text(text = "Angry")
-        }
+        Text(text = text, fontSize = 18.sp, color = Color.White)
     }
 }
 
+@Preview(showBackground = true)
 @Composable
-fun HeartRateView(heartRateList: List<HeartRateMeasurement>, modifier: Modifier) {
-
-    Column(
-        modifier = modifier
-    ) {
-        Text(
-            text = "Heart Rate",
-        )
-        heartRateList.forEach { measurement ->
-            Row(
-            ) {
-                Text(text = "Heart Rate: ${measurement.hr}")
-            }
-        }
-    }
-}
-
-@Composable
-fun SkinTemperatureView(
-    skinTemperatureList: List<SkinTemperatureMeasurement>,
-    modifier: Modifier
-) {
-    Column(
-        modifier = modifier
-    ) {
-        Text(
-            text = "Skin Temperature",
-        )
-        skinTemperatureList.forEach { measurement ->
-            Row()
-            {
-                Text(text = "Skin Temperature: ${measurement.objectTemperature}")
-            }
-        }
+fun MainScreenPreview() {
+    TSEEmotionalRecognitionTheme {
+        MainScreen()
     }
 }
