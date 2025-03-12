@@ -11,10 +11,10 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.tse_emotionalrecognition.R
-import com.example.tse_emotionalrecognition.data.database.UserDataStore
-import com.example.tse_emotionalrecognition.data.database.UserRepository
-import com.example.tse_emotionalrecognition.data.database.entities.HeartRateMeasurement
-import com.example.tse_emotionalrecognition.data.database.entities.SkinTemperatureMeasurement
+import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
+import com.example.tse_emotionalrecognition.common.data.database.UserRepository
+import com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement
+import com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement
 import com.samsung.android.service.health.tracking.ConnectionListener
 import com.samsung.android.service.health.tracking.HealthTracker
 import com.samsung.android.service.health.tracking.HealthTrackerException
@@ -27,14 +27,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class DataCollectService : Service() {
-    private lateinit var userRepository: UserRepository
+    private lateinit var userRepository: com.example.tse_emotionalrecognition.common.data.database.UserRepository
     private lateinit var healthTrackingService: HealthTrackingService
     private lateinit var heartRateTracker: HealthTracker
     private lateinit var skinTemperatureTracker: HealthTracker
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
-        userRepository = UserDataStore.getUserRepository(applicationContext)
+        userRepository = com.example.tse_emotionalrecognition.common.data.database.UserDataStore.getUserRepository(applicationContext)
         healthTrackingService = HealthTrackingService(
             object : ConnectionListener {
             override fun onConnectionSuccess() {
@@ -120,39 +120,42 @@ class DataCollectService : Service() {
 
 
 
-fun buildTrackerEventListener(repository: UserRepository, sessionId: Long, type: HealthTrackerType, context: Context
+fun buildTrackerEventListener(repository: com.example.tse_emotionalrecognition.common.data.database.UserRepository, sessionId: Long, type: HealthTrackerType, context: Context
 ): HealthTracker.TrackerEventListener {
     return object : HealthTracker.TrackerEventListener {
         override fun onDataReceived(list: List<DataPoint>) {
             Log.v("data","logged")
 
             if (type == HealthTrackerType.HEART_RATE_CONTINUOUS && list.isNotEmpty()) {
-                val entries = mutableListOf<HeartRateMeasurement>()
+                val entries = mutableListOf<com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement>()
                 for (dataPoint in list) {
                     entries.add(
-                        HeartRateMeasurement(
+                        com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement(
                             0L,
                             sessionId,
                             dataPoint.timestamp.toLong(),
                             dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE),
-                            dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE_STATUS))
+                            dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE_STATUS)
+                        )
                     )
+                    Log.v("data", "Heart rate: ${dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE)}")
                 }
                 repository.insertHeartRateMeasurementList(
                     CoroutineScope(Dispatchers.IO),
                     entries
                 )
             } else if (type == HealthTrackerType.SKIN_TEMPERATURE_CONTINUOUS && list.isNotEmpty()){
-                val entries = mutableListOf<SkinTemperatureMeasurement>()
+                val entries = mutableListOf<com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement>()
                 for (dataPoint in list) {
                     entries.add(
-                        SkinTemperatureMeasurement(0L,
+                        com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement(
+                            0L,
                             sessionId,
                             dataPoint.timestamp,
                             dataPoint.getValue(ValueKey.SkinTemperatureSet.OBJECT_TEMPERATURE),
                             dataPoint.getValue(ValueKey.SkinTemperatureSet.AMBIENT_TEMPERATURE),
                             dataPoint.getValue(ValueKey.SkinTemperatureSet.STATUS)
-                            )
+                        )
                     )
                 }
                 repository.insertSkinTemperatureMeasurementList(

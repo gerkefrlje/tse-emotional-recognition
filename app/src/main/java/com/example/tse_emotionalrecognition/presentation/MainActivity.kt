@@ -6,10 +6,11 @@
 package com.example.tse_emotionalrecognition.presentation
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
-import android.provider.Settings.Global
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -20,6 +21,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,7 +30,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.material.Button
@@ -36,28 +38,38 @@ import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
 import androidx.wear.tooling.preview.devices.WearDevices
 import com.example.tse_emotionalrecognition.R
-import com.example.tse_emotionalrecognition.data.database.UserDataStore
-import com.example.tse_emotionalrecognition.data.database.entities.AffectData
-import com.example.tse_emotionalrecognition.data.database.entities.AffectType
-import com.example.tse_emotionalrecognition.data.database.UserRepository
+import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
+import com.example.tse_emotionalrecognition.common.data.database.UserRepository
+import com.example.tse_emotionalrecognition.presentation.interventions.InterventionOverviewActivity
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 
 class MainActivity : ComponentActivity() {
-    private val userRepository by lazy { UserDataStore.getUserRepository(application) }
+    private val userRepository by lazy { com.example.tse_emotionalrecognition.common.data.database.UserDataStore.getUserRepository(application) }
 
 
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
+    private val requestedPermissions = arrayOf(
+        android.Manifest.permission.BODY_SENSORS,
+        android.Manifest.permission.FOREGROUND_SERVICE,
+        android.Manifest.permission.POST_NOTIFICATIONS,
+        android.Manifest.permission.ACTIVITY_RECOGNITION,
+        android.Manifest.permission.HIGH_SAMPLING_RATE_SENSORS,
+    )
+
+    @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
 
         super.onCreate(savedInstanceState)
-
+        requestPermissions(requestedPermissions, 0)
         setTheme(android.R.style.Theme_DeviceDefault)
 
         setContent {
-            //WearApp("Android")
             SelectIntervention(userRepository)
         }
     }
@@ -65,7 +77,11 @@ class MainActivity : ComponentActivity() {
     private fun triggerLable() {
         userRepository.insertAffect(
             CoroutineScope(Dispatchers.IO)
-            , AffectData(sessionId = 1, affect = AffectType.HAPPY_RELAXED)
+            ,
+            com.example.tse_emotionalrecognition.common.data.database.entities.AffectData(
+                sessionId = 1,
+                affect = com.example.tse_emotionalrecognition.common.data.database.entities.AffectType.HAPPY_RELAXED
+            )
         ){
             var affectDataID = it.id
             val intent = Intent(this, LabelActivity::class.java)
@@ -106,8 +122,10 @@ fun DefaultPreview() {
     WearApp("Preview Android")
 }
 
+
 @Composable
-fun SelectIntervention(userRepository: UserRepository) {
+fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.common.data.database.UserRepository) {
+
     val context = LocalContext.current
 
     TSEEmotionalRecognitionTheme {
@@ -120,12 +138,14 @@ fun SelectIntervention(userRepository: UserRepository) {
             item {
                 Button(
                     onClick = {
-                        val intent = Intent(context, BreathingActivity::class.java)
+
+                        val intent = Intent(context, InterventionOverviewActivity::class.java)
                         context.startActivity(intent)
+
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Breathing Intervention")
+                    Text(text = "Interventions")
                 }
             }
             item {
@@ -135,10 +155,14 @@ fun SelectIntervention(userRepository: UserRepository) {
                 Button(
                     onClick = {
                         userRepository.insertAffect(
-                            CoroutineScope(Dispatchers.IO),
-                            AffectData(sessionId = 1, affect = AffectType.HAPPY_RELAXED)
-                        ) {
-                            val affectDataID = it.id
+                            CoroutineScope(Dispatchers.IO)
+                            ,
+                            com.example.tse_emotionalrecognition.common.data.database.entities.AffectData(
+                                sessionId = 1,
+                                affect = com.example.tse_emotionalrecognition.common.data.database.entities.AffectType.HAPPY_RELAXED
+                            )
+                        ){
+                            var affectDataID = it.id
                             val intent = Intent(context, LabelActivity::class.java)
                             intent.putExtra("affectDataId", affectDataID)
                             context.startActivity(intent)
@@ -150,33 +174,18 @@ fun SelectIntervention(userRepository: UserRepository) {
                 }
             }
             item {
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-            item {
                 Button(
                     onClick = {
-                        val intent = Intent(context, MusicActivity::class.java)
+
+                        val intent = Intent(context, SendDataActivity::class.java)
                         context.startActivity(intent)
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Music Activity")
-                }
-            }
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-            item {
-                Button(
-                    onClick = {
-                        val intent = Intent(context, ContactActivity::class.java)
-                        context.startActivity(intent)
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Contact Activity")
+                    Text("Transfer")
                 }
             }
         }
     }
+
 }

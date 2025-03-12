@@ -21,6 +21,11 @@
     </queries>
 
 
+    <!-- additional sensors required by the sensor sdk-->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -88,14 +93,29 @@
         </activity>
 
         <activity
-            android:name=".presentation.BreathingActivity"
+            android:name=".presentation.interventions.InterventionOverviewActivity"
             android:exported="true"
-            android:taskAffinity=""/>
+            android:taskAffinity="" />
+
+        <activity
+            android:name=".presentation.interventions.BreathingActivity"
+            android:exported="true"
+            android:taskAffinity="" />
+
+        <activity
+            android:name=".presentation.interventions.CallInterventionActivity"
+            android:exported="true"
+            android:taskAffinity="" />
 
         <activity
             android:name=".presentation.LabelActivity"
             android:exported="true"
-            android:taskAffinity=""/>
+            android:taskAffinity="" />
+
+        <activity
+            android:name=".presentation.SendDataActivity"
+            android:exported="true"
+            android:taskAffinity="" />
 
         <activity
             android:name=".presentation.MusicActivity"
