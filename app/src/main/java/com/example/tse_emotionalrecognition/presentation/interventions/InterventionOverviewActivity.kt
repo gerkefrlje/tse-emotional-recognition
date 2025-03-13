@@ -63,6 +63,7 @@ fun ChoseIntervention() {
                     Text("Breathing Intervention")
                 }
             }
+            /** altes Design
             item {
                 Spacer(modifier = Modifier.height(16.dp))
             } //Spacer zwischen den Buttons
@@ -76,7 +77,7 @@ fun ChoseIntervention() {
                 ) {
                     Text("Call Intervention")
                 }
-            }
+            }**/
             item {
                 Spacer(modifier = Modifier.height(16.dp))
             } //Spacer zwischen den Buttons
@@ -88,7 +89,7 @@ fun ChoseIntervention() {
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Musicc Intervention")
+                    Text("Music Intervention")
                 }
             }
             item {

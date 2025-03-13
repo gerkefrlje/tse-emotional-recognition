@@ -35,6 +35,8 @@ import kotlinx.coroutines.launch
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import android.provider.ContactsContract
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.ui.platform.LocalContext
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.ButtonDefaults
@@ -81,6 +83,7 @@ class ContactActivity : ComponentActivity() {
                 contactName = preferences[CONTACT_NAME_KEY] ?: ""
                 contactPhone = preferences[CONTACT_PHONE_KEY] ?: ""
                 isConfigured = contactName.isNotEmpty() && contactPhone.isNotEmpty()
+                Log.d("ContactActivity", "Contact loaded: $contactName, $contactPhone")
             }
         }
 
@@ -109,6 +112,7 @@ class ContactActivity : ComponentActivity() {
         } else {
             ConfigureScreen(onSave = { name, phone ->
                 // Save the contact details to DataStore.
+                Log.d("ContactActivity", "Contact saved: $name, $phone")
                 scope.launch {
                     context.dataStore.edit { preferences ->
                         preferences[CONTACT_NAME_KEY] = name
@@ -121,6 +125,34 @@ class ContactActivity : ComponentActivity() {
 
     private suspend fun getContactDetails(context: Context, uri: Uri): Pair<String, String>? {
         return withContext(Dispatchers.IO) {
+            val cursor = context.contentResolver.query(uri, null, null, null, null)
+            cursor?.use {
+                if (it.moveToFirst()) {
+                    val nameIndex = it.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME)
+                    val name = it.getString(nameIndex)
+
+                    val idIndex = it.getColumnIndex(ContactsContract.Contacts._ID)
+                    val id = it.getString(idIndex)
+
+                    val phoneCursor = context.contentResolver.query(
+                        ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                        null,
+                        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?",
+                        arrayOf(id),
+                        null
+                    )
+                    phoneCursor?.use { phoneIt ->
+                        if (phoneIt.moveToFirst()) {
+                            val phoneIndex = phoneIt.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)
+                            val phone = phoneIt.getString(phoneIndex)
+                            return@withContext Pair(name, phone)
+                        }
+                    }
+                }
+
+            }
+
+            /**
             val cursor = context.contentResolver.query(
                 uri,
                 arrayOf(
@@ -139,7 +171,7 @@ class ContactActivity : ComponentActivity() {
                     val phone = if (phoneIndex != -1) it.getString(phoneIndex) else ""
                     return@withContext Pair(name, phone)
                 }
-            }
+            }**/
             return@withContext null
         }
     }
@@ -154,9 +186,15 @@ class ContactActivity : ComponentActivity() {
             if (uri != null) {
                 scope.launch {
                     val details = getContactDetails(context, uri)
-                    details?.let { (name, phone) ->
-                        onSave(name, phone)
+                    if (details != null) {
+                        onSave(details.first, details.second)
+                        Toast.makeText(context, "Contact saved", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, "Failed to get contact details", Toast.LENGTH_SHORT).show()
                     }
+//                    details?.let { (name, phone) ->
+//                        onSave(name, phone)
+//                    }
                 }
             }
         }

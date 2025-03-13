@@ -59,6 +59,7 @@ class MainActivity : ComponentActivity() {
         android.Manifest.permission.POST_NOTIFICATIONS,
         android.Manifest.permission.ACTIVITY_RECOGNITION,
         android.Manifest.permission.HIGH_SAMPLING_RATE_SENSORS,
+        android.Manifest.permission.READ_CONTACTS
     )
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -172,6 +173,9 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                 ) {
                     Text("Label Activity")
                 }
+            }
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
             }
             item {
                 Button(
