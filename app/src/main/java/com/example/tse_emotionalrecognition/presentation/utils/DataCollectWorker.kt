@@ -4,6 +4,7 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH
 import android.os.Build
 import android.util.Log
 import androidx.core.app.NotificationCompat
@@ -33,19 +34,27 @@ class DataCollectWorker(private val context: Context, workerParams: WorkerParame
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .build()
 
-        val foregroundInfo = ForegroundInfo(NOTIFICATION_ID, notification)
+        Log.d("DataCollectWorker", "Creating foreground info")
+        val foregroundInfo = ForegroundInfo(NOTIFICATION_ID, notification, FOREGROUND_SERVICE_TYPE_HEALTH)
 
+        Log.d("DataCollectWorker", "Setting foreground info")
         setForeground(foregroundInfo)
 
         val phase = getAppPhase(context)
 
+        Log.d("DataCollectWorker", "Creating Intent for DataCollectService")
         val sessionId = Calendar.getInstance().timeInMillis
         val intent = Intent(applicationContext, DataCollectService::class.java)
 
         intent.putExtra("COLLECT_DATA", true)
         intent.putExtra("sessionId", sessionId)
         intent.putExtra("PHASE", phase.name)
+
+        Log.d("DataCollectWorker", "Starting DataCollectService")
         ContextCompat.startForegroundService(applicationContext, intent)
+
+        Log.d("DataCollectWorker", "Worker finished")
+        Log.d("DataCollectWorker", "Result is " + Result.success())
 
         return Result.success()
     }

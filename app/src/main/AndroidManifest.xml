@@ -66,8 +66,11 @@
             android:name=".presentation.utils.DataCollectService"
             android:enabled="true"
             android:exported="false"
+            android:foregroundServiceType="health" />
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="health"
-            tools:ignore="ForegroundServicePermission" />
+            tools:node="merge" />
 
 
         <uses-library
