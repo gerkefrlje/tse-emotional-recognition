@@ -1,4 +1,5 @@
 package com.example.tse_emotionalrecognition.presentation
+import android.content.Context
 
 import android.Manifest
 import android.content.Context
@@ -74,9 +75,18 @@ import coil.compose.rememberAsyncImagePainter
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
+import com.example.tse_emotionalrecognition.complication.MainComplicationService
 
 enum class EmojiState {
     NEUTRAL, HAPPY, UNHAPPY
+}
+
+fun getEmojiResForState(state: EmojiState): Int {
+    return when(state) {
+        EmojiState.NEUTRAL -> R.drawable.neutral_emoji_animated
+        EmojiState.HAPPY -> R.drawable.happy_emoji_animated
+        EmojiState.UNHAPPY -> R.drawable.unhappy_emoji_animated
+    }
 }
 
 @Composable
@@ -247,7 +257,6 @@ fun DefaultPreview() {
     WearApp("Preview Android")
 }
 
-
 @Composable
 fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.common.data.database.UserRepository) {
     val context = LocalContext.current
@@ -260,7 +269,7 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                 .padding(16.dp)
         ) {
             item {
-                LoopingGifImage(gifRes = R.drawable.unhappy_emoji_animated) // Display animated emoji at the top
+                LoopingGifImage(gifRes = getEmojiResForState(currentEmojiState)) // Display animated emoji based on current state
             }
             item {
                 Button(
@@ -346,6 +355,14 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Start Sensor")
+                }
+            }
+            item {
+                Button(
+                    onClick = { updateEmoji(EmojiState.entries.toTypedArray().random()) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Randomize Emoji")
                 }
             }
         }
