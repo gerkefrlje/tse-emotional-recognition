@@ -59,14 +59,18 @@ class MainComplicationService : SuspendingComplicationDataSourceService() {
             .build()
     }
 
-    // Helper function to create the tap action PendingIntent
     @SuppressLint("WearRecents")
     private fun createMainActivityTapIntent(): PendingIntent {
         val intent = Intent(this, MainActivity::class.java).apply {
-            // Optionally set flags if you need to clear existing activities
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK
         }
-        return PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        // Use FLAG_MUTABLE instead of FLAG_IMMUTABLE
+        return PendingIntent.getActivity(
+            this,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
     }
 
     // Placeholder: replace with your actual logic to determine the emoji state
