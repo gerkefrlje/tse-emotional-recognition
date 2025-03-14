@@ -1,8 +1,3 @@
-/* While this template provides a good starting point for using Wear Compose, you can always
- * take a look at https://github.com/android/wear-os-samples/tree/main/ComposeStarter to find the
- * most up to date changes to the libraries and their usages.
- */
-
 package com.example.tse_emotionalrecognition.presentation
 
 import android.Manifest
@@ -10,12 +5,16 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
+import android.graphics.drawable.Animatable
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings.Global
 import android.util.Log
+import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.DrawableRes
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -39,6 +38,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.material.Button
@@ -46,6 +48,7 @@ import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
 import androidx.wear.tooling.preview.devices.WearDevices
+import coil.ImageLoader
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
@@ -64,6 +67,39 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
+import coil.request.ImageRequest
+
+enum class EmojiState {
+    NEUTRAL, HAPPY, UNHAPPY
+}
+
+@Composable
+fun LoopingGifImage(
+    @DrawableRes gifRes: Int,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+
+    val gifEnabledLoader = ImageLoader.Builder(context)
+        .components {
+            add(GifDecoder.Factory())
+        }
+        .build()
+
+    // Use AsyncImage with the custom loader to display the animated GIF.
+    AsyncImage(
+        model = gifRes,
+        contentDescription = "Animated GIF",
+        imageLoader = gifEnabledLoader,
+        modifier = modifier.fillMaxWidth()
+    )
+}
 
 class MainActivity : ComponentActivity() {
     private val userRepository by lazy { UserDataStore.getUserRepository(application) }
@@ -84,17 +120,20 @@ class MainActivity : ComponentActivity() {
 
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     private val requestedPermissions = arrayOf(
-        Manifest.permission.BODY_SENSORS,
-        Manifest.permission.FOREGROUND_SERVICE_HEALTH,
-        Manifest.permission.POST_NOTIFICATIONS,
-        Manifest.permission.ACCESS_NETWORK_STATE,
-        Manifest.permission.WAKE_LOCK
+        android.Manifest.permission.BODY_SENSORS,
+        android.Manifest.permission.FOREGROUND_SERVICE,
+        android.Manifest.permission.POST_NOTIFICATIONS,
+        android.Manifest.permission.ACTIVITY_RECOGNITION,
+        android.Manifest.permission.HIGH_SAMPLING_RATE_SENSORS,
+        android.Manifest.permission.READ_CONTACTS
     )
 
     @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onCreate(savedInstanceState: Bundle?) {
         installSplashScreen()
+
         super.onCreate(savedInstanceState)
+        requestPermissions(requestedPermissions, 0)
         setTheme(android.R.style.Theme_DeviceDefault)
 
         sharedPreferences = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
@@ -136,7 +175,11 @@ class MainActivity : ComponentActivity() {
     private fun triggerLable() {
         userRepository.insertAffect(
             CoroutineScope(Dispatchers.IO)
-            , AffectData(sessionId = 1, affect = AffectType.HAPPY_RELAXED)
+            ,
+            com.example.tse_emotionalrecognition.common.data.database.entities.AffectData(
+                sessionId = 1,
+                affect = com.example.tse_emotionalrecognition.common.data.database.entities.AffectType.HAPPY_RELAXED
+            )
         ){
             var affectDataID = it.id
             val intent = Intent(this, LabelActivity::class.java)
@@ -204,8 +247,9 @@ fun DefaultPreview() {
     WearApp("Preview Android")
 }
 
+
 @Composable
-fun SelectIntervention(userRepository: UserRepository) {
+fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.common.data.database.UserRepository) {
     val context = LocalContext.current
 
     TSEEmotionalRecognitionTheme {
@@ -216,9 +260,11 @@ fun SelectIntervention(userRepository: UserRepository) {
                 .padding(16.dp)
         ) {
             item {
+                LoopingGifImage(gifRes = R.drawable.unhappy_emoji_animated) // Display animated emoji at the top
+            }
+            item {
                 Button(
                     onClick = {
-
                         val intent = Intent(context, InterventionOverviewActivity::class.java)
                         context.startActivity(intent)
                     },
@@ -234,10 +280,14 @@ fun SelectIntervention(userRepository: UserRepository) {
                 Button(
                     onClick = {
                         userRepository.insertAffect(
-                            CoroutineScope(Dispatchers.IO),
-                            AffectData(sessionId = 1, affect = AffectType.HAPPY_RELAXED)
-                        ) {
-                            val affectDataID = it.id
+                            CoroutineScope(Dispatchers.IO)
+                            ,
+                            com.example.tse_emotionalrecognition.common.data.database.entities.AffectData(
+                                sessionId = 1,
+                                affect = com.example.tse_emotionalrecognition.common.data.database.entities.AffectType.HAPPY_RELAXED
+                            )
+                        ){
+                            var affectDataID = it.id
                             val intent = Intent(context, LabelActivity::class.java)
                             intent.putExtra("affectDataId", affectDataID)
                             context.startActivity(intent)
@@ -254,7 +304,6 @@ fun SelectIntervention(userRepository: UserRepository) {
             item {
                 Button(
                     onClick = {
-
                         val intent = Intent(context, SendDataActivity::class.java)
                         context.startActivity(intent)
                     },

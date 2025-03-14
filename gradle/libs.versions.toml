@@ -1,6 +1,8 @@
 [versions]
 agp = "8.8.0"
 datastorePreferences = "1.0.0"
+coilCompose = "2.7.0"
+coilGif = "2.2.2"
 datastorePreferencesVersion = "1.1.3"
 gson = "2.10.1"
 kotlin = "2.0.0"
@@ -11,8 +13,10 @@ composeMaterial = "1.2.1"
 composeFoundation = "1.2.1"
 playServicesWearableVersion = "18.1.0"
 roomCompiler = "2.6.1"
+#ui = "<version>"
 roomKtx = "2.6.1"
 wearSensory = "1.2.0"
+watchfaceComplicationsData = "1.2.1"
 wearToolingPreview = "1.0.0"
 activityCompose = "1.8.0"
 coreSplashscreen = "1.0.1"
@@ -43,6 +47,9 @@ androidx-room-compiler = { module = "androidx.room:room-compiler" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomKtx" }
 androidx-wear-sensory = { module = "androidx.wear:wear-sensory", version.ref = "wearSensory" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
+androidx-watchface-complications-data = { module = "androidx.wear.watchface:watchface-complications-data", version.ref = "watchfaceComplicationsData" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
+coil-gif = { module = "io.coil-kt:coil-gif", version.ref = "coilGif" }
 compose-navigation = { module = "androidx.wear.compose:compose-navigation" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
