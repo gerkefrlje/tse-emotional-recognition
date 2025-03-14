@@ -1,4 +1,5 @@
 package com.example.tse_emotionalrecognition.presentation
+import android.content.Context
 
 import android.content.Intent
 import android.graphics.drawable.Animatable
@@ -58,9 +59,18 @@ import coil.compose.rememberAsyncImagePainter
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
+import com.example.tse_emotionalrecognition.complication.MainComplicationService
 
 enum class EmojiState {
     NEUTRAL, HAPPY, UNHAPPY
+}
+
+fun getEmojiResForState(state: EmojiState): Int {
+    return when(state) {
+        EmojiState.NEUTRAL -> R.drawable.neutral_emoji_animated
+        EmojiState.HAPPY -> R.drawable.happy_emoji_animated
+        EmojiState.UNHAPPY -> R.drawable.unhappy_emoji_animated
+    }
 }
 
 @Composable
@@ -163,6 +173,22 @@ fun DefaultPreview() {
 fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.common.data.database.UserRepository) {
     val context = LocalContext.current
 
+    var currentEmojiState by remember { mutableStateOf(EmojiState.NEUTRAL) }
+
+    fun updateEmoji(state: EmojiState) {
+        currentEmojiState = state
+        // Update shared preferences with the new emoji state
+        val prefs = context.getSharedPreferences("emoji_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putString("emoji_state", state.name).apply()
+
+        // Request complication update to refresh the complication appearance
+        val requester = androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester.create(
+            context,
+            android.content.ComponentName(context, MainComplicationService::class.java)
+        )
+        requester.requestUpdateAll()
+    }
+
     TSEEmotionalRecognitionTheme {
         ScalingLazyColumn(
             modifier = Modifier
@@ -171,7 +197,7 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                 .padding(16.dp)
         ) {
             item {
-                LoopingGifImage(gifRes = R.drawable.unhappy_emoji_animated) // Display animated emoji at the top
+                LoopingGifImage(gifRes = getEmojiResForState(currentEmojiState)) // Display animated emoji based on current state
             }
             item {
                 Button(
@@ -221,6 +247,14 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Transfer")
+                }
+            }
+            item {
+                Button(
+                    onClick = { updateEmoji(EmojiState.entries.toTypedArray().random()) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Randomize Emoji")
                 }
             }
         }

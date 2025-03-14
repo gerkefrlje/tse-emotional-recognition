@@ -69,13 +69,18 @@ class MainComplicationService : SuspendingComplicationDataSourceService() {
             this,
             0,
             intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            PendingIntent.FLAG_UPDATE_CURRENT  or PendingIntent.FLAG_MUTABLE
         )
     }
 
     // Placeholder: replace with your actual logic to determine the emoji state
     private fun getEmojiState(): String {
-        // For example, this might check a value from a repository, data store, or sensor
-        return "neutral" // Or "happy", "sad"
+        val prefs = getSharedPreferences("emoji_prefs", MODE_PRIVATE)
+        val state = prefs.getString("emoji_state", "NEUTRAL") ?: "NEUTRAL"
+        return when(state.uppercase()) {
+            "HAPPY" -> "happy"
+            "UNHAPPY" -> "sad"
+            else -> "neutral"
+        }
     }
 }
