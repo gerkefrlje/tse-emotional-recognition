@@ -70,6 +70,7 @@ dependencies {
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
     debugImplementation(libs.tiles.tooling)
+    implementation("androidx.wear.watchface:watchface-complications-data:1.2.1")
 
 //    implementation(libs.androidx.material)
 //    implementation(libs.androidx.ui)
