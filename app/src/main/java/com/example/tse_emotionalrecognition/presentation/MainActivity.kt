@@ -1,15 +1,14 @@
-/* While this template provides a good starting point for using Wear Compose, you can always
- * take a look at https://github.com/android/wear-os-samples/tree/main/ComposeStarter to find the
- * most up to date changes to the libraries and their usages.
- */
-
 package com.example.tse_emotionalrecognition.presentation
 
 import android.content.Intent
+import android.graphics.drawable.Animatable
 import android.os.Build
 import android.os.Bundle
+import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.DrawableRes
 import androidx.annotation.RequiresApi
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.background
@@ -23,7 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -31,12 +30,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
 import androidx.wear.tooling.preview.devices.WearDevices
+import coil.ImageLoader
 import com.example.tse_emotionalrecognition.R
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
@@ -47,10 +51,42 @@ import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import coil.compose.AsyncImage
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
+import coil.decode.GifDecoder
+import coil.decode.ImageDecoderDecoder
+import coil.request.ImageRequest
+
+enum class EmojiState {
+    NEUTRAL, HAPPY, UNHAPPY
+}
+
+@Composable
+fun LoopingGifImage(
+    @DrawableRes gifRes: Int,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+
+    val gifEnabledLoader = ImageLoader.Builder(context)
+        .components {
+            add(GifDecoder.Factory())
+        }
+        .build()
+
+    // Use AsyncImage with the custom loader to display the animated GIF.
+    AsyncImage(
+        model = gifRes,
+        contentDescription = "Animated GIF",
+        imageLoader = gifEnabledLoader,
+        modifier = modifier.fillMaxWidth()
+    )
+}
 
 class MainActivity : ComponentActivity() {
     private val userRepository by lazy { com.example.tse_emotionalrecognition.common.data.database.UserDataStore.getUserRepository(application) }
-
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
     private val requestedPermissions = arrayOf(
@@ -123,10 +159,8 @@ fun DefaultPreview() {
     WearApp("Preview Android")
 }
 
-
 @Composable
 fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.common.data.database.UserRepository) {
-
     val context = LocalContext.current
 
     TSEEmotionalRecognitionTheme {
@@ -137,12 +171,13 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                 .padding(16.dp)
         ) {
             item {
+                LoopingGifImage(gifRes = R.drawable.unhappy_emoji_animated) // Display animated emoji at the top
+            }
+            item {
                 Button(
                     onClick = {
-
                         val intent = Intent(context, InterventionOverviewActivity::class.java)
                         context.startActivity(intent)
-
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -180,7 +215,6 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
             item {
                 Button(
                     onClick = {
-
                         val intent = Intent(context, SendDataActivity::class.java)
                         context.startActivity(intent)
                     },
@@ -191,5 +225,4 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
             }
         }
     }
-
 }
