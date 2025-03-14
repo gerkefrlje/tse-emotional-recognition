@@ -1,5 +1,6 @@
 package com.example.tse_emotionalrecognition.complication
 
+import android.annotation.SuppressLint
 import android.app.PendingIntent
 import android.content.Intent
 import android.graphics.drawable.Icon
@@ -28,10 +29,10 @@ class MainComplicationService : SuspendingComplicationDataSourceService() {
         // Use a neutral emoji for preview purposes
         val neutralIcon = Icon.createWithResource(this, R.drawable.unhappy_emoji)
         // Wrap the Icon into a SmallImage
-        val smallImage = SmallImage(neutralIcon, SmallImageType.PHOTO, neutralIcon)
+        val smallImage = SmallImage.Builder(neutralIcon, SmallImageType.PHOTO).build()
         val tapIntent = createMainActivityTapIntent()
         return SmallImageComplicationData.Builder(
-            smallImage = neutralIcon,
+            smallImage = smallImage,
             contentDescription = PlainComplicationText.Builder("Neutral Emoji").build()
         )
             .setTapAction(tapIntent)
@@ -49,10 +50,11 @@ class MainComplicationService : SuspendingComplicationDataSourceService() {
         }
 
         val icon = Icon.createWithResource(this, emojiIconRes)
+        val smallImage = SmallImage.Builder(icon, SmallImageType.PHOTO).build()
         val tapIntent = createMainActivityTapIntent()
 
         return SmallImageComplicationData.Builder(
-            smallImage = icon,
+            smallImage = smallImage,
             contentDescription = PlainComplicationText.Builder(descriptionText).build()
         )
             .setTapAction(tapIntent)
@@ -60,6 +62,7 @@ class MainComplicationService : SuspendingComplicationDataSourceService() {
     }
 
     // Helper function to create the tap action PendingIntent
+    @SuppressLint("WearRecents")
     private fun createMainActivityTapIntent(): PendingIntent {
         val intent = Intent(this, MainActivity::class.java).apply {
             // Optionally set flags if you need to clear existing activities
