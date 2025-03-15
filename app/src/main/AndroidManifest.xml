@@ -66,6 +66,12 @@
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="health"
             tools:node="merge" />
+        <service
+            android:name=".model.ModelService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="health" />
+
 
 
         <uses-library

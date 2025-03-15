@@ -87,4 +87,8 @@ dependencies {
     //Spotify SDK
     implementation(files("${projectDir}/libs/spotify-app-remote-release-0.8.0.aar"))
     implementation(libs.gson)
+
+    // Kotlin Smile
+    implementation(libs.smile.core)
+    implementation(libs.smile.kotlin)
 }

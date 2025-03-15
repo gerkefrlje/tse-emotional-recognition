@@ -182,11 +182,11 @@ class DataCollectService : Service() {
     }
 
     private fun launchFeedbackActivity() {
-
+        // TODO: Launch ModelService with intent extra marking trianing + feedback
     }
 
     private fun launchPredictionService() {
-
+        // TODO: Launch ModelService with intent extra marking predict only
     }
 
     private fun createNotification(contentText: String): Notification {

@@ -147,4 +147,21 @@ class UserRepository(db: UserDatabase) {
         }
     }
 
+    suspend fun getAllHeartRateMeasurements(): List<HeartRateMeasurement> {
+        return withContext(Dispatchers.IO) {
+            heartRateDao.getAll()
+        }
+    }
+
+    suspend fun getAllSkinTemperatureMeasurements(): List<SkinTemperatureMeasurement> {
+        return withContext(Dispatchers.IO) {
+            skinTemperatureDao.getAll()
+        }
+    }
+
+    suspend fun getAllAffectData(): List<AffectData> {
+        return withContext(Dispatchers.IO) {
+            affectDao.getAll()
+        }
+    }
 }
