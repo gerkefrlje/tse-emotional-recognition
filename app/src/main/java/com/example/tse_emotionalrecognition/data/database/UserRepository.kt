@@ -93,19 +93,41 @@ class UserRepository(db: UserDatabase) {
         onFinished: (entity: AffectData) -> Unit = {}
     ) {
         scope.launch(Dispatchers.IO) {
-            val entity = affectDao.getAffectById(id)
-            when (column) {
-                AffectColumns.TIME_OF_ENGAGEMENT -> entity.timeOfEngagement = value as Long
-                AffectColumns.TIME_OF_FINISHED -> entity.timeOfFinished = value as Long
-                AffectColumns.AFFECT -> {
-                    entity.affect =  value as AffectType
-                    entity.timeOfAffect = System.currentTimeMillis()
+            try {
+                val entity = affectDao.getAffectById(id)
+                if (entity != null) {
+                    when (column) {
+                        AffectColumns.TIME_OF_ENGAGEMENT -> {
+                            if (value is Long) {
+                                entity.timeOfEngagement = value
+                            } else {
+                                Log.e("Affect", "Invalid type for TIME_OF_ENGAGEMENT: ${value.javaClass.simpleName}")
+                            }
+                        }
+                        AffectColumns.TIME_OF_FINISHED -> {
+                            if (value is Long) {
+                                entity.timeOfFinished = value
+                            } else {
+                                Log.e("Affect", "Invalid type for TIME_OF_FINISHED: ${value.javaClass.simpleName}")
+                            }
+                        }
+                        AffectColumns.AFFECT -> {
+                            if (value is AffectType) {
+                                entity.affect = value
+                                entity.timeOfAffect = System.currentTimeMillis()
+                            } else {
+                                Log.e("Affect", "Invalid type for AFFECT: ${value.javaClass.simpleName}")
+                            }
+                        }
+                    }
+                    affectDao.insert(entity)
+                    Log.v("Affect", "updated to ${entity.toString()}")
+                    onFinished(entity)
+                } else {
+                    Log.e("Affect", "AffectData with ID $id not found")
                 }
-            }
-            affectDao.insert(entity)
-            withContext(Dispatchers.IO) {
-                Log.v("Affect", "updated to ${entity.toString()}")
-                onFinished(entity)
+            } catch (e: Exception) {
+                Log.e("Affect", "Error updating AffectData: ${e.message}")
             }
         }
     }

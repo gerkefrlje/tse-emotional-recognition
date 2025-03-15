@@ -1,6 +1,7 @@
 package com.example.tse_emotionalrecognition.presentation
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
@@ -34,7 +35,7 @@ class LabelActivity : ComponentActivity() {
         setContent {
             val affectDataId = intent.getLongExtra("affectDataId", -1)
 
-
+            Log.d("LabelActivity", "affectDataId from intent: $affectDataId") // Logging hinzufügen
 
             insertEngagementTime(affectDataId)
             LabelWatch(
