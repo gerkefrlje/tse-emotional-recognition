@@ -100,11 +100,70 @@ class DataCollectWorker(private val context: Context, workerParams: WorkerParame
 
         Log.d("DataCollectWorker", "Starting DataCollectService")
         ContextCompat.startForegroundService(applicationContext, intent)
+    }
 
-        Log.d("DataCollectWorker", "Worker finished")
-        Log.d("DataCollectWorker", "Result is " + Result.success())
+    private fun createNotification() {
+        val sessionId = Calendar.getInstance().timeInMillis
+        val phase = getAppPhase(context)
 
-        return Result.success()
+
+//        val intent = Intent(context, DataCollectService::class.java).apply {
+//            putExtra("COLLECT_DATA", true)
+//            putExtra("PHASE", phase)
+//            putExtra("sessionId", sessionId)
+//        }
+
+        val notificationIntent = Intent(context, DataCollectReciever::class.java).apply {
+            putExtra("COLLECT_DATA", true)
+            putExtra("PHASE", phase)
+            putExtra("sessionId", sessionId)
+        }
+
+        val pedingIntent = PendingIntent.getBroadcast(context, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+
+        val intent = Intent(context, DataCollectReciever::class.java).apply {
+            putExtra("COLLECT_DATA", true)
+            putExtra("PHASE", phase)
+            putExtra("sessionId", sessionId)
+        }
+
+        //context.sendBroadcast(intent)
+
+
+        val pendingIntent = PendingIntent.getService(
+            context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notificationManager =
+            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                "data_collection_request",
+                "Data Collection Request",
+                NotificationManager.IMPORTANCE_HIGH
+            )
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val notification = NotificationCompat.Builder(context, "data_collection_request")
+            .setContentTitle("Datenaufzeichnung starten")
+            .setContentText("Tippe hier, um die Erfassung zu starten.")
+            .setSmallIcon(R.drawable.splash_icon)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+            .build()
+
+        val broadcastNotification = NotificationCompat.Builder(context, "data_collection_request")
+            .setContentTitle("Datenaufzeichnung starten")
+            .setContentText("Tippe hier, um die Erfassung zu starten.")
+            .setSmallIcon(R.drawable.splash_icon)
+            .setContentIntent(pedingIntent)
+            .setAutoCancel(true)
+            .build()
+
+        //notificationManager.notify(1, notification)
+        notificationManager.notify(69, broadcastNotification)
     }
 
     private fun getAppPhase(context: Context): AppPhase {

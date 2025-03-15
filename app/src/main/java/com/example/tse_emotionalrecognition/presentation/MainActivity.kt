@@ -273,6 +273,24 @@ fun SelectIntervention(userRepository: UserRepository) {
                     Text("Contact Activity")
                 }
             }
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            item {
+                Button(
+                    onClick = {
+                        val intent = Intent(context, DataCollectReciever::class.java)
+                        intent.putExtra("COLLECT_DATA", true)
+                        intent.putExtra("PHASE", AppPhase.INITIAL_COLLECTION)
+                        intent.putExtra("sessionId", 1L)
+
+                        context.sendBroadcast(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Start Sensor")
+                }
+            }
         }
     }
 }
