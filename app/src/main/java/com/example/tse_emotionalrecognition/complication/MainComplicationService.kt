@@ -44,6 +44,9 @@ class MainComplicationService : SuspendingComplicationDataSourceService() {
         val (emojiIconRes, descriptionText) = when (emojiState) {
             "happy" -> Pair(R.drawable.happy_emoji, "Happy Emoji")
             "sad" -> Pair(R.drawable.unhappy_emoji, "Sad Emoji")
+            "happy_alert" -> Pair(R.drawable.happy_emoji_alert, "Happy Alert Emoji")
+            "sad_alert" -> Pair(R.drawable.unhappy_emoji_alert, "Sad Alert Emoji")
+            "neutral_alert" -> Pair(R.drawable.neutral_emoji_alert, "Neutral Alert Emoji")
             else -> Pair(R.drawable.neutral_emoji, "Neutral Emoji")
         }
 
@@ -80,6 +83,9 @@ class MainComplicationService : SuspendingComplicationDataSourceService() {
         return when(state.uppercase()) {
             "HAPPY" -> "happy"
             "UNHAPPY" -> "sad"
+            "HAPPY_ALERT" -> "happy_alert"
+            "UNHAPPY_ALERT" -> "sad_alert"
+            "NEUTRAL_ALERT" -> "neutral_alert"
             else -> "neutral"
         }
     }
