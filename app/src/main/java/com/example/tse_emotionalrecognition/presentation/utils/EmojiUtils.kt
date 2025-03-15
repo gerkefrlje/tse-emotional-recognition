@@ -31,7 +31,3 @@ fun updateEmoji(context: Context, state: EmojiState) {
     )
     requester.requestUpdateAll()
 }
-
-fun showDialog(context: Context) {
-
-}

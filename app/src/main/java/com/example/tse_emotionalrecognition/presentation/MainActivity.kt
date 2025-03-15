@@ -1,6 +1,5 @@
 package com.example.tse_emotionalrecognition.presentation
 
-import android.content.Context
 
 import android.Manifest
 import android.content.Context
@@ -47,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Image
 import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.material.*
@@ -201,7 +201,6 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
     var currentEmojiState by remember {
         mutableStateOf(EmojiState.valueOf(prefs.getString("emoji_state", EmojiState.NEUTRAL.name)!!))
     }
-    var showDialog by remember { mutableStateOf(false) }
 
     TSEEmotionalRecognitionTheme {
         ScalingLazyColumn(
