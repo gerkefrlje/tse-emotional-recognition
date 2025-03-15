@@ -2,11 +2,13 @@ package com.example.tse_emotionalrecognition.presentation.utils
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.material3.AlertDialog
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.Text
 import coil.ImageLoader
@@ -14,6 +16,11 @@ import coil.compose.AsyncImage
 import coil.decode.GifDecoder
 import coil.request.ImageRequest
 import coil.request.repeatCount
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 
 
 @Composable
@@ -42,20 +49,54 @@ fun LoopingGifImage(
 @Composable
 fun EmojiSelector(currentEmojiState: EmojiState) {
     var showDialog by remember { mutableStateOf(false) }
-
+    var isNonAlertState = false
     LoopingGifImage(
         gifRes = getEmojiResForState(currentEmojiState),
         modifier = Modifier.clickable { showDialog = true }
     )
 
-    if (showDialog) {
+    isNonAlertState = currentEmojiState == EmojiState.NEUTRAL || currentEmojiState == EmojiState.HAPPY || currentEmojiState == EmojiState.UNHAPPY
+
+    if (showDialog && !isNonAlertState) {
         AlertDialog(
+            containerColor = Color.Black,
             onDismissRequest = { showDialog = false },
-            title = { Text(text = "Emoji Info") },
-            text = { Text(text = currentEmojiState.name) },
+            title = {
+                Text(
+                    text = "Hey You!",
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .fillMaxHeight(1f)
+                        .verticalScroll(rememberScrollState())
+                ) {
+                    when (currentEmojiState) {
+                        EmojiState.NEUTRAL_ALERT -> {
+
+                        }
+                        EmojiState.HAPPY_ALERT -> {
+                        }
+                        EmojiState.UNHAPPY_ALERT -> {
+                        }
+                        else -> { Text(text = "default text")}
+                    }
+
+                }
+            },
             confirmButton = {
-                Button(onClick = { showDialog = false }) {
-                    Text("OK")
+                Box(
+                    modifier = Modifier.fillMaxWidth(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Button(onClick = { showDialog = false }) {
+                        Text("OK")
+                    }
                 }
             }
         )
