@@ -57,6 +57,7 @@ import com.example.tse_emotionalrecognition.data.database.entities.AffectData
 import com.example.tse_emotionalrecognition.data.database.entities.AffectType
 import com.example.tse_emotionalrecognition.data.database.UserRepository
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
+import com.example.tse_emotionalrecognition.presentation.utils.DataCollectReciever
 import com.example.tse_emotionalrecognition.presentation.utils.DataCollectWorker
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
@@ -148,9 +149,13 @@ class MainActivity : ComponentActivity() {
 
         val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.NOT_REQUIRED).build()
 
-        val dataCollectionRequest = PeriodicWorkRequest.Builder(DataCollectWorker::class.java, 30, TimeUnit.MINUTES).setConstraints(constraints).build()
+        //val dataCollectionRequest = PeriodicWorkRequest.Builder(DataCollectWorker::class.java, 15, TimeUnit.MINUTES).setConstraints(constraints).build()
 
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork("DataCollectionWork", ExistingPeriodicWorkPolicy.KEEP, dataCollectionRequest)
+        val periodicWorkRequest = PeriodicWorkRequest.Builder(DataCollectWorker::class.java, 15, TimeUnit.MINUTES)
+            .setConstraints(constraints).build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork("DataCollectionWork", ExistingPeriodicWorkPolicy.KEEP, periodicWorkRequest)
+
     }
 
     private fun getAppPhase(): AppPhase {
