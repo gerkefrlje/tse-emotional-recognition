@@ -20,6 +20,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -40,6 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Image
+import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -75,6 +77,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import coil.request.ImageRequest
+import coil.request.repeatCount
 import com.example.tse_emotionalrecognition.complication.MainComplicationService
 
 enum class EmojiState {
@@ -102,9 +105,15 @@ fun LoopingGifImage(
         }
         .build()
 
+    // Create ImageRequest with repeat count set to 0 (play once)
+    val imageRequest = ImageRequest.Builder(context)
+        .data(gifRes)
+        .repeatCount(1) // 0 = play once, 1 = repeat once, etc.
+        .build()
+
     // Use AsyncImage with the custom loader to display the animated GIF.
     AsyncImage(
-        model = gifRes,
+        model = imageRequest,
         contentDescription = "Animated GIF",
         imageLoader = gifEnabledLoader,
         modifier = modifier.fillMaxWidth()
@@ -261,6 +270,26 @@ fun DefaultPreview() {
 fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.common.data.database.UserRepository) {
     val context = LocalContext.current
 
+    val prefs = context.getSharedPreferences("emoji_prefs", Context.MODE_PRIVATE)
+    val savedState = prefs.getString("emoji_state", EmojiState.NEUTRAL.name) ?: EmojiState.NEUTRAL.name
+    var currentEmojiState by remember { mutableStateOf(EmojiState.valueOf(savedState)) }
+
+    var showDialog by remember { mutableStateOf(false) }
+
+    fun updateEmoji(state: EmojiState) {
+        currentEmojiState = state
+        // Update shared preferences with the new emoji state
+        val prefs = context.getSharedPreferences("emoji_prefs", Context.MODE_PRIVATE)
+        prefs.edit().putString("emoji_state", state.name).apply()
+
+        // Request complication update to refresh the complication appearance
+        val requester = androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester.create(
+            context,
+            android.content.ComponentName(context, MainComplicationService::class.java)
+        )
+        requester.requestUpdateAll()
+    }
+
     TSEEmotionalRecognitionTheme {
         ScalingLazyColumn(
             modifier = Modifier
@@ -269,8 +298,34 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                 .padding(16.dp)
         ) {
             item {
-                LoopingGifImage(gifRes = getEmojiResForState(currentEmojiState)) // Display animated emoji based on current state
+                LoopingGifImage(
+                    gifRes = getEmojiResForState(currentEmojiState),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showDialog = true }
+                )
+                // Display an AlertDialog when showDialog is true
+                if (showDialog) {
+                    val dialogText = when (currentEmojiState) {
+                        EmojiState.NEUTRAL -> "This is a neutral emoji."
+                        EmojiState.HAPPY -> "This is a happy emoji."
+                        EmojiState.UNHAPPY -> "This is an unhappy emoji."
+                    }
+                    AlertDialog(
+                        onDismissRequest = { showDialog = false },
+                        title = { Text(text = "Emoji Info") },
+                        text = { Text(text = dialogText) },
+                        confirmButton = {
+                            Button(onClick = { showDialog = false }) {
+                                Text("OK")
+                            }
+                        }
+                    )
+                }
+
+            // Display animated emoji based on current state, and show dialog on click
             }
+
             item {
                 Button(
                     onClick = {
