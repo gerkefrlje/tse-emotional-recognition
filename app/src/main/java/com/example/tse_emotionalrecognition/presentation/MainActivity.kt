@@ -11,7 +11,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -59,7 +58,6 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
     var currentEmojiState by remember {
         mutableStateOf(EmojiState.valueOf(prefs.getString("emoji_state", EmojiState.NEUTRAL.name)!!))
     }
-    var showDialog by remember { mutableStateOf(false) }
 
     TSEEmotionalRecognitionTheme {
         ScalingLazyColumn(
