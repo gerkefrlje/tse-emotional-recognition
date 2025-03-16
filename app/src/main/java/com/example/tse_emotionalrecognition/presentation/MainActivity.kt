@@ -21,6 +21,7 @@ import com.example.tse_emotionalrecognition.presentation.interventions.Intervent
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
 import com.example.tse_emotionalrecognition.presentation.utils.EmojiSelector
 import com.example.tse_emotionalrecognition.presentation.utils.EmojiState
+import com.example.tse_emotionalrecognition.presentation.utils.scheduleDailyEmojiUpdateWorkManager
 import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -58,6 +59,7 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
     var currentEmojiState by remember {
         mutableStateOf(EmojiState.valueOf(prefs.getString("emoji_state", EmojiState.NEUTRAL.name)!!))
     }
+    scheduleDailyEmojiUpdateWorkManager(context)
 
     TSEEmotionalRecognitionTheme {
         ScalingLazyColumn(
