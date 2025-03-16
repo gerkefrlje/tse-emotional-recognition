@@ -43,7 +43,6 @@ androidx-room-compiler = { module = "androidx.room:room-compiler" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomKtx" }
 androidx-wear-sensory = { module = "androidx.wear:wear-sensory", version.ref = "wearSensory" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
-androidx-ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
 compose-navigation = { module = "androidx.wear.compose:compose-navigation" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }

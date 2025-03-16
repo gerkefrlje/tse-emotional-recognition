@@ -11,16 +11,16 @@ import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.os.Build
 import android.os.IBinder
 import android.os.CountDownTimer
-import androidx.core.content.ContextCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.tse_emotionalrecognition.R
-import com.example.tse_emotionalrecognition.data.database.UserDataStore
-import com.example.tse_emotionalrecognition.data.database.UserRepository
-import com.example.tse_emotionalrecognition.data.database.entities.AffectData
-import com.example.tse_emotionalrecognition.data.database.entities.AffectType
-import com.example.tse_emotionalrecognition.data.database.entities.HeartRateMeasurement
-import com.example.tse_emotionalrecognition.data.database.entities.SkinTemperatureMeasurement
+import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
+import com.example.tse_emotionalrecognition.common.data.database.UserRepository
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
+import com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement
+import com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement
+
 import com.example.tse_emotionalrecognition.presentation.AppPhase
 import com.example.tse_emotionalrecognition.presentation.LabelActivity
 import com.samsung.android.service.health.tracking.ConnectionListener
@@ -314,6 +314,7 @@ fun buildTrackerEventListener(
                             dataPoint.getValue(ValueKey.SkinTemperatureSet.STATUS)
                         )
                     )
+                    Log.v("data", "Skin temperature: ${dataPoint.getValue(ValueKey.SkinTemperatureSet.OBJECT_TEMPERATURE)}")
                 }
                 repository.insertSkinTemperatureMeasurementList(
                     CoroutineScope(Dispatchers.IO),
