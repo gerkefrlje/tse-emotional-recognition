@@ -107,12 +107,6 @@ class DataCollectWorker(private val context: Context, workerParams: WorkerParame
         val phase = getAppPhase(context)
 
 
-//        val intent = Intent(context, DataCollectService::class.java).apply {
-//            putExtra("COLLECT_DATA", true)
-//            putExtra("PHASE", phase)
-//            putExtra("sessionId", sessionId)
-//        }
-
         val notificationIntent = Intent(context, DataCollectReciever::class.java).apply {
             putExtra("COLLECT_DATA", true)
             putExtra("PHASE", phase)
@@ -127,12 +121,9 @@ class DataCollectWorker(private val context: Context, workerParams: WorkerParame
             putExtra("sessionId", sessionId)
         }
 
-        //context.sendBroadcast(intent)
-
-
-        val pendingIntent = PendingIntent.getService(
-            context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+//        val pendingIntent = PendingIntent.getService(
+//            context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+//        )
 
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
@@ -146,13 +137,13 @@ class DataCollectWorker(private val context: Context, workerParams: WorkerParame
             notificationManager.createNotificationChannel(channel)
         }
 
-        val notification = NotificationCompat.Builder(context, "data_collection_request")
-            .setContentTitle("Datenaufzeichnung starten")
-            .setContentText("Tippe hier, um die Erfassung zu starten.")
-            .setSmallIcon(R.drawable.splash_icon)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-            .build()
+//        val notification = NotificationCompat.Builder(context, "data_collection_request")
+//            .setContentTitle("Datenaufzeichnung starten")
+//            .setContentText("Tippe hier, um die Erfassung zu starten.")
+//            .setSmallIcon(R.drawable.splash_icon)
+//            .setContentIntent(pendingIntent)
+//            .setAutoCancel(true)
+//            .build()
 
         val broadcastNotification = NotificationCompat.Builder(context, "data_collection_request")
             .setContentTitle("Datenaufzeichnung starten")
