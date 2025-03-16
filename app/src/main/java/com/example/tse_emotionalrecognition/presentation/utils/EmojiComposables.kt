@@ -63,7 +63,7 @@ fun EmojiSelector(currentEmojiState: EmojiState) {
             onDismissRequest = { showDialog = false },
             title = {
                 Text(
-                    text = "Hey You!",
+                    text = "Hey Du!",
                     modifier = Modifier.fillMaxWidth(),
                     textAlign = TextAlign.Center,
                     fontWeight = FontWeight.Bold
@@ -78,7 +78,7 @@ fun EmojiSelector(currentEmojiState: EmojiState) {
                 ) {
                     when (currentEmojiState) {
                         EmojiState.NEUTRAL_ALERT -> {
-
+                            Text(text = "Ich sehe du hast ")
                         }
                         EmojiState.HAPPY_ALERT -> {
                         }
