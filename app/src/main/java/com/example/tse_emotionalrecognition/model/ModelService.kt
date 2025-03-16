@@ -15,6 +15,7 @@ import com.example.tse_emotionalrecognition.R
 import com.example.tse_emotionalrecognition.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.data.database.UserRepository
 import com.example.tse_emotionalrecognition.data.database.entities.AffectData
+import com.example.tse_emotionalrecognition.data.database.entities.AffectType
 import com.example.tse_emotionalrecognition.data.database.entities.HeartRateMeasurement
 import com.example.tse_emotionalrecognition.data.database.entities.SkinTemperatureMeasurement
 import kotlinx.coroutines.CoroutineScope
@@ -55,7 +56,7 @@ class ModelService : Service() {
     private var skinTemperatureMeasurements: List<SkinTemperatureMeasurement> = emptyList()
     private var affectData: List<AffectData> = emptyList()
 
-    private var prediction = ""
+    private var prediction = AffectType.NONE
 
     override fun onCreate() {
         super.onCreate()
@@ -131,10 +132,10 @@ class ModelService : Service() {
             val predictionAsInt = model.predict(predictionData)[0]
 
             prediction = when (predictionAsInt) {
-                0 -> "Negative"
-                1 -> "Positive"
-                2 -> "Neutral"
-                else -> "Unknown"
+                0 -> AffectType.ANGRY_SAD
+                1 -> AffectType.HAPPY_RELAXED
+                2 -> AffectType.NONE
+                else -> AffectType.NONE
             }
         }
     }
