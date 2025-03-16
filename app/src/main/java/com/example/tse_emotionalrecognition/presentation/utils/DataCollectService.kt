@@ -205,7 +205,6 @@ class DataCollectService : Service() {
             delay(1000L)
             healthTrackingService.disconnectService()
             delay(1000L)
-
         }
         Log.d("DataCollectService", "Data collection stopped")
     }
