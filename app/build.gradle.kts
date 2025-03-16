@@ -75,13 +75,13 @@ dependencies {
 //    implementation(libs.androidx.ui)
     implementation(libs.androidx.datastore.preferences.v113)
 
+    implementation(libs.room.runtime)
+    ksp(libs.room.compiler)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.work.runtime.ktx)
 
 
-    implementation("androidx.room:room-runtime:2.6.1")
-    ksp("androidx.room:room-compiler:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-
-    //App Navigation
+    //App Navigatio
     implementation(libs.navigation.compose)
     implementation(libs.compose.navigation)
 
