@@ -55,7 +55,7 @@ class ModelService : Service() {
     private var skinTemperatureMeasurements: List<SkinTemperatureMeasurement> = emptyList()
     private var affectData: List<AffectData> = emptyList()
 
-    private var prediction = 2
+    private var prediction = ""
 
     override fun onCreate() {
         super.onCreate()
@@ -128,7 +128,14 @@ class ModelService : Service() {
         val predictionData = preparePredictionData()
 
         if (model != null) {
-            prediction = model.predict(predictionData)[0]
+            val predictionAsInt = model.predict(predictionData)[0]
+
+            prediction = when (predictionAsInt) {
+                0 -> "Negative"
+                1 -> "Positive"
+                2 -> "Neutral"
+                else -> "Unknown"
+            }
         }
     }
 
