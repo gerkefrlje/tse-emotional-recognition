@@ -45,6 +45,8 @@ import com.google.android.gms.wearable.Wearable
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.io.ByteArrayOutputStream
+import java.util.zip.GZIPOutputStream
 
 class SendDataActivity : ComponentActivity(), MessageClient.OnMessageReceivedListener {
 
@@ -164,6 +166,15 @@ fun Greeting(wearCount: Int = 0, onCountChange: (Int) -> Unit) {
     val lifecycleOwner = LocalLifecycleOwner.current
 
 
+    fun compressByteArray(data: ByteArray): ByteArray {
+        val byteArrayOutputStream = ByteArrayOutputStream()
+        val gzipOutputStream = GZIPOutputStream(byteArrayOutputStream)
+        gzipOutputStream.write(data)
+        gzipOutputStream.close()
+        return byteArrayOutputStream.toByteArray()
+    }
+
+
     LaunchedEffect(Unit) {  // `Unit` statt `true`, um unnötige Re-Compositions zu vermeiden
         lifecycleOwner.lifecycleScope.launch {
             try {
@@ -215,15 +226,22 @@ fun Greeting(wearCount: Int = 0, onCountChange: (Int) -> Unit) {
                         // Convert the list of HeartRateMeasurement objects to a JSON string
                         // Use the kotlinx.serialization library for this
                         val jsonString =
-                            Json.encodeToString(heartRateMeasurements.takeLast(20)) // currently limited to 20 measurements due to limitations
+                            Json.encodeToString(heartRateMeasurements) // currently limited to 20 measurements due to limitations
+
+                        val byteArray = jsonString.toByteArray(Charsets.UTF_8)
+
+                        val compressedByteArray = compressByteArray(byteArray)
 
                         val sendHR = PutDataMapRequest.create("/hr").apply {
                             dataMap.putString("hr", jsonString) // JSON-String speichern
+                            //dataMap.putByteArray("hr", compressedByteArray)
                             dataMap.putLong("timeStamp", System.currentTimeMillis()) //added timestamp because DataClient only sends data when the data has been changed
                         }.asPutDataRequest() // creates "package" which should be send to phone
 
-                        dataClient.putDataItem(sendHR) // sends data to phone
-                        Log.d("WearableMessage", "Herzfrequenz-Daten gesendet: $jsonString")
+                        dataClient.putDataItem(sendHR).addOnSuccessListener {
+                            Log.d("WearableMessage", "Herzfrequenz-Daten gesendet: $jsonString")
+
+                        } // sends data to phone
                     }
 
                     if (skinTemperatureMeasurements.isNotEmpty()) {

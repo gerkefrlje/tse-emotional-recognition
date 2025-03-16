@@ -37,6 +37,7 @@ import com.example.tse_emotionalrecognition.presentation.utils.EmojiState
 import com.example.tse_emotionalrecognition.presentation.utils.scheduleDailyEmojiUpdateWorkManager
 import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 import com.example.tse_emotionalrecognition.presentation.utils.DataCollectReciever
+import com.example.tse_emotionalrecognition.presentation.utils.DataCollectService
 import com.example.tse_emotionalrecognition.presentation.utils.DataCollectWorker
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
@@ -179,24 +180,6 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                 ) {
                     Text("Label Activity")
                 }
-            }
-            item {
-                Button(
-                    onClick = {
-                        val intent = Intent(context, DataCollectReciever::class.java)
-                        intent.putExtra("COLLECT_DATA", true)
-                        intent.putExtra("PHASE", AppPhase.INITIAL_COLLECTION)
-                        intent.putExtra("sessionId", 1L)
-
-                        context.sendBroadcast(intent)
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Start Sensor")
-                }
-            }
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
             }
             item {
                 Button(
