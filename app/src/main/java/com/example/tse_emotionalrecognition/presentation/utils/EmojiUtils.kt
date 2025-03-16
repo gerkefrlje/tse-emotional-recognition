@@ -105,7 +105,7 @@ fun scheduleDailyEmojiUpdateWorkManager(context: Context) {
     val initialDelay = calendar.timeInMillis - currentTime
 
     val dailyWorkRequest = PeriodicWorkRequestBuilder<DailyEmojiWorker>(1, TimeUnit.DAYS)
-        .setInitialDelay(1000, TimeUnit.MILLISECONDS)
+        .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
         .build()
 
     WorkManager.getInstance(context).enqueueUniquePeriodicWork(
