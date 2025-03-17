@@ -30,10 +30,12 @@ import com.example.tse_emotionalrecognition.common.data.database.entities.Affect
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
 import com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement
 import com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement
+import com.example.tse_emotionalrecognition.common.data.database.entities.TAG
 import com.example.tse_emotionalrecognition.common.data.database.utils.CommunicationDataSender
 
 import com.example.tse_emotionalrecognition.presentation.AppPhase
 import com.example.tse_emotionalrecognition.presentation.LabelActivity
+import com.example.tse_emotionalrecognition.presentation.MainActivity
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import com.samsung.android.service.health.tracking.ConnectionListener
@@ -103,7 +105,6 @@ class DataCollectService : Service() {
         healthTrackingService.connectService()
     }
 
-    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("DataCollectService", "Service started")
 
@@ -149,6 +150,7 @@ class DataCollectService : Service() {
         stopDataCollection()
         countDownTimer?.cancel()
         wearDetectionHelper.stop()
+
         if (::wakeLock.isInitialized && wakeLock.isHeld) {
             wakeLock.release()
         }
@@ -201,54 +203,25 @@ class DataCollectService : Service() {
             healthTrackingService.disconnectService()
             delay(1000L)
 
-            sendToPhone()
         }
         Log.d("DataCollectService", "Data collection stopped")
     }
 
-    private suspend fun sendToPhone() {
-        var skinTemperatureMeasurements = userRepository.getSkinTemperatureMeasurements()
-        var heartRateMeasurements = userRepository.getHeartRateMeasurements().takeLast(100)
+    private fun sendToPhone() {
+        CoroutineScope(Dispatchers.IO).launch {
+            var skinTemperatureMeasurements = userRepository.getSkinTemperatureMeasurements()
+            var heartRateMeasurements = userRepository.getHeartRateMeasurements().takeLast(100)
 
-        val heartRateMeasurementString = Json.encodeToString(heartRateMeasurements)
-        val skinTemperatureMeasurementString = Json.encodeToString(skinTemperatureMeasurements)
+            val heartRateMeasurementString = Json.encodeToString(heartRateMeasurements)
+            val skinTemperatureMeasurementString = Json.encodeToString(skinTemperatureMeasurements)
 
-        val sender = CommunicationDataSender(applicationContext)
-        sender.sendStringData("/phone/hr", heartRateMeasurementString)
-        sender.sendStringData("/phone/skin", skinTemperatureMeasurementString)
-
-    }
-
-    private suspend fun sendSensorData() {
-        var skinTemperatureMeasurements = userRepository.getSkinTemperatureMeasurements()
-        var heartRateMeasurements = userRepository.getHeartRateMeasurements().takeLast(100)
-
-        val heartRateMeasurementString = Json.encodeToString(heartRateMeasurements)
-        val skinTemperatureMeasurementString = Json.encodeToString(skinTemperatureMeasurements)
-
-        if(heartRateMeasurements.isEmpty() || skinTemperatureMeasurements.isEmpty()) {
-            Log.d("DataCollectService", "No sensor data to send")
-        }
-
-        val dataClient = Wearable.getDataClient(applicationContext)
-
-        val putDataRequestHR = PutDataMapRequest.create("/hr").apply {
-            dataMap.putString("hr", heartRateMeasurementString)
-            dataMap.putLong("timeStamp", System.currentTimeMillis())
-        }.asPutDataRequest()
-
-        val putDataRequestST = PutDataMapRequest.create("/skin").apply {
-            dataMap.putString("skin", skinTemperatureMeasurementString)
-            dataMap.putLong("timeStamp", System.currentTimeMillis())
-        }.asPutDataRequest()
-
-        dataClient.putDataItem(putDataRequestHR).addOnSuccessListener {
-            Log.d("DataCollectService", "HR Sensor Data sent to phone")
-        }
-        dataClient.putDataItem(putDataRequestST).addOnSuccessListener {
-            Log.d("DataCollectService", "ST Sensor Data sent to phone")
+            val sender = CommunicationDataSender(applicationContext)
+            sender.sendStringData("/phone/hr", heartRateMeasurementString)
+            sender.sendStringData("/phone/skin", skinTemperatureMeasurementString)
         }
     }
+
+
 
     private fun startTimer() {
         countDownTimer = object : CountDownTimer(dataCollectionInterval, 1000) {
@@ -298,11 +271,26 @@ class DataCollectService : Service() {
                     PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
                 Log.v("DataCollectService", "AffectData ID: ${insertedAffectData.id}")
                 createActivityNotification("How do you feel", pendingIntent, newAffectData.id)
+
+
+
             } else {
                 Log.e("DataCollectService", "Failed to insert AffectData")
             }
 
         }
+    }
+
+    private fun updateNotificationTracker(){
+        userRepository.incrementTriggered(CoroutineScope(Dispatchers.IO), MainActivity.trackerID)
+        val sender = CommunicationDataSender(applicationContext)
+        CoroutineScope(Dispatchers.IO).launch {
+            val interventionStats = userRepository.getInterventionStatsByTag(TAG.INTERVENTIONS)
+            val interventionStatsString = Json.encodeToString(interventionStats)
+
+            sender.sendStringData("/phone/notification", interventionStatsString)
+        }
+
     }
 
     private fun launchFeedbackActivity() {
@@ -320,7 +308,7 @@ class DataCollectService : Service() {
 
         val cancelIntent = Intent(this, NotificationMonitor::class.java)
         cancelIntent.putExtra("affectDataId", affectDataId)
-        val cancelPendingIntent = PendingIntent.getBroadcast(this, affectDataId.hashCode(), cancelIntent, PendingIntent.FLAG_IMMUTABLE)
+        val cancelPendingIntent = PendingIntent.getBroadcast(this, affectDataId.hashCode(), cancelIntent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
 
         val notification = NotificationCompat.Builder(this, "data_collection_service")
@@ -328,13 +316,13 @@ class DataCollectService : Service() {
             .setContentText(notificationText)
             .setSmallIcon(R.mipmap.ic_launcher)
             .addAction(R.mipmap.ic_launcher, "Open Label Activity", intent)
-            .setAutoCancel(true)
             .setDeleteIntent(cancelPendingIntent)
-            .setTimeoutAfter(10L * 1000L)
+            .setPriority(NotificationCompat.PRIORITY_HIGH) // oder PRIORITY_MAX
+            .setTimeoutAfter(10L * 60L *1000L)
             .build()
 
         notificationManager.notify(notificationId, notification)
-
+        updateNotificationTracker()
 
     }
 
@@ -353,9 +341,7 @@ class DataCollectService : Service() {
                 "Data Collection Service",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                setShowBadge(false) // Keine Symbol-Badge für den Kanal
-                enableLights(false)
-                enableVibration(false)
+                setBypassDnd(true)
             }
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)

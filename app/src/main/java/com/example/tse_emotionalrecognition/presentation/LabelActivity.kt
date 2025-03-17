@@ -1,5 +1,7 @@
 package com.example.tse_emotionalrecognition.presentation
 
+import android.app.NotificationManager
+import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -36,6 +38,10 @@ class LabelActivity : ComponentActivity() {
             val affectDataId = intent.getLongExtra("affectDataId", -1)
 
             Log.d("LabelActivity", "affectDataId from intent: $affectDataId") // Logging hinzufügen
+
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.cancel(3) // Verwende die NotificationId
+            Log.d("LabelActivity", "Notification canceled") // Logging hinzufügen
 
             insertEngagementTime(affectDataId)
             LabelWatch(
