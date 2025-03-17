@@ -83,6 +83,10 @@ class LabelActivity : ComponentActivity() {
             notificationManager.cancel(3) // Verwende die NotificationId
             Log.d("LabelActivity", "Notification canceled") // Logging hinzufügen
 
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.cancel(3) // Verwende die NotificationId
+            Log.d("LabelActivity", "Notification canceled") // Logging hinzufügen
+
             insertEngagementTime(affectDataId)
             LabelWatch(
                 affectDataId,
