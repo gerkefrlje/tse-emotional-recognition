@@ -65,11 +65,15 @@ dependencies {
     implementation(libs.androidx.material3.android) //Kein Plan für was das gebraucht wurde
     implementation(project(":common"))
     implementation(libs.androidx.material3.android)
+    implementation(libs.androidx.work.runtime.ktx)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
     debugImplementation(libs.tiles.tooling)
+    implementation(libs.androidx.watchface.complications.data)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.gif)
 
 //    implementation(libs.androidx.material)
 //    implementation(libs.androidx.ui)
