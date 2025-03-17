@@ -2,6 +2,7 @@ package com.example.phone
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -60,6 +61,18 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        interventionTrackerViewModel.interventionStats.observe(this) { stats ->
+            stats?.let {
+                val completedCount = it.triggeredCount
+                val missedCount = it.dismissedCount
+                // Reagiere auf die neuen Werte
+                println("Neue Daten: Completed=$completedCount, Missed=$missedCount")
+                Log.d("MainActivity", "Neue Daten: Completed=$completedCount, Missed=$missedCount")
+            }
+        }    }
 }
 
 /**
@@ -328,6 +341,6 @@ fun MenuDialogItem(text: String, onClick: () -> Unit) {
 @Composable
 fun MainScreenPreview() {
     TSEEmotionalRecognitionTheme {
-        MainScreen(0, 0)
+        MainScreen(0,0)
     }
 }

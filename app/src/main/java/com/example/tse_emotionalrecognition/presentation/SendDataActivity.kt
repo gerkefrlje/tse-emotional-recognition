@@ -259,18 +259,14 @@ fun Greeting(wearCount: Int = 0, onCountChange: (Int) -> Unit) {
                     val jsonString =
                         Json.encodeToString(heartRateMeasurements) // currently limited to 20 measurements due to limitations
 
-                        val byteArray = jsonString.toByteArray(Charsets.UTF_8)
-
-                        val compressedByteArray = compressByteArray(byteArray)
-
-                    sender.sendStringData("/phone/hr", jsonString)
+                    //sender.sendStringData("/phone/hr", jsonString)
                 }
 
                 if (skinTemperatureMeasurements.isNotEmpty()) {
                     val jsonString =
                         Json.encodeToString(skinTemperatureMeasurements) // Ganze Liste
 
-                    sender.sendStringData("/phone/skin", jsonString)
+                    //sender.sendStringData("/phone/skin", jsonString)
                 }
 
 

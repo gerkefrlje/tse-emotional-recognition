@@ -50,6 +50,11 @@ import com.example.tse_emotionalrecognition.presentation.utils.InfoActivity
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import java.util.Calendar
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -96,6 +101,9 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        val DEBUG_TAG = "MainActivity"
+        const val trackerID = 1L
     }
 
     private val userRepository by lazy { UserDataStore.getUserRepository(application) }
@@ -103,11 +111,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var sharedPreferences: SharedPreferences
     private val FIRST_LAUNCH_KEY = "first_launch_time"
 
-    companion object {
-        val DEBUG_TAG = "MainActivity"
-        const val trackerID = 1L
-
-    }
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->

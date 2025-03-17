@@ -54,8 +54,18 @@ class InterventionStatsTileService : SuspendingTileService() {
     override fun onTileEnterEvent(requestParams: EventBuilders.TileEnterEvent) {
         Log.d("TileDebug", "Tile wurde betätigt: $requestParams")
         getUpdater(this).requestUpdate(InterventionStatsTileService::class.java)
+
     }
 
+}
+
+private suspend fun updateInterventionStats(context: Context) {
+    // Beispiel für eine Datenänderung (z.B. Interventionen abgeschlossen)
+    val userRepository = UserDataStore.getUserRepository(context)
+    val interventionStats = userRepository.getInterventionStatsById(MainActivity.trackerID)
+    // Update logik oder andere Datenoperationen
+
+    // Optional: Aktualisiere die Ansicht mit neuen Daten
 }
 
 private fun resources(): ResourceBuilders.Resources {

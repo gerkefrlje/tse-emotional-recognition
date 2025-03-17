@@ -187,7 +187,6 @@ class UserRepository(db: com.example.tse_emotionalrecognition.common.data.databa
                 val entity = interventionStatsDao.getInterventionStatsById(id)
                 if(entity != null) {
                     entity.triggeredCount++
-
                     interventionStatsDao.update(entity)
                     Log.v("InterventionStats", "updated to ${entity.toString()}")
                     onFinished?.invoke(entity)
@@ -213,7 +212,10 @@ class UserRepository(db: com.example.tse_emotionalrecognition.common.data.databa
                 }
 
             }
-        }fun insertSession(
+        }
+
+
+        fun insertSession(
             scope: CoroutineScope,
             entity: com.example.tse_emotionalrecognition.common.data.database.entities.SessionData,
             onFinished: (entity: com.example.tse_emotionalrecognition.common.data.database.entities.SessionData) -> Unit
