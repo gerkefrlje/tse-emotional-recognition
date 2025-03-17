@@ -19,21 +19,11 @@ import androidx.annotation.DrawableRes
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.*
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.background
@@ -46,6 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Image
 import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.unit.dp
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.content.ContextCompat
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
@@ -62,6 +53,7 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.example.tse_emotionalrecognition.R
+import androidx.wear.compose.material.*
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.common.data.database.UserRepository
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
@@ -70,6 +62,9 @@ import com.example.tse_emotionalrecognition.presentation.interventions.Intervent
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
 import com.example.tse_emotionalrecognition.presentation.utils.EmojiSelector
 import com.example.tse_emotionalrecognition.presentation.utils.EmojiState
+import com.example.tse_emotionalrecognition.presentation.utils.scheduleDailyEmojiUpdateWorkManager
+import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
+import com.example.tse_emotionalrecognition.presentation.utils.EmojiSelector
 import com.example.tse_emotionalrecognition.presentation.utils.scheduleDailyEmojiUpdateWorkManager
 import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 import com.example.tse_emotionalrecognition.presentation.utils.DataCollectReciever
@@ -165,37 +160,6 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun WearApp(greetingName: String) {
-    TSEEmotionalRecognitionTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colors.background),
-            contentAlignment = Alignment.Center
-        ) {
-            TimeText()
-            Greeting(greetingName = greetingName)
-        }
-    }
-}
-
-@Composable
-fun Greeting(greetingName: String) {
-    Text(
-        modifier = Modifier.fillMaxWidth(),
-        textAlign = TextAlign.Center,
-        color = MaterialTheme.colors.primary,
-        text = stringResource(R.string.hello_world, greetingName)
-    )
-}
-
-@Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true)
-@Composable
-fun DefaultPreview() {
-    WearApp("Preview Android")
-}
-
-@Composable
 fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.common.data.database.UserRepository) {
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("emoji_prefs", Context.MODE_PRIVATE)
@@ -246,23 +210,6 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                 ) {
                     Text("Label Activity")
                 }
-            }
-            item {
-                Button(
-                    onClick = {
-                        val newEmojiState = EmojiState.entries.random()
-                        updateEmoji(context, newEmojiState)
-
-                        // Force UI Update
-                        currentEmojiState = newEmojiState
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Transfer")
-                }
-            }
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
             }
             item {
                 Button(
