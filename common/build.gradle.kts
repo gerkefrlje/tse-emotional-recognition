@@ -41,6 +41,9 @@ dependencies {
     ksp("androidx.room:room-compiler:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
 
+    // Wearable Data Layer API für Kommunikation mit dem Smartphone
+    implementation(libs.play.services.wearable)
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

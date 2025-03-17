@@ -47,7 +47,7 @@ dependencies {
 
 
     //für die Übertragung zwischen Handy und Uhr
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2") //wandelt Klassen in String um
+    implementation(libs.kotlinx.serialization.json) //wandelt Klassen in String um
 
     // Wearable Data Layer API für Kommunikation mit dem Smartphone
     implementation(libs.play.services.wearable)
@@ -56,6 +56,9 @@ dependencies {
     implementation("androidx.room:room-runtime:2.6.1")
     ksp("androidx.room:room-compiler:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
+
+    //live data from viewmodel
+    implementation(libs.androidx.runtime.livedata) // oder die neueste Version
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
