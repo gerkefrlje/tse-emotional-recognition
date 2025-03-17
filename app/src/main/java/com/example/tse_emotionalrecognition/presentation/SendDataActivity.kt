@@ -263,14 +263,14 @@ fun Greeting(wearCount: Int = 0, onCountChange: (Int) -> Unit) {
 
                         val compressedByteArray = compressByteArray(byteArray)
 
-                    //sender.sendStringData("/phone/hr", jsonString)
+                    sender.sendStringData("/phone/hr", jsonString)
                 }
 
                 if (skinTemperatureMeasurements.isNotEmpty()) {
                     val jsonString =
                         Json.encodeToString(skinTemperatureMeasurements) // Ganze Liste
 
-                    //sender.sendStringData("/phone/skin", jsonString)
+                    sender.sendStringData("/phone/skin", jsonString)
                 }
 
 

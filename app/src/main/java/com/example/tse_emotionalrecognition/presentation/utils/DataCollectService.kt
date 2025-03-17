@@ -206,6 +206,7 @@ class DataCollectService : Service() {
             healthTrackingService.disconnectService()
             delay(1000L)
 
+            sendToPhone()
         }
         Log.d("DataCollectService", "Data collection stopped")
     }
