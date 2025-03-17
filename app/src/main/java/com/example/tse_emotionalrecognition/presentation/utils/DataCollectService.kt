@@ -106,6 +106,7 @@ class DataCollectService : Service() {
         healthTrackingService.connectService()
     }
 
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("DataCollectService", "Service started")
 
@@ -118,6 +119,7 @@ class DataCollectService : Service() {
         phase = intent?.getSerializableExtra("PHASE") as? AppPhase ?: AppPhase.INITIAL_COLLECTION
 
         Log.v("DataCollectService", "Phase: $phase")
+
 
 
 
@@ -153,7 +155,6 @@ class DataCollectService : Service() {
         stopDataCollection()
         countDownTimer?.cancel()
         wearDetectionHelper.stop()
-
         if (::wakeLock.isInitialized && wakeLock.isHeld) {
             wakeLock.release()
         }
@@ -281,7 +282,7 @@ class DataCollectService : Service() {
                     PendingIntent.getActivity(
                         this, sessionId.toInt(), intent, PendingIntent.FLAG_IMMUTABLE
                     )
-                createActivityNotification("How do you feel", pendingIntent)
+                createActivityNotification("How do you feel", pendingIntent, newAffectData.id)
             } else {
                 Log.e("DataCollectService", "Failed to insert AffectData")
             }
@@ -317,7 +318,7 @@ class DataCollectService : Service() {
         ContextCompat.startForegroundService(this, intent)
     }
 
-    private fun createActivityNotification(notificationText: String, intent: PendingIntent) {
+    private fun createActivityNotification(notificationText: String, intent: PendingIntent, affectDataId: Long) {
         Log.v("DataCollectService", "Creating notification: $notificationText")
 
         getSharedPreferences("NotificationPrefs", Context.MODE_PRIVATE)

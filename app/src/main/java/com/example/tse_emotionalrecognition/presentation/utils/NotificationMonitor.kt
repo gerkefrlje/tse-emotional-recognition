@@ -26,6 +26,7 @@ import kotlinx.serialization.json.Json
 
 class NotificationMonitor() : BroadcastReceiver() {
 
+
     override fun onReceive(context: Context, intent: Intent) {
         val userRepository = UserDataStore.getUserRepository(context)
 
@@ -50,10 +51,20 @@ class NotificationMonitor() : BroadcastReceiver() {
 
 
         Log.v("NotificationMonitor", "Notification dismissed")
-    }
+        val affectDataId = intent.getLongExtra("affectDataId", -1L)
+        if (affectDataId != -1L) {
+            userRepository.deleteAffect(
+                CoroutineScope(Dispatchers.IO), affectDataId,
+            ) { deletedID ->
+                if (deletedID != null) {
+                    Log.v("NotificationMonitor", "AffectData deleted with ID: $deletedID")
+                } else {
+                    Log.e("NotificationMonitor", "Failed to delete AffectData")
+                }
 
 
 }
+        }
 
 private fun updateNotificationTracker(userRepository: UserRepository, context: Context) {
 

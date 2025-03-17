@@ -45,7 +45,7 @@
             android:enabled="true"
             android:exported="false">
             <intent-filter>
-                <action android:name="android.intent.action.NOTIFICATION_REMOVED" />
+                <action android:name="android.intent.action.NOTIFICATION_CANCELLED" />
             </intent-filter>
         </receiver>
         <service
@@ -108,6 +108,7 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="health" />
+
 
 
 

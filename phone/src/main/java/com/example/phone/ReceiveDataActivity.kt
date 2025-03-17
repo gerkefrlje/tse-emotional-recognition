@@ -35,6 +35,7 @@ import com.example.phone.utils.HealthViewModel
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.common.data.database.UserRepository
 import com.google.android.gms.wearable.Wearable
+import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -86,7 +87,6 @@ class ReceiveDataActivity : ComponentActivity() {//, DataClient.OnDataChangedLis
                         }
                         item {
                             HeartRateView(
-
                                 heartRateList = heartRateList
                             )
                         }
@@ -98,7 +98,6 @@ class ReceiveDataActivity : ComponentActivity() {//, DataClient.OnDataChangedLis
                             }
 
                         item {SkinTemperatureView(
-
                                 skinTemperatureList = skinTemperatureList
                             )
 
@@ -247,6 +246,11 @@ fun HeartRateView(heartRateList: List<com.example.tse_emotionalrecognition.commo
         Text(text = "Heart Rate")
         LazyColumn(
         ) {
+
+            item {
+                Text(
+                    text = "Heart Rate",
+                )}
             items(heartRateList) { measurement ->
                 Card(
                     modifier = Modifier
@@ -290,8 +294,7 @@ fun SkinTemperatureView(
 
 fun formatTimeOnly(sessionId: Long): String {
     val date = Date(sessionId)
-    val sdf =
-        SimpleDateFormat("HH:mm:ss", Locale.getDefault()) // Format für Stunden, Minuten, Sekunden
+    val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault()) // Format für Stunden, Minuten, Sekunden
     return sdf.format(date)
 }
 
