@@ -1,6 +1,9 @@
 package com.example.tse_emotionalrecognition.common.data.database
 
 import android.util.Log
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
+import com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement
+import com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -157,4 +160,21 @@ class UserRepository(db: com.example.tse_emotionalrecognition.common.data.databa
         }
     }
 
+    suspend fun getAllHeartRateMeasurements(): List<HeartRateMeasurement> {
+        return withContext(Dispatchers.IO) {
+            heartRateDao.getAll()
+        }
+    }
+
+    suspend fun getAllSkinTemperatureMeasurements(): List<SkinTemperatureMeasurement> {
+        return withContext(Dispatchers.IO) {
+            skinTemperatureDao.getAll()
+        }
+    }
+
+    suspend fun getAllAffectData(): List<AffectData> {
+        return withContext(Dispatchers.IO) {
+            affectDao.getAll()
+        }
+    }
 }

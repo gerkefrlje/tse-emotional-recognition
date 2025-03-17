@@ -142,6 +142,11 @@
             android:exported="true"
             android:taskAffinity=""/>
 
+        <activity
+            android:name=".presentation.FeedbackActivity"
+            android:exported="true"
+            android:taskAffinity=""/>
+
 
 
     </application>

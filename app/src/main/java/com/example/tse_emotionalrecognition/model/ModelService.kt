@@ -1,23 +1,30 @@
 package com.example.tse_emotionalrecognition.model
 
 import android.app.Notification
+import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.SharedPreferences
 import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import androidx.activity.result.launch
+import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.work.impl.close
 import com.example.tse_emotionalrecognition.R
-import com.example.tse_emotionalrecognition.data.database.UserDataStore
-import com.example.tse_emotionalrecognition.data.database.UserRepository
-import com.example.tse_emotionalrecognition.data.database.entities.AffectData
-import com.example.tse_emotionalrecognition.data.database.entities.AffectType
-import com.example.tse_emotionalrecognition.data.database.entities.HeartRateMeasurement
-import com.example.tse_emotionalrecognition.data.database.entities.SkinTemperatureMeasurement
+import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
+import com.example.tse_emotionalrecognition.common.data.database.UserRepository
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
+import com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement
+import com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement
+import com.example.tse_emotionalrecognition.presentation.FeedbackActivity
+import com.example.tse_emotionalrecognition.presentation.LabelActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -25,7 +32,6 @@ import kotlinx.coroutines.withContext
 import smile.classification.GradientTreeBoost
 import smile.classification.gbm
 import smile.data.DataFrame
-import smile.data.Tuple
 import smile.data.formula.Formula
 import smile.data.vector.*
 import java.io.File
@@ -38,7 +44,7 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 const val MODEL_FILE_NAME = "gbm_model.ser"
-const val DATA_WINDOW_MS = 2 * 60 * 1000L
+const val DATA_WINDOW_MS = 3 * 60 * 1000L
 const val LABEL_COLUMN = "affect"
 const val LAST_TRAINED_KEY = "last_trained_time"
 
@@ -55,6 +61,7 @@ class ModelService : Service() {
     private var heartRateMeasurements: List<HeartRateMeasurement> = emptyList()
     private var skinTemperatureMeasurements: List<SkinTemperatureMeasurement> = emptyList()
     private var affectData: List<AffectData> = emptyList()
+    private var sessionId: Long = 0L
 
     private var prediction = AffectType.NONE
 
@@ -64,6 +71,7 @@ class ModelService : Service() {
         userRepository = UserDataStore.getUserRepository(applicationContext)
     }
 
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         val action = intent?.action
 
@@ -75,6 +83,8 @@ class ModelService : Service() {
             FOREGROUND_SERVICE_TYPE_HEALTH
         )
 
+        sessionId = intent?.getLongExtra("sessionId", 0L) ?: 0L
+
         when (action) {
             ACTION_TRAIN_MODEL -> {
                 loadData()
@@ -82,13 +92,37 @@ class ModelService : Service() {
                 val lastTrainedTime = sharedPreferences.getLong(LAST_TRAINED_KEY, 0L)
                 val currentTime = System.currentTimeMillis()
 
-                if (currentTime - lastTrainedTime < 24 * 60 * 60 * 1000) {
+                if (currentTime - lastTrainedTime > 24 * 60 * 60 * 1000) {
                     trainModel()
                 }
 
                 predict()
 
-                // TODO: Link to Feedback
+                val intent = Intent(applicationContext, FeedbackActivity::class.java)
+                intent.flags = FLAG_ACTIVITY_NEW_TASK // Hinzufügen des Flags
+                val newAffectData = AffectData(
+                    sessionId = sessionId,
+                    timeOfNotification= System.currentTimeMillis(),
+                    affect = AffectType.NULL)
+
+                //TODO selbes affect Data
+                userRepository.insertAffect(
+                    CoroutineScope(Dispatchers.IO), newAffectData,
+                ) { insertedAffectData ->
+                    if (insertedAffectData != null) {
+                        Log.v("ModelService", "AffectData inserted with ID: ${insertedAffectData.id}")
+
+
+                        intent.putExtra("affectDataId", newAffectData.id)
+                        val pendingIntent =
+                            PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+                        Log.v("ModelService", "AffectData ID: ${insertedAffectData.id}")
+                        createActivityNotification("How do you feel", pendingIntent)
+                    } else {
+                        Log.e("ModelService", "Failed to insert AffectData")
+                    }
+
+                }
             }
             ACTION_PREDICT -> {
                 loadData ()
@@ -132,10 +166,10 @@ class ModelService : Service() {
             val predictionAsInt = model.predict(predictionData)[0]
 
             prediction = when (predictionAsInt) {
-                0 -> AffectType.ANGRY_SAD
-                1 -> AffectType.HAPPY_RELAXED
+                0 -> AffectType.NEGATIVE
+                1 -> AffectType.POSITIVE
                 2 -> AffectType.NONE
-                else -> AffectType.NONE
+                else -> AffectType.NULL
             }
         }
     }
@@ -187,9 +221,11 @@ class ModelService : Service() {
         )
 
         val affectDf = DataFrame.of(
-            LongVector.of("timestamp", affectData.map { it.timeOfEngagement }.toLongArray()),
+            LongVector.of("timestamp", affectData.map { it.timeOfNotification }.toLongArray()),
             LongVector.of("affect", affectData.map { it.affect.ordinal.toLong() }.toLongArray())
-        )
+        ).filter {
+            it[1] as Long != 3L
+        }
 
         val rows = mutableListOf<DataRow>()
 
@@ -211,11 +247,12 @@ class ModelService : Service() {
 
             val skinWindow = skinDf.filter { it[0] as Long in (affectTimestamp - DATA_WINDOW_MS)..affectTimestamp }
 
-            if (skinWindow.isEmpty()) {
-                continue
+            var skinTemperatureNormalizedValues = skinWindow.map { it[1] as Double }
+
+            if (skinTemperatureNormalizedValues.isEmpty()) {
+                skinTemperatureNormalizedValues = List(1) { 0.0 }
             }
 
-            val skinTemperatureNormalizedValues = skinWindow.map { it[1] as Double }
             val meanSkinTemperatureNormalized = skinTemperatureNormalizedValues.average()
 
             rows.add(DataRow(meanHrNormalized, rmssd, meanSkinTemperatureNormalized, affectValue))
@@ -264,7 +301,13 @@ class ModelService : Service() {
         val skinWindow = skinDf.filter { it[0] as Long in (latestTimestamp - DATA_WINDOW_MS)..latestTimestamp }
 
 
-        val skinTemperatureNormalizedValues = skinWindow.map { it[1] as Double }
+
+        var skinTemperatureNormalizedValues = skinWindow.map { it[1] as Double }
+
+        if (skinTemperatureNormalizedValues.isEmpty()) {
+            skinTemperatureNormalizedValues = List(1) { 0.0 }
+        }
+
         val meanSkinTemperatureNormalized = skinTemperatureNormalizedValues.average()
 
         return DataFrame.of(
@@ -329,6 +372,23 @@ class ModelService : Service() {
             Log.e("ModelTrainer", "Error loading model", e)
             return null
         }
+    }
+
+    private fun createActivityNotification(notificationText: String, intent: PendingIntent) {
+        Log.v("DataCollectService", "Creating notification: $notificationText")
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val notificationId = 4  // Unique ID for the notification
+
+
+        val notification = NotificationCompat.Builder(this, "data_collection_service")
+            .setContentTitle("Data Collection Service")
+            .setContentText(notificationText)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .addAction(R.mipmap.ic_launcher, "Launch Activity", intent)
+            .setAutoCancel(true)
+            .build()
+
+        notificationManager.notify(notificationId, notification)
     }
 
     private fun createNotification(contentText: String): Notification {

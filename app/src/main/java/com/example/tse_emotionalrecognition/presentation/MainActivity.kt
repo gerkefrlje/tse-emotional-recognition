@@ -1,3 +1,8 @@
+/* While this template provides a good starting point for using Wear Compose, you can always
+ * take a look at https://github.com/android/wear-os-samples/tree/main/ComposeStarter to find the
+ * most up to date changes to the libraries and their usages.
+ */
+
 package com.example.tse_emotionalrecognition.presentation
 
 
@@ -41,6 +46,7 @@ import com.example.tse_emotionalrecognition.presentation.utils.DataCollectWorker
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 
 class MainActivity : ComponentActivity() {
     private val userRepository by lazy { UserDataStore.getUserRepository(application) }
@@ -126,7 +132,22 @@ class MainActivity : ComponentActivity() {
         WorkManager.getInstance(this).enqueueUniquePeriodicWork("DataCollectionWork", ExistingPeriodicWorkPolicy.KEEP, periodicWorkRequest)
 
     }
+
+    private fun getAppPhase(): AppPhase {
+        val firstLaunchTime = sharedPreferences.getLong(FIRST_LAUNCH_KEY, 0L)
+        val currentTime = System.currentTimeMillis()
+        val elapsedTime = currentTime - firstLaunchTime
+        val daysElapsed = TimeUnit.MILLISECONDS.toDays(elapsedTime)
+
+        return when {
+            daysElapsed < 2 -> AppPhase.INITIAL_COLLECTION
+            daysElapsed < 4 -> AppPhase.PREDICTION_WITH_FEEDBACK
+            else -> AppPhase.PREDICTION_ONLY
+        }
+    }
 }
+
+
 
 @Composable
 fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.common.data.database.UserRepository) {
@@ -162,13 +183,9 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                 Button(
                     onClick = {
                         userRepository.insertAffect(
-                            CoroutineScope(Dispatchers.IO)
-                            ,
-                            com.example.tse_emotionalrecognition.common.data.database.entities.AffectData(
-                                sessionId = 1,
-                                affect = com.example.tse_emotionalrecognition.common.data.database.entities.AffectType.HAPPY_RELAXED
-                            )
-                        ){
+                            CoroutineScope(Dispatchers.IO),
+                            AffectData(sessionId = 1, affect = AffectType.POSITIVE)
+                        ) {
                             val affectDataID = it.id
                             val intent = Intent(context, LabelActivity::class.java)
                             intent.putExtra("affectDataId", affectDataID)

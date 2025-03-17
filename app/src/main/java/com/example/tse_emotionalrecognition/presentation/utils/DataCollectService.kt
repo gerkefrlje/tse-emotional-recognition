@@ -21,6 +21,7 @@ import com.example.tse_emotionalrecognition.common.data.database.entities.Affect
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
 import com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement
 import com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement
+import com.example.tse_emotionalrecognition.model.ModelService
 
 import com.example.tse_emotionalrecognition.presentation.AppPhase
 import com.example.tse_emotionalrecognition.presentation.LabelActivity
@@ -202,7 +203,10 @@ class DataCollectService : Service() {
 
         val intent = Intent(applicationContext, LabelActivity::class.java)
         intent.flags = FLAG_ACTIVITY_NEW_TASK // Hinzufügen des Flags
-        val newAffectData = AffectData(sessionId = sessionId, affect = AffectType.NONE)
+        val newAffectData = AffectData(
+            sessionId = sessionId,
+            timeOfNotification= System.currentTimeMillis(),
+            affect = AffectType.NULL)
 
         //TODO selbes affect Data
         userRepository.insertAffect(
@@ -225,11 +229,19 @@ class DataCollectService : Service() {
     }
 
     private fun launchFeedbackActivity() {
-        // TODO: Launch ModelService with intent extra marking trianing + feedback
+        //Launch ModelService with intent action = ACTION_TRAIN_MODEL
+        val intent = Intent(applicationContext, ModelService::class.java)
+        intent.putExtra("sessionId", sessionId)
+        intent.action = ModelService.ACTION_TRAIN_MODEL
+        ContextCompat.startForegroundService(this, intent)
     }
 
     private fun launchPredictionService() {
-        // TODO: Launch ModelService with intent extra marking predict only
+        // Launch ModelService with intent action = ACTION_PREDICT
+        val intent = Intent(applicationContext, ModelService::class.java)
+        intent.putExtra("sessionId", sessionId)
+        intent.action = ModelService.ACTION_PREDICT
+        ContextCompat.startForegroundService(this, intent)
     }
 
     private fun createActivityNotification(notificationText: String, intent: PendingIntent) {

@@ -16,9 +16,10 @@ data class AffectData(
 )
 
 enum class AffectType {
-    ANGRY_SAD,
-    HAPPY_RELAXED,
-    NONE
+    NEGATIVE,
+    POSITIVE,
+    NONE,
+    NULL
 }
 
 
