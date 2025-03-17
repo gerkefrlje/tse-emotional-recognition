@@ -1,70 +1,39 @@
 package com.example.tse_emotionalrecognition.presentation
 
 
-import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.content.pm.PackageManager
-import android.graphics.drawable.Animatable
 import android.os.Build
 import android.os.Bundle
-import android.provider.Settings.Global
 import android.util.Log
-import android.view.ViewGroup
-import android.widget.ImageView
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.annotation.DrawableRes
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.*
-import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.unit.dp
-import androidx.compose.foundation.Image
-import androidx.compose.material3.AlertDialog
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.content.ContextCompat
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
-import androidx.wear.compose.material.*
 import androidx.wear.compose.material.Button
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
-import androidx.wear.compose.material.TimeText
-import androidx.wear.tooling.preview.devices.WearDevices
-import coil.ImageLoader
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
-import com.example.tse_emotionalrecognition.R
-import androidx.wear.compose.material.*
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
-import com.example.tse_emotionalrecognition.common.data.database.UserRepository
-import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
-import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
 import com.example.tse_emotionalrecognition.presentation.interventions.InterventionOverviewActivity
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
 import com.example.tse_emotionalrecognition.presentation.utils.EmojiSelector
 import com.example.tse_emotionalrecognition.presentation.utils.EmojiState
-import com.example.tse_emotionalrecognition.presentation.utils.scheduleDailyEmojiUpdateWorkManager
-import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
-import com.example.tse_emotionalrecognition.presentation.utils.EmojiSelector
 import com.example.tse_emotionalrecognition.presentation.utils.scheduleDailyEmojiUpdateWorkManager
 import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 import com.example.tse_emotionalrecognition.presentation.utils.DataCollectReciever
@@ -200,7 +169,7 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                                 affect = com.example.tse_emotionalrecognition.common.data.database.entities.AffectType.HAPPY_RELAXED
                             )
                         ){
-                            var affectDataID = it.id
+                            val affectDataID = it.id
                             val intent = Intent(context, LabelActivity::class.java)
                             intent.putExtra("affectDataId", affectDataID)
                             context.startActivity(intent)
@@ -246,7 +215,11 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
             }
             item {
                 Button(
-                    onClick = { updateEmoji(EmojiState.entries.toTypedArray().random()) },
+                    onClick = {  val newEmojiState = EmojiState.entries.random()
+                        updateEmoji(context, newEmojiState)
+
+                        // Force UI Update
+                        currentEmojiState = newEmojiState },
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Randomize Emoji")
