@@ -41,6 +41,9 @@ import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import kotlinx.serialization.json.Json
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class ReceiveDataActivity : ComponentActivity() {//, DataClient.OnDataChangedListener
 
@@ -83,14 +86,12 @@ class ReceiveDataActivity : ComponentActivity() {//, DataClient.OnDataChangedLis
                         }
                         item {
                             HeartRateView(
-                                modifier = standardModifier.verticalScroll(rememberScrollState()),
                                 heartRateList = heartRateList
                             )
                         }
 
                         item {
                             SkinTemperatureView(
-                                modifier = standardModifier.verticalScroll(rememberScrollState()),
                                 skinTemperatureList = skinTemperatureList
                             )
 
@@ -256,47 +257,61 @@ fun Greeting(modifier: Modifier = Modifier, count: Int, context: Context) {
 }
 
 @Composable
-fun HeartRateView(heartRateList: List<HeartRateMeasurement>, modifier: Modifier) {
+fun HeartRateView(heartRateList: List<HeartRateMeasurement>) {
 
-    Column(
-        modifier = modifier
-    ) {
-        Text(
-            text = "Heart Rate",
-        )
-        heartRateList.forEach { measurement ->
-            Row(
-            ) {
-                Text(text = "HR: ${measurement.hr}")
-                Text(text = "ID: ${measurement.sessionId}")
-            }
-        }
-    }
-}
+    Column {
+        Text(text = "Heart Rate")
+        LazyColumn(
+        ) {
 
-@Composable
-fun SkinTemperatureView(
-    skinTemperatureList: List<SkinTemperatureMeasurement>,
-    modifier: Modifier
-) {
-    Column(modifier = modifier) {
-        Text(text = "Session ID")
-
-        LazyColumn {
-            items(skinTemperatureList) { measurement ->
+            item {
+                Text(
+                    text = "Heart Rate",
+                )}
+            items(heartRateList) { measurement ->
                 Card(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
+                        .fillMaxWidth(),
                     elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = "Temp: ${measurement.objectTemperature}")
-                        Text(text = "ID: ${measurement.sessionId}")
+                        Text(text = "HR: ${measurement.hr}")
+                        Text(text = "ID: ${formatTimeOnly(measurement.sessionId)}")
                     }
                 }
             }
         }
     }
+
+}
+
+@Composable
+fun SkinTemperatureView(
+    skinTemperatureList: List<SkinTemperatureMeasurement>,
+) {
+    Column() {
+        Text(text = "Skin Temperature")
+
+        LazyColumn {
+            items(skinTemperatureList) { measurement ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(text = "Temp: ${measurement.objectTemperature}")
+                        Text(text = "ID: ${formatTimeOnly(measurement.sessionId)}")
+                    }
+                }
+            }
+        }
+    }
+}
+
+fun formatTimeOnly(sessionId: Long): String {
+    val date = Date(sessionId)
+    val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault()) // Format für Stunden, Minuten, Sekunden
+    return sdf.format(date)
 }
 

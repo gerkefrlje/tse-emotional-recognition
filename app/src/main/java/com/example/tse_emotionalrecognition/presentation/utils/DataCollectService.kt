@@ -8,11 +8,15 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC
+import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH
 import android.os.Build
 import android.os.IBinder
 import android.os.CountDownTimer
+import android.os.PowerManager
 import androidx.core.content.ContextCompat
 import android.util.Log
+import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +48,9 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class DataCollectService : Service() {
     private lateinit var userRepository: UserRepository
@@ -58,8 +65,20 @@ class DataCollectService : Service() {
     private var sessionId: Long = 0L
     private var phase: AppPhase = AppPhase.INITIAL_COLLECTION
 
+    private lateinit var wakeLock: PowerManager.WakeLock
+
+    private fun acquireWakeLock() {
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = powerManager.newWakeLock(
+            PowerManager.PARTIAL_WAKE_LOCK,
+            "DataCollectService::WakeLock"
+        )
+        wakeLock.acquire(3L * 10L * 1000L /* 10 minutes */)
+    }
+
     override fun onCreate() {
         super.onCreate()
+        acquireWakeLock()
         createNotificationChannel()
         userRepository = UserDataStore.getUserRepository(applicationContext)
         wearDetectionHelper = WearDetectionHelper(this)
@@ -83,16 +102,19 @@ class DataCollectService : Service() {
         healthTrackingService.connectService()
     }
 
+    @RequiresApi(Build.VERSION_CODES.UPSIDE_DOWN_CAKE)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d("DataCollectService", "Service started")
 
         startForeground(
             123,
-            createNotification("Health data collection is running...")
+            createNotification("Health data collection is running..."),
+        FOREGROUND_SERVICE_TYPE_HEALTH or FOREGROUND_SERVICE_TYPE_DATA_SYNC
         )
 
         phase = intent?.getStringExtra("PHASE")?.let { AppPhase.valueOf(it) }
             ?: AppPhase.INITIAL_COLLECTION
+
 
         sessionId = intent?.getLongExtra("sessionId", 0L) ?: 0L
         val shouldCollectData = intent?.getBooleanExtra("COLLECT_DATA", false) ?: false
@@ -126,6 +148,9 @@ class DataCollectService : Service() {
         stopDataCollection()
         countDownTimer?.cancel()
         wearDetectionHelper.stop()
+        if (::wakeLock.isInitialized && wakeLock.isHeld) {
+            wakeLock.release()
+        }
         stopForeground(true)
     }
 
@@ -258,7 +283,7 @@ class DataCollectService : Service() {
                 val pendingIntent =
                     PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
                 Log.v("DataCollectService", "AffectData ID: ${insertedAffectData.id}")
-                createActivityNotification("How do you feel", pendingIntent)
+                createActivityNotification("How do you feel", pendingIntent, newAffectData.id)
             } else {
                 Log.e("DataCollectService", "Failed to insert AffectData")
             }
@@ -274,21 +299,29 @@ class DataCollectService : Service() {
 
     }
 
-    private fun createActivityNotification(notificationText: String, intent: PendingIntent) {
+    private fun createActivityNotification(notificationText: String, intent: PendingIntent, affectDataId: Long) {
         Log.v("DataCollectService", "Creating notification: $notificationText")
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val notificationId = 3  // Unique ID for the notification
+
+        val cancelIntent = Intent(this, NotificationMonitor::class.java)
+        cancelIntent.putExtra("affectDataId", affectDataId)
+        val cancelPendingIntent = PendingIntent.getBroadcast(this, affectDataId.hashCode(), cancelIntent, PendingIntent.FLAG_IMMUTABLE)
 
 
         val notification = NotificationCompat.Builder(this, "data_collection_service")
             .setContentTitle("Data Collection Service")
             .setContentText(notificationText)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .addAction(R.mipmap.ic_launcher, "Launch Activity", intent)
+            .addAction(R.mipmap.ic_launcher, "Open Label Activity", intent)
             .setAutoCancel(true)
+            .setDeleteIntent(cancelPendingIntent)
+            .setTimeoutAfter(10L * 1000L)
             .build()
 
         notificationManager.notify(notificationId, notification)
+
+
     }
 
     private fun createNotification(contentText: String): Notification {
@@ -304,7 +337,7 @@ class DataCollectService : Service() {
             val channel = NotificationChannel(
                 "data_collection_service",
                 "Data Collection Service",
-                NotificationManager.IMPORTANCE_LOW
+                NotificationManager.IMPORTANCE_HIGH
             ).apply {
                 setShowBadge(false) // Keine Symbol-Badge für den Kanal
                 enableLights(false)
@@ -338,7 +371,8 @@ fun buildTrackerEventListener(
                             dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE_STATUS)
                         )
                     )
-                    Log.v("data", "Heart rate: ${dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE)}")
+                    Log.v("data", "Heart rate: ${dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE)} at ${formatTimeOnly(dataPoint.timestamp)}")
+
                 }
                 repository.insertHeartRateMeasurementList(
                     CoroutineScope(Dispatchers.IO),
@@ -372,6 +406,12 @@ fun buildTrackerEventListener(
 
         override fun onError(trackerError: HealthTracker.TrackerError) {
             Log.v("data", "error Data")
+        }
+
+        fun formatTimeOnly(sessionId: Long): String {
+            val date = Date(sessionId)
+            val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault()) // Format für Stunden, Minuten, Sekunden
+            return sdf.format(date)
         }
     }
 }

@@ -185,9 +185,11 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                 Button(
                     onClick = {
                         val intent = Intent(context, DataCollectReciever::class.java)
+                        val sessionId = Calendar.getInstance().timeInMillis
+
                         intent.putExtra("COLLECT_DATA", true)
                         intent.putExtra("PHASE", AppPhase.INITIAL_COLLECTION)
-                        intent.putExtra("sessionId", 1L)
+                        intent.putExtra("sessionId", sessionId)
 
                         context.sendBroadcast(intent)
                     },
