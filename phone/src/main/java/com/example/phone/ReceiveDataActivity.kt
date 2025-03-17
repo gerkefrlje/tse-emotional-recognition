@@ -98,15 +98,6 @@ class ReceiveDataActivity : ComponentActivity() {//, DataClient.OnDataChangedLis
                                 heartRateList = heartRateList
                             )
                         }
-
-                        item {
-                            }
-
-                        item {
-                            }
-                                item {
-                            }
-
                         item {SkinTemperatureView(
                                 skinTemperatureList = skinTemperatureList
                             )
@@ -256,6 +247,11 @@ fun HeartRateView(heartRateList: List<com.example.tse_emotionalrecognition.commo
         Text(text = "Heart Rate")
         LazyColumn(
         ) {
+
+            item {
+                Text(
+                    text = "Heart Rate",
+                )}
             items(heartRateList) { measurement ->
                 Card(
                     modifier = Modifier
@@ -299,8 +295,7 @@ fun SkinTemperatureView(
 
 fun formatTimeOnly(sessionId: Long): String {
     val date = Date(sessionId)
-    val sdf =
-        SimpleDateFormat("HH:mm:ss", Locale.getDefault()) // Format für Stunden, Minuten, Sekunden
+    val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault()) // Format für Stunden, Minuten, Sekunden
     return sdf.format(date)
 }
 
