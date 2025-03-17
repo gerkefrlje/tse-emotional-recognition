@@ -2,6 +2,7 @@ package com.example.tse_emotionalrecognition.common.data.database.daos
 
 import androidx.room.Dao
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement
 
@@ -11,7 +12,7 @@ interface HeartRateMeasurementDao {
     @Insert
     suspend fun insert(item: HeartRateMeasurement): Long
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(items: List<HeartRateMeasurement>): List<Long>
 
     @Query("SELECT * FROM heartRateMeasurement WHERE synced = :syncedValue")
