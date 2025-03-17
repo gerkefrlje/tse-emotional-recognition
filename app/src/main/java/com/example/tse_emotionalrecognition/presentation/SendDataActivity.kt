@@ -33,7 +33,11 @@ import androidx.wear.compose.material.TimeText
 import com.example.tse_emotionalrecognition.R
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement
+import com.example.tse_emotionalrecognition.common.data.database.entities.InterventionStats
 import com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement
+import com.example.tse_emotionalrecognition.common.data.database.entities.TAG
+import com.example.tse_emotionalrecognition.common.data.database.utils.CommunicationDataSender
+import com.example.tse_emotionalrecognition.presentation.MainActivity.Companion.trackerID
 import com.example.tse_emotionalrecognition.presentation.interventions.BreathingActivity
 import com.example.tse_emotionalrecognition.presentation.interventions.CallInterventionActivity
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
@@ -42,6 +46,8 @@ import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -205,6 +211,16 @@ fun Greeting(wearCount: Int = 0, onCountChange: (Int) -> Unit) {
             text = stringResource(R.string.hello_world, "Test")
         )
         Button(
+            onClick = {
+                val interventionStats = InterventionStats(id = trackerID, tag = TAG.INTERVENTIONS)
+                userRepository.insertInterventionStats(CoroutineScope(Dispatchers.IO), interventionStats)
+                val sender = CommunicationDataSender(context)
+                val interventionStatsString = Json.encodeToString(interventionStats)
+                sender.sendStringData("/phone/notification", interventionStatsString)
+
+            },
+        ) { Text("reset Intervention")}
+        Button(
 
             onClick = {
                 val count = wearCount + 1
@@ -225,6 +241,7 @@ fun Greeting(wearCount: Int = 0, onCountChange: (Int) -> Unit) {
                 }
                 Log.d("MainActivity", "Send Data: $count")
 
+                userRepository.incrementDismissed(CoroutineScope(Dispatchers.IO), MainActivity.trackerID)
 
 
 
@@ -233,6 +250,7 @@ fun Greeting(wearCount: Int = 0, onCountChange: (Int) -> Unit) {
                         context
                     )
 
+                //sender.sendIntData("/phone/notification", count)
 
                 if (heartRateMeasurements.isNotEmpty()) {
 
@@ -241,14 +259,14 @@ fun Greeting(wearCount: Int = 0, onCountChange: (Int) -> Unit) {
                     val jsonString =
                         Json.encodeToString(heartRateMeasurements) // currently limited to 20 measurements due to limitations
 
-                    sender.sendStringData("/phone/hr", jsonString)
+                    //sender.sendStringData("/phone/hr", jsonString)
                 }
 
                 if (skinTemperatureMeasurements.isNotEmpty()) {
                     val jsonString =
                         Json.encodeToString(skinTemperatureMeasurements) // Ganze Liste
 
-                    sender.sendStringData("/phone/skin", jsonString)
+                    //sender.sendStringData("/phone/skin", jsonString)
                 }
 
 

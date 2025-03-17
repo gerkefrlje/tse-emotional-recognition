@@ -11,8 +11,10 @@ interface AffectDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(affect: AffectData): Long
+
     @Query("SELECT * FROM affectData WHERE id = :id")
     fun getAffectById(id: Long): AffectData;
+
     @Query("DELETE FROM affectData WHERE id = :id")
     fun deleteAffectById(id: Long)
 

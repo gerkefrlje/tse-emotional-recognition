@@ -56,6 +56,9 @@ import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.common.data.database.UserRepository
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
+import com.example.tse_emotionalrecognition.common.data.database.entities.InterventionStats
+import com.example.tse_emotionalrecognition.common.data.database.entities.TAG
+import com.example.tse_emotionalrecognition.common.data.database.utils.CommunicationDataSender
 import com.example.tse_emotionalrecognition.presentation.interventions.InterventionOverviewActivity
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
 import com.example.tse_emotionalrecognition.presentation.utils.DataCollectReciever
@@ -65,6 +68,9 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import java.util.Calendar
 
 class MainActivity : ComponentActivity() {
@@ -72,6 +78,12 @@ class MainActivity : ComponentActivity() {
 
     private lateinit var sharedPreferences: SharedPreferences
     private val FIRST_LAUNCH_KEY = "first_launch_time"
+
+    companion object {
+        val DEBUG_TAG = "MainActivity"
+        val trackerID = 1L
+
+    }
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
@@ -102,6 +114,9 @@ class MainActivity : ComponentActivity() {
         sharedPreferences = getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val firstLaunchTime = sharedPreferences.getLong(FIRST_LAUNCH_KEY, 0L)
 
+
+        initiateInterventionTracker()
+
         if (firstLaunchTime == 0L) {
             val currentTime = System.currentTimeMillis()
             sharedPreferences.edit().putLong(FIRST_LAUNCH_KEY, currentTime).apply()
@@ -112,7 +127,22 @@ class MainActivity : ComponentActivity() {
             SelectIntervention(userRepository)
         }
 
+
+
         checkAndRequestPermissions()
+    }
+
+    private fun initiateInterventionTracker() {
+        CoroutineScope(Dispatchers.IO).launch {
+            if(userRepository.getInterventionStatsById(trackerID)== null) {
+                val interventionStats = InterventionStats(id = trackerID, tag = TAG.INTERVENTIONS)
+                userRepository.insertInterventionStats(CoroutineScope(Dispatchers.IO), interventionStats)
+                val sender = CommunicationDataSender(applicationContext)
+                val interventionStatsString = Json.encodeToString(interventionStats)
+                sender.sendStringData("/phone/notification", interventionStatsString)
+
+            }
+        }
     }
 
     private fun checkAndRequestPermissions() {
@@ -120,7 +150,11 @@ class MainActivity : ComponentActivity() {
             val permissionsToRequest = mutableListOf<String>()
 
             requestedPermissions.forEach { permission ->
-                if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                if (ContextCompat.checkSelfPermission(
+                        this,
+                        permission
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
                     permissionsToRequest.add(permission)
                 }
             }
@@ -137,27 +171,35 @@ class MainActivity : ComponentActivity() {
 
     private fun triggerLable() {
         userRepository.insertAffect(
-            CoroutineScope(Dispatchers.IO)
-            , AffectData(sessionId = 1, affect = AffectType.HAPPY_RELAXED)
-        ){
+            CoroutineScope(Dispatchers.IO),
+            AffectData(sessionId = 1, affect = AffectType.HAPPY_RELAXED)
+        ) {
             var affectDataID = it.id
             val intent = Intent(this, LabelActivity::class.java)
             intent.putExtra("affectDataId", affectDataID)
             startActivity(intent)
         }
+
+
     }
 
     private fun scheduleDataCollection() {
         Log.d("DataCollectService", "Scheduling data collection")
 
-        val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.NOT_REQUIRED).build()
+        val constraints =
+            Constraints.Builder().setRequiredNetworkType(NetworkType.NOT_REQUIRED).build()
 
         //val dataCollectionRequest = PeriodicWorkRequest.Builder(DataCollectWorker::class.java, 15, TimeUnit.MINUTES).setConstraints(constraints).build()
 
-        val periodicWorkRequest = PeriodicWorkRequest.Builder(DataCollectWorker::class.java, 15, TimeUnit.MINUTES)
-            .setConstraints(constraints).build()
+        val periodicWorkRequest =
+            PeriodicWorkRequest.Builder(DataCollectWorker::class.java, 15, TimeUnit.MINUTES)
+                .setConstraints(constraints).build()
 
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork("DataCollectionWork", ExistingPeriodicWorkPolicy.KEEP, periodicWorkRequest)
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "DataCollectionWork",
+            ExistingPeriodicWorkPolicy.KEEP,
+            periodicWorkRequest
+        )
 
     }
 
