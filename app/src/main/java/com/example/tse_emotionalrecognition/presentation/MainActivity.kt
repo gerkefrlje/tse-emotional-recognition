@@ -65,6 +65,7 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import java.util.Calendar
 
 class MainActivity : ComponentActivity() {
     private val userRepository by lazy { UserDataStore.getUserRepository(application) }
@@ -271,9 +272,11 @@ fun SelectIntervention(userRepository: UserRepository) {
                 Button(
                     onClick = {
                         val intent = Intent(context, DataCollectReciever::class.java)
+                        val sessionId = Calendar.getInstance().timeInMillis
+
                         intent.putExtra("COLLECT_DATA", true)
                         intent.putExtra("PHASE", AppPhase.INITIAL_COLLECTION)
-                        intent.putExtra("sessionId", 1L)
+                        intent.putExtra("sessionId", sessionId)
 
                         context.sendBroadcast(intent)
                     },
