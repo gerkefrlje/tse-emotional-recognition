@@ -125,7 +125,7 @@ fun DefaultPreview() {
 
 
 @Composable
-fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.common.data.database.UserRepository) {
+fun SelectIntervention(userRepository: UserRepository) {
 
     val context = LocalContext.current
 
@@ -158,12 +158,12 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                         userRepository.insertAffect(
                             CoroutineScope(Dispatchers.IO)
                             ,
-                            com.example.tse_emotionalrecognition.common.data.database.entities.AffectData(
+                            AffectData(
                                 sessionId = 1,
-                                affect = com.example.tse_emotionalrecognition.common.data.database.entities.AffectType.HAPPY_RELAXED
+                                affect = AffectType.HAPPY_RELAXED
                             )
                         ){
-                            var affectDataID = it.id
+                            val affectDataID = it.id
                             val intent = Intent(context, LabelActivity::class.java)
                             intent.putExtra("affectDataId", affectDataID)
                             context.startActivity(intent)
@@ -187,6 +187,21 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Transfer")
+                }
+            }
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            item {
+                Button(
+                    onClick = {
+
+                        val intent = Intent(context, InterventionTriggerActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Notification")
                 }
             }
         }

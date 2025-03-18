@@ -26,6 +26,10 @@ class InterventionTriggerHelper(private val context: Context) {
         private const val TWO_HOURS_IN_MILLIS: Long = 7200000 // 2 * 60 * 60 * 1000
         private var lastNotificationTime: Long = 0
         private var lastTriggeredActivity: Class<*>? = null
+
+        val BREATH = 1
+        val CONTACT = 2
+        val MUSIC = 3
     }
 
     init {
@@ -43,6 +47,26 @@ class InterventionTriggerHelper(private val context: Context) {
                 lastTriggeredActivity = activityToStart
             } else {
                 Log.d("InterventionTriggerHelper", "Notification suppressed due to time limit")
+            }
+        }
+    }
+
+    fun testTrigger(int: Int) {
+        when(int){
+            BREATH -> {
+                val activityToStart = BreathingActivity::class.java
+                showNotification(activityToStart)
+                lastTriggeredActivity = activityToStart
+            }
+            CONTACT -> {
+                val activityToStart = ContactActivity::class.java
+                showNotification(activityToStart)
+                lastTriggeredActivity = activityToStart
+            }
+            MUSIC -> {
+                val activityToStart = MusicActivity::class.java
+                showNotification(activityToStart)
+                lastTriggeredActivity = activityToStart
             }
         }
     }
@@ -73,7 +97,7 @@ class InterventionTriggerHelper(private val context: Context) {
         )
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(com.example.tse_emotionalrecognition.R.drawable.ic_launcher_foreground) // Ersetze durch dein Icon
+            .setSmallIcon(com.example.tse_emotionalrecognition.R.drawable.splash_icon) // Ersetze durch dein Icon
             .setContentTitle("Intervention Needed")
             .setContentText("Tap to start the intervention")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -82,7 +106,7 @@ class InterventionTriggerHelper(private val context: Context) {
 
         with(NotificationManagerCompat.from(context)) {
             if (ActivityCompat.checkSelfPermission(
-                    this,
+                    context,
                     Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED
             ) {

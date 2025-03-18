@@ -136,6 +136,11 @@
             android:exported="true"
             android:taskAffinity=""/>
 
+        <activity
+            android:name=".presentation.InterventionTriggerActivity"
+            android:exported="true"
+            android:taskAffinity=""/>
+
 
 
     </application>

@@ -104,25 +104,27 @@ class BreathingActivity : ComponentActivity() {
 
         val scope = rememberCoroutineScope()
         // Animatable value that controls the size factor; initial value is 0.5 (small size)
-        val sizeAnim = remember { androidx.compose.animation.core.Animatable(0.5f)}
+        val sizeAnim = remember { androidx.compose.animation.core.Animatable(0.4f)}
 
-        var buttonText by remember { mutableStateOf("Touch") }
+        var buttonText by remember { mutableStateOf("Breath in") }
 
         fun animate() {
             scope.launch {
-                buttonText = "Breath"
-
                 // Animate to a smaller size (e.g., 50% of full size) over 1 second
                 for(i in 0..1) {
+                    buttonText = "Breath in"
                     sizeAnim.animateTo(
                         targetValue = 1f,
                         animationSpec = tween(durationMillis = 2000)
                     )
+                    buttonText = "Breath out"
+                    delay(1000)
                     // Animate back to full size over 1 second
                     sizeAnim.animateTo(
                         targetValue = 0.5f,
                         animationSpec = tween(durationMillis = 4000)
                     )
+                    delay(1000)
                 }
                 buttonText = "Done"
 
