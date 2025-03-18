@@ -46,7 +46,6 @@ import com.example.phone.utils.HealthViewModel
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.common.data.database.UserRepository
 import com.google.android.gms.wearable.Wearable
-import kotlinx.serialization.json.Json
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale

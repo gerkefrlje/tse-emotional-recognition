@@ -120,4 +120,8 @@ dependencies {
     // Kotlin Smile
     implementation(libs.smile.core)
     implementation(libs.smile.kotlin)
+
+
+    // Use to preview wear tiles in your own app
+    debugImplementation(libs.androidx.tiles.renderer)
 }

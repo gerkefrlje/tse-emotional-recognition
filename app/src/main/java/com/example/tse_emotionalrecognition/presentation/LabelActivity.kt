@@ -79,21 +79,23 @@ class LabelActivity : ComponentActivity() {
             }
 
 
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.cancel(3) // Verwende die NotificationId
-            Log.d("LabelActivity", "Notification canceled") // Logging hinzufügen
+            Log.d("LabelActivity", "affectDataId from intent: ${newAffectData.id}") // Logging hinzufügen
 
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.cancel(3) // Verwende die NotificationId
             Log.d("LabelActivity", "Notification canceled") // Logging hinzufügen
 
-            insertEngagementTime(affectDataId)
-            LabelWatch(
-                affectDataId,
-                startDestination = "Select",
-                navController = rememberSwipeDismissableNavController(),
-                modifier = Modifier.fillMaxSize(),
-            )
+            if (isAffectDataInserted) {
+                insertEngagementTime(newAffectData.id)
+                LabelWatch(
+                    newAffectData.id,
+                    startDestination = "Select",
+                    navController = rememberSwipeDismissableNavController(),
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                LoadingScreen()  // Ladeanzeige, bis AffectData eingefügt ist
+            }
         }
     }
 

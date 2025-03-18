@@ -319,7 +319,7 @@ class DataCollectService : Service() {
         ContextCompat.startForegroundService(this, intent)
     }
 
-    private fun createActivityNotification(notificationText: String, intent: PendingIntent, affectDataId: Long) {
+    private fun createActivityNotification(notificationText: String, intent: PendingIntent) {
         Log.v("DataCollectService", "Creating notification: $notificationText")
 
         getSharedPreferences("NotificationPrefs", Context.MODE_PRIVATE)
