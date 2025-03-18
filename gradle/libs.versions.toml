@@ -1,15 +1,24 @@
 [versions]
 agp = "8.8.0"
+datastorePreferences = "1.0.0"
+coilCompose = "2.7.0"
+coilGif = "2.2.2"
+datastorePreferencesVersion = "1.1.3"
+gson = "2.10.1"
 kotlin = "2.0.0"
+kotlinxSerializationJson = "1.6.2"
 playServicesWearable = "18.0.0"
 composeBom = "2024.04.01"
 composeMaterial = "1.2.1"
 composeFoundation = "1.2.1"
+playServicesWearableVersion = "18.1.0"
 roomCompiler = "2.6.1"
+#ui = "<version>"
 roomKtx = "2.6.1"
 smileCore = "3.0.0"
 smileKotlin = "3.0.0"
 wearSensory = "1.2.0"
+watchfaceComplicationsData = "1.2.1"
 wearToolingPreview = "1.0.0"
 activityCompose = "1.8.0"
 coreSplashscreen = "1.0.1"
@@ -21,11 +30,16 @@ horologistComposeTools = "0.6.17"
 horologistTiles = "0.6.17"
 watchfaceComplicationsDataSourceKtx = "1.2.1"
 workRuntimeKtx = "2.10.0"
-datastorePreferences = "1.0.0"
-datastorePreferencesVersion = "1.1.3"
-material = "1.5.0"
-ui = "1.3.3"
-gson = "2.10.1"
+coreKtx = "1.15.0"
+junit = "4.13.2"
+junitVersion = "1.2.1"
+espressoCore = "3.6.1"
+lifecycleRuntimeKtx = "2.8.7"
+material3Android = "1.3.1"
+appcompat = "1.6.1"
+material = "1.10.0"
+roomCommon = "2.6.1"
+googlePlayServicesWearable = "19.0.0"
 
 [libraries]
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
@@ -35,12 +49,16 @@ androidx-room-compiler = { module = "androidx.room:room-compiler" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomKtx" }
 androidx-wear-sensory = { module = "androidx.wear:wear-sensory", version.ref = "wearSensory" }
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
-androidx-ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
+androidx-watchface-complications-data = { module = "androidx.wear.watchface:watchface-complications-data", version.ref = "watchfaceComplicationsData" }
+coil-compose = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
+coil-gif = { module = "io.coil-kt:coil-gif", version.ref = "coilGif" }
 compose-navigation = { module = "androidx.wear.compose:compose-navigation" }
 gson = { module = "com.google.code.gson:gson", version.ref = "gson" }
+kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 navigation-compose = { module = "androidx.navigation:navigation-compose" }
 play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "playServicesWearable" }
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
+play-services-wearable-v1810 = { module = "com.google.android.gms:play-services-wearable", version.ref = "playServicesWearableVersion" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "roomCompiler" }
 room-ktx = { module = "androidx.room:room-ktx" }
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomCompiler" }
@@ -64,9 +82,21 @@ tiles-tooling-preview = { group = "androidx.wear.tiles", name = "tiles-tooling-p
 horologist-compose-tools = { group = "com.google.android.horologist", name = "horologist-compose-tools", version.ref = "horologistComposeTools" }
 horologist-tiles = { group = "com.google.android.horologist", name = "horologist-tiles", version.ref = "horologistTiles" }
 watchface-complications-data-source-ktx = { group = "androidx.wear.watchface", name = "watchface-complications-data-source-ktx", version.ref = "watchfaceComplicationsDataSourceKtx" }
+androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
+androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
+androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+androidx-material3-android = { group = "androidx.compose.material3", name = "material3-android", version.ref = "material3Android" }
+androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+material = { group = "com.google.android.material", name = "material", version.ref = "material" }
+androidx-room-common = { group = "androidx.room", name = "room-common", version.ref = "roomCommon" }
+gms-play-services-wearable = { group = "com.google.android.gms", name = "play-services-wearable", version.ref = "googlePlayServicesWearable" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+android-library = { id = "com.android.library", version.ref = "agp" }
 

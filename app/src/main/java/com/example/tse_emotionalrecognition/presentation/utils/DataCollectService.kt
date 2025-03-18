@@ -3,6 +3,7 @@ package com.example.tse_emotionalrecognition.presentation.utils
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
@@ -14,10 +15,14 @@ import androidx.core.content.ContextCompat
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.example.tse_emotionalrecognition.R
-import com.example.tse_emotionalrecognition.data.database.UserDataStore
-import com.example.tse_emotionalrecognition.data.database.UserRepository
-import com.example.tse_emotionalrecognition.data.database.entities.HeartRateMeasurement
-import com.example.tse_emotionalrecognition.data.database.entities.SkinTemperatureMeasurement
+import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
+import com.example.tse_emotionalrecognition.common.data.database.UserRepository
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
+import com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement
+import com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement
+import com.example.tse_emotionalrecognition.model.ModelService
+
 import com.example.tse_emotionalrecognition.presentation.AppPhase
 import com.example.tse_emotionalrecognition.presentation.LabelActivity
 import com.samsung.android.service.health.tracking.ConnectionListener
@@ -52,16 +57,21 @@ class DataCollectService : Service() {
         wearDetectionHelper = WearDetectionHelper(this)
         healthTrackingService = HealthTrackingService(
             object : ConnectionListener {
-            override fun onConnectionSuccess() {
-                Log.v("data", "connected")
-                heartRateTracker = healthTrackingService.getHealthTracker(HealthTrackerType.HEART_RATE_CONTINUOUS)
-                skinTemperatureTracker = healthTrackingService.getHealthTracker(HealthTrackerType.SKIN_TEMPERATURE_CONTINUOUS)
-            }
-            override fun onConnectionEnded() {
-                Log.v("connect","ended")
-            }
-            override fun onConnectionFailed(e: HealthTrackerException) { }
-        }, applicationContext)
+                override fun onConnectionSuccess() {
+                    Log.v("data", "connected")
+                    heartRateTracker =
+                        healthTrackingService.getHealthTracker(HealthTrackerType.HEART_RATE_CONTINUOUS)
+                    skinTemperatureTracker =
+                        healthTrackingService.getHealthTracker(HealthTrackerType.SKIN_TEMPERATURE_CONTINUOUS)
+                }
+
+                override fun onConnectionEnded() {
+                    Log.v("connect", "ended")
+                }
+
+                override fun onConnectionFailed(e: HealthTrackerException) {}
+            }, applicationContext
+        )
         healthTrackingService.connectService()
     }
 
@@ -73,7 +83,9 @@ class DataCollectService : Service() {
             createNotification("Health data collection is running...")
         )
 
-        phase = intent?.getStringExtra("PHASE")?.let { AppPhase.valueOf(it) } ?: AppPhase.INITIAL_COLLECTION
+        phase = intent?.getSerializableExtra("PHASE") as? AppPhase ?: AppPhase.INITIAL_COLLECTION
+
+        Log.v("DataCollectService", "Phase: $phase")
 
         sessionId = intent?.getLongExtra("sessionId", 0L) ?: 0L
         val shouldCollectData = intent?.getBooleanExtra("COLLECT_DATA", false) ?: false
@@ -118,10 +130,24 @@ class DataCollectService : Service() {
                 !this@DataCollectService::skinTemperatureTracker.isInitialized
             ) {
                 Log.v("HealthTrackingService", "Waiting for trackers to initialize...")
-                kotlinx.coroutines.delay(100L) // Warte auf Initialisierung
+                delay(100L) // Warte auf Initialisierung
             }
-            heartRateTracker.setEventListener(buildTrackerEventListener(userRepository,sessionId, HealthTrackerType.HEART_RATE_CONTINUOUS, applicationContext))
-            skinTemperatureTracker.setEventListener(buildTrackerEventListener(userRepository,sessionId, HealthTrackerType.SKIN_TEMPERATURE_CONTINUOUS, applicationContext))
+            heartRateTracker.setEventListener(
+                buildTrackerEventListener(
+                    userRepository,
+                    sessionId,
+                    HealthTrackerType.HEART_RATE_CONTINUOUS,
+                    applicationContext
+                )
+            )
+            skinTemperatureTracker.setEventListener(
+                buildTrackerEventListener(
+                    userRepository,
+                    sessionId,
+                    HealthTrackerType.SKIN_TEMPERATURE_CONTINUOUS,
+                    applicationContext
+                )
+            )
         }
 
         Log.d("DataCollectService", "Data collection started")
@@ -129,11 +155,11 @@ class DataCollectService : Service() {
 
     private fun stopDataCollection() {
         CoroutineScope(Dispatchers.IO).launch {
-            if(this@DataCollectService::heartRateTracker.isInitialized) {
+            if (this@DataCollectService::heartRateTracker.isInitialized) {
                 heartRateTracker.flush()
                 heartRateTracker.unsetEventListener()
             }
-            if(this@DataCollectService::skinTemperatureTracker.isInitialized) {
+            if (this@DataCollectService::skinTemperatureTracker.isInitialized) {
                 skinTemperatureTracker.flush()
                 skinTemperatureTracker.unsetEventListener()
             }
@@ -175,18 +201,68 @@ class DataCollectService : Service() {
     }
 
     private fun launchLabelActivity() {
-        val intent = Intent(this, LabelActivity::class.java)
-        intent.putExtra("sessionId", sessionId)
-        intent.addFlags(FLAG_ACTIVITY_NEW_TASK)
-        ContextCompat.startActivity(this, intent, null)
+
+        val intent = Intent(applicationContext, LabelActivity::class.java)
+        intent.flags = FLAG_ACTIVITY_NEW_TASK // Hinzufügen des Flags
+
+        val newAffectData = AffectData(
+            sessionId = sessionId,
+            timeOfNotification= System.currentTimeMillis(),
+            affect = AffectType.NULL
+        )
+
+        userRepository.insertAffect(
+            CoroutineScope(Dispatchers.IO), newAffectData,
+        ) { insertedAffectData ->
+            if (insertedAffectData != null) {
+                Log.v("DataCollectService", "AffectData inserted with ID: ${insertedAffectData.id}")
+
+
+                intent.putExtra("affectDataId", insertedAffectData.id)
+                val pendingIntent =
+                    PendingIntent.getActivity(
+                        this, 0, intent, PendingIntent.FLAG_IMMUTABLE
+                    )
+                createActivityNotification("How do you feel", pendingIntent)
+            } else {
+                Log.e("DataCollectService", "Failed to insert AffectData")
+            }
+
+        }
     }
 
     private fun launchFeedbackActivity() {
-        // TODO: Launch ModelService with intent extra marking trianing + feedback
+        //Launch ModelService with intent action = ACTION_TRAIN_MODEL
+        val intent = Intent(applicationContext, ModelService::class.java)
+        intent.putExtra("sessionId", sessionId)
+        intent.action = ModelService.ACTION_TRAIN_MODEL
+        ContextCompat.startForegroundService(this, intent)
     }
 
     private fun launchPredictionService() {
-        // TODO: Launch ModelService with intent extra marking predict only
+        // Launch ModelService with intent action = ACTION_PREDICT
+        val intent = Intent(applicationContext, ModelService::class.java)
+        intent.putExtra("sessionId", sessionId)
+        intent.action = ModelService.ACTION_PREDICT
+        ContextCompat.startForegroundService(this, intent)
+    }
+
+    private fun createActivityNotification(notificationText: String, intent: PendingIntent) {
+        Log.v("DataCollectService", "Creating notification: $notificationText")
+        val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        val notificationId = System.currentTimeMillis().toInt()  // Unique ID for the notification
+
+        val notification = NotificationCompat.Builder(this, "data_collection_service")
+            .setContentTitle("Data Collection Service")
+            .setContentText(notificationText)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .addAction(R.mipmap.ic_launcher, "Launch Activity", intent)
+            .setFullScreenIntent(intent, true)
+            .setAutoCancel(true)
+            .setVibrate(longArrayOf(0, 500, 500, 500))
+            .build()
+
+        notificationManager.notify(notificationId, notification)
     }
 
     private fun createNotification(contentText: String): Notification {
@@ -202,18 +278,27 @@ class DataCollectService : Service() {
             val channel = NotificationChannel(
                 "data_collection_service",
                 "Data Collection Service",
-                NotificationManager.IMPORTANCE_HIGH
-            )
+                NotificationManager.IMPORTANCE_LOW
+            ).apply {
+                setShowBadge(false) // Keine Symbol-Badge für den Kanal
+                enableLights(false)
+                enableVibration(false)
+            }
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
         }
     }
 }
 
-fun buildTrackerEventListener(repository: UserRepository, sessionId: Long, type: HealthTrackerType, context: Context): HealthTracker.TrackerEventListener {
+fun buildTrackerEventListener(
+    repository: UserRepository,
+    sessionId: Long,
+    type: HealthTrackerType,
+    context: Context
+): HealthTracker.TrackerEventListener {
     return object : HealthTracker.TrackerEventListener {
         override fun onDataReceived(list: List<DataPoint>) {
-            Log.v("data","logged")
+            Log.v("data", "logged")
 
             if (type == HealthTrackerType.HEART_RATE_CONTINUOUS && list.isNotEmpty()) {
                 val entries = mutableListOf<HeartRateMeasurement>()
@@ -224,25 +309,29 @@ fun buildTrackerEventListener(repository: UserRepository, sessionId: Long, type:
                             sessionId,
                             dataPoint.timestamp.toLong(),
                             dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE),
-                            dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE_STATUS))
+                            dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE_STATUS)
+                        )
                     )
+                    Log.v("data", "Heart rate: ${dataPoint.getValue(ValueKey.HeartRateSet.HEART_RATE)}")
                 }
                 repository.insertHeartRateMeasurementList(
                     CoroutineScope(Dispatchers.IO),
                     entries
                 )
-            } else if (type == HealthTrackerType.SKIN_TEMPERATURE_CONTINUOUS && list.isNotEmpty()){
+            } else if (type == HealthTrackerType.SKIN_TEMPERATURE_CONTINUOUS && list.isNotEmpty()) {
                 val entries = mutableListOf<SkinTemperatureMeasurement>()
                 for (dataPoint in list) {
                     entries.add(
-                        SkinTemperatureMeasurement(0L,
+                        SkinTemperatureMeasurement(
+                            0L,
                             sessionId,
                             dataPoint.timestamp,
                             dataPoint.getValue(ValueKey.SkinTemperatureSet.OBJECT_TEMPERATURE),
                             dataPoint.getValue(ValueKey.SkinTemperatureSet.AMBIENT_TEMPERATURE),
                             dataPoint.getValue(ValueKey.SkinTemperatureSet.STATUS)
-                            )
+                        )
                     )
+                    Log.v("data", "Skin temperature: ${dataPoint.getValue(ValueKey.SkinTemperatureSet.OBJECT_TEMPERATURE)}")
                 }
                 repository.insertSkinTemperatureMeasurementList(
                     CoroutineScope(Dispatchers.IO),

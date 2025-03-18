@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     //Todo Vgl mit eis
     id("com.google.devtools.ksp")
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.22" //oder die neueste Version
 }
 
 android {
@@ -61,14 +62,21 @@ dependencies {
     implementation(libs.horologist.compose.tools)
     implementation(libs.horologist.tiles)
     implementation(libs.watchface.complications.data.source.ktx)
+    implementation(libs.androidx.material3.android) //Kein Plan für was das gebraucht wurde
+    implementation(project(":common"))
+    implementation(libs.androidx.material3.android)
+    implementation(libs.androidx.work.runtime.ktx)
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.ui.test.junit4)
     debugImplementation(libs.ui.tooling)
     debugImplementation(libs.ui.test.manifest)
     debugImplementation(libs.tiles.tooling)
+    implementation(libs.androidx.watchface.complications.data)
+    implementation(libs.coil.compose)
+    implementation(libs.coil.gif)
 
-    implementation(libs.androidx.material)
-    implementation(libs.androidx.ui)
+//    implementation(libs.androidx.material)
+//    implementation(libs.androidx.ui)
     implementation(libs.androidx.datastore.preferences.v113)
 
     implementation(libs.room.runtime)
@@ -87,6 +95,13 @@ dependencies {
     //Spotify SDK
     implementation(files("${projectDir}/libs/spotify-app-remote-release-0.8.0.aar"))
     implementation(libs.gson)
+
+    //für die Übertragung zwischen Handy und Uhr
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.2") //wandelt Klassen in String um
+
+    // Wearable Data Layer API für Kommunikation mit dem Smartphone
+    implementation(libs.play.services.wearable)
+
 
     // Kotlin Smile
     implementation(libs.smile.core)

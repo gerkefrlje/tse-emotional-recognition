@@ -1,16 +1,22 @@
 package com.example.tse_emotionalrecognition.presentation
 
+import android.app.Activity
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavHostController
@@ -18,48 +24,46 @@ import androidx.wear.compose.material.Text
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import androidx.navigation.compose.*
+import androidx.wear.compose.material.Button
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
-import com.example.tse_emotionalrecognition.data.database.UserDataStore
-import com.example.tse_emotionalrecognition.data.database.entities.AffectColumns
-import com.example.tse_emotionalrecognition.data.database.entities.AffectType
+import androidx.wear.tooling.preview.devices.WearDevices
+import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
 import com.example.tse_emotionalrecognition.presentation.utils.FullText
 import com.example.tse_emotionalrecognition.presentation.utils.RowButton
 
 
 class LabelActivity : ComponentActivity() {
-    private val userRepository by lazy { UserDataStore.getUserRepository(application) }
+    private val userRepository by lazy { com.example.tse_emotionalrecognition.common.data.database.UserDataStore.getUserRepository(application) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             val affectDataId = intent.getLongExtra("affectDataId", -1)
 
-
+            Log.d("LabelActivity", "affectDataId from intent: $affectDataId") // Logging hinzufügen
 
             insertEngagementTime(affectDataId)
             LabelWatch(
                 affectDataId,
-                startDestination = "Select",
-                navController = rememberSwipeDismissableNavController(),
-                modifier = Modifier.fillMaxSize(),
             )
         }
     }
 
     private fun insertAffect() {
-        userRepository
     }
 
     private fun insertEngagementTime(id: Long) {
         userRepository.updateAffectColumn(
             CoroutineScope(Dispatchers.IO),
-            id, AffectColumns.TIME_OF_ENGAGEMENT, System.currentTimeMillis()
+            id, com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns.TIME_OF_ENGAGEMENT, System.currentTimeMillis()
         )
     }
 
     private fun updateAffect(
         id: Long,
-        column: AffectColumns,
+        column: com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns,
         value: Any,
         finished: (() -> Unit)? = null
     ) {
@@ -76,85 +80,82 @@ class LabelActivity : ComponentActivity() {
 
     @Composable
     private fun LabelWatch(
-        affectId: Long,
-        navController: NavHostController,
-        startDestination: String = "AngrySadSelect",
-        modifier: Modifier = Modifier
+        affectId: Long
     ) {
-        var loops: Int = 0
-        NavHost(
-            navController = navController,
-            startDestination = startDestination
+        val context = LocalContext.current
+        var showThankYou by remember { mutableStateOf(false) }
+
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
         ) {
-            composable("Select") {
-                val scrollState = rememberScrollState()
+            if (showThankYou) {
                 Column(
-                    modifier = modifier.verticalScroll(scrollState),
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 ) {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(0.8f),
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
-                        Text(
-                            text = "What fits better for you?",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(20.dp))
-                    RowButton(
-                        text = "Happy or Relaxed",
-                        onClick = {
-                            updateAffect(affectId, AffectColumns.AFFECT, AffectType.HAPPY_RELAXED)
-                            navController.navigate("HappyRelaxedIntervention") {
-                                popUpTo(0)
-                            }
-                        }
+                    Text(
+                        text = "Thank you!",
+                        fontSize = 20.sp,
+                        color = Color.White,
+                        textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
-                    RowButton(
-                        text = "Angry or Sad",
-                        onClick = {
-                            updateAffect(affectId, AffectColumns.AFFECT, AffectType.ANGRY_SAD)
-                            navController.navigate("AngrySadIntervention") {
-                                popUpTo(0)
-                            }
-                        }
+                    Text(
+                        text = "✖",
+                        fontSize = 24.sp,
+                        color = Color.White,
+                        modifier = Modifier.clickable { (context as? Activity)?.finish() },
+                        textAlign = TextAlign.Center
                     )
                 }
-            }
-            composable("AngrySadIntervention") {
-                FullText(
-                    text = "Life is to short to worry about stupid things !",
-                    finished = {
-                        updateAffect(
-                            affectId,
-                            AffectColumns.TIME_OF_FINISHED,
-                            System.currentTimeMillis()
+            } else {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(horizontal = 0.dp)
+                ) {
+                    Text(
+                        text = "How are you feeling\nright now?",
+                        textAlign = TextAlign.Center,
+                        color = Color.White
+                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(0.8f),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            16.dp,
+                            Alignment.CenterHorizontally
                         )
-                        finish()
+                    ) {
+                        listOf(
+                            "😊" to AffectType.POSITIVE,
+                            "😐" to AffectType.NONE,
+                            "😞" to AffectType.NEGATIVE
+                        ).forEach { (emoji, affectType) ->
+                            Text(
+                                text = emoji,
+                                fontSize = 32.sp,
+                                modifier = Modifier.clickable {
+                                    updateAffect(affectId, AffectColumns.AFFECT, affectType) {
+                                        showThankYou = true
+                                    }
+                                },
+                                textAlign = TextAlign.Center,
+                                color = Color.White
+                            )
+                        }
                     }
-                )
+                }
             }
-            composable("HappyRelaxedIntervention") {
-                FullText(
-                    text = "Keep going, nice progress !",
-                    finished = {
-                        updateAffect(
-                            affectId,
-                            AffectColumns.TIME_OF_FINISHED,
-                            System.currentTimeMillis()
-                        )
-                        finish()
-                    }
-                )
-            }
-
         }
+    }
+
+    @Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true)
+    @Composable
+    fun PreviewLabelWatch() {
+        LabelWatch(
+            affectId = 1L
+        )
     }
 }
 

@@ -22,27 +22,29 @@
     </queries>
 
 
+    <!-- additional sensors required by the sensor sdk-->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault">
+        <receiver android:name=".presentation.utils.DataCollectReciever"
+            android:enabled="true"
+            android:exported="false"/>
         <service
             android:name=".complication.MainComplicationService"
-            android:exported="true"
-            android:label="@string/complication_label"
-            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST" />
             </intent-filter>
-
             <meta-data
                 android:name="android.support.wearable.complications.SUPPORTED_TYPES"
-                android:value="SHORT_TEXT" />
-            <meta-data
-                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
-                android:value="0" />
+                android:value="SMALL_IMAGE" />
         </service>
         <service
             android:name=".tile.MainTileService"
@@ -92,23 +94,37 @@
             android:theme="@style/MainActivityTheme.Starting">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
         <activity
-            android:name=".presentation.BreathingActivity"
+            android:name=".presentation.interventions.InterventionOverviewActivity"
             android:exported="true"
-            android:taskAffinity=""/>
+            android:taskAffinity="" />
+
+        <activity
+            android:name=".presentation.interventions.BreathingActivity"
+            android:exported="true"
+            android:taskAffinity="" />
+
+        <activity
+            android:name=".presentation.interventions.CallInterventionActivity"
+            android:exported="true"
+            android:taskAffinity="" />
 
         <activity
             android:name=".presentation.LabelActivity"
             android:exported="true"
-            android:taskAffinity=""/>
+            android:taskAffinity="" />
 
         <activity
-            android:name=".presentation.MusicActivity"
+            android:name=".presentation.SendDataActivity"
+            android:exported="true"
+            android:taskAffinity="" />
+
+        <activity
+            android:name=".presentation.interventions.MusicActivity"
             android:exported="true"
             android:taskAffinity="">
                 <intent-filter>
@@ -122,7 +138,12 @@
         </activity>
 
         <activity
-            android:name=".presentation.ContactActivity"
+            android:name=".presentation.interventions.ContactActivity"
+            android:exported="true"
+            android:taskAffinity=""/>
+
+        <activity
+            android:name=".presentation.FeedbackActivity"
             android:exported="true"
             android:taskAffinity=""/>
 
