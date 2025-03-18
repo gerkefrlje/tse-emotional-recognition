@@ -218,12 +218,11 @@ class DataCollectService : Service() {
                 Log.v("DataCollectService", "AffectData inserted with ID: ${insertedAffectData.id}")
 
 
-                intent.putExtra("affectDataId", newAffectData.id)
+                intent.putExtra("affectDataId", insertedAffectData.id)
                 val pendingIntent =
                     PendingIntent.getActivity(
                         this, 0, intent, PendingIntent.FLAG_IMMUTABLE
                     )
-                Log.v("DataCollectService", "AffectData ID: ${insertedAffectData.id}")
                 createActivityNotification("How do you feel", pendingIntent)
             } else {
                 Log.e("DataCollectService", "Failed to insert AffectData")
@@ -251,7 +250,7 @@ class DataCollectService : Service() {
     private fun createActivityNotification(notificationText: String, intent: PendingIntent) {
         Log.v("DataCollectService", "Creating notification: $notificationText")
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        val notificationId = 3  // Unique ID for the notification
+        val notificationId = System.currentTimeMillis().toInt()  // Unique ID for the notification
 
         val notification = NotificationCompat.Builder(this, "data_collection_service")
             .setContentTitle("Data Collection Service")
