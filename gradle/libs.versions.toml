@@ -20,6 +20,7 @@ roomCompiler = "2.6.1"
 #ui = "<version>"
 roomKtx = "2.6.1"
 runtimeLivedata = "1.7.8"
+tilesRenderer = "1.4.1"
 tilesVersion = "1.3.0-alpha03"
 wearSensory = "1.2.0"
 watchfaceComplicationsData = "1.2.1"
@@ -55,6 +56,7 @@ androidx-protolayout-material = { module = "androidx.wear.protolayout:protolayou
 androidx-room-compiler = { module = "androidx.room:room-compiler" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomKtx" }
 androidx-runtime-livedata = { module = "androidx.compose.runtime:runtime-livedata", version.ref = "runtimeLivedata" }
+androidx-tiles-renderer = { module = "androidx.wear.tiles:tiles-renderer", version.ref = "tilesRenderer" }
 androidx-tiles-v130alpha03 = { module = "androidx.wear.tiles:tiles", version.ref = "tilesVersion" }
 androidx-tiles-v141 = { module = "androidx.wear.tiles:tiles", version.ref = "androidxTiles" }
 androidx-wear-sensory = { module = "androidx.wear:wear-sensory", version.ref = "wearSensory" }

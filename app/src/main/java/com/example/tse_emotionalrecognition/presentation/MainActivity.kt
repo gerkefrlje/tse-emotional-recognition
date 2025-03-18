@@ -213,19 +213,13 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
             item {
                 Button(
                     onClick = {
-                        userRepository.insertAffect(
-                            CoroutineScope(Dispatchers.IO)
-                            ,
-                            com.example.tse_emotionalrecognition.common.data.database.entities.AffectData(
-                                sessionId = 1,
-                                affect = com.example.tse_emotionalrecognition.common.data.database.entities.AffectType.HAPPY_RELAXED
-                            )
-                        ){
-                            val affectDataID = it.id
-                            val intent = Intent(context, LabelActivity::class.java)
-                            intent.putExtra("affectDataId", affectDataID)
-                            context.startActivity(intent)
-                        }
+                        val newAffectData = com.example.tse_emotionalrecognition.common.data.database.entities.AffectData(
+                            sessionId = Calendar.getInstance().timeInMillis,
+                            affect = com.example.tse_emotionalrecognition.common.data.database.entities.AffectType.NONE
+                        )
+                        val intent = Intent(context, LabelActivity::class.java)
+                        intent.putExtra("affectData", Json.encodeToString(newAffectData))
+                        context.startActivity(intent)
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {

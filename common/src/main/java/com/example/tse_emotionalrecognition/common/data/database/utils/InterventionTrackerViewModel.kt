@@ -1,4 +1,4 @@
-package com.example.phone.utils
+package com.example.tse_emotionalrecognition.common.data.database.utils
 
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -21,31 +21,8 @@ class InterventionTrackerViewModel(private val userRepository: UserRepository) :
     private fun loadInterventionStats() {
         viewModelScope.launch {
             val stats = userRepository.getInterventionStatsById(NOTIFICATION_ID)
-            _interventionStats.postValue(stats)
+            _interventionStats.value = stats
         }
-    }
-
-    fun incrementTriggered() {
-        viewModelScope.launch {
-            val stats = userRepository.getInterventionStatsById(NOTIFICATION_ID)
-            if (stats != null) {
-                userRepository.incrementTriggered(viewModelScope, NOTIFICATION_ID) {
-                    _interventionStats.postValue(it)
-                }
-            }
-        }
-    }
-
-    fun incrementDismissed() {
-        viewModelScope.launch {
-            val stats = userRepository.getInterventionStatsById(NOTIFICATION_ID)
-            if (stats != null) {
-                userRepository.incrementDismissed(viewModelScope, NOTIFICATION_ID) {
-                    _interventionStats.postValue(it)
-                }
-            }
-        }
-
     }
 }
 

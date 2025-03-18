@@ -113,4 +113,8 @@ dependencies {
 
     // Use to utilize components and layouts with Material Design in your tiles
     implementation(libs.androidx.protolayout.material)
+
+
+    // Use to preview wear tiles in your own app
+    debugImplementation(libs.androidx.tiles.renderer)
 }

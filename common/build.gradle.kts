@@ -44,6 +44,10 @@ dependencies {
     // Wearable Data Layer API für Kommunikation mit dem Smartphone
     implementation(libs.play.services.wearable)
 
+
+    //live data from viewmodel
+    implementation(libs.androidx.runtime.livedata) // oder die neueste Version
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)

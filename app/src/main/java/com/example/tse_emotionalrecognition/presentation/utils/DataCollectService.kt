@@ -198,7 +198,6 @@ class DataCollectService : Service() {
                 skinTemperatureTracker.flush()
                 skinTemperatureTracker.unsetEventListener()
             }
-
             delay(1000L)
             healthTrackingService.disconnectService()
             delay(1000L)
@@ -242,7 +241,7 @@ class DataCollectService : Service() {
 
     private fun launchNextStep() {
         Log.v("DataCollectService", "Launching next phase: $phase")
-
+        sendToPhone()
         if (phase == AppPhase.INITIAL_COLLECTION) {
             launchLabelActivity()
         } else if (phase == AppPhase.PREDICTION_WITH_FEEDBACK) {
@@ -257,28 +256,30 @@ class DataCollectService : Service() {
         val intent = Intent(applicationContext, LabelActivity::class.java)
         intent.flags = FLAG_ACTIVITY_NEW_TASK // Hinzufügen des Flags
         val newAffectData = AffectData(sessionId = sessionId, affect = AffectType.NONE)
+        val newAffectDataString = Json.encodeToString(newAffectData)
 
-        //TODO selbes affect Data
-        userRepository.insertAffect(
-            CoroutineScope(Dispatchers.IO), newAffectData,
-        ) { insertedAffectData ->
-            if (insertedAffectData != null) {
-                Log.v("DataCollectService", "AffectData inserted with ID: ${insertedAffectData.id}")
+        intent.putExtra("affectData", newAffectDataString)
+        val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+        createActivityNotification("How do you feel", pendingIntent)
+
+//        userRepository.insertAffect(
+//            CoroutineScope(Dispatchers.IO), newAffectData,
+//        ) { insertedAffectData ->
+//            if (insertedAffectData != null) {
+//                Log.v("DataCollectService", "AffectData inserted with ID: ${insertedAffectData.id}")
+//                intent.putExtra("affectDataId", insertedAffectData.id)
+//                val pendingIntent =
+//                    PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+//                Log.v("DataCollectService", "AffectData ID: ${insertedAffectData.id}")
+//                createActivityNotification("How do you feel", pendingIntent, insertedAffectData.id)
+//
+//
+//
+//            } else {
+//                Log.e("DataCollectService", "Failed to insert AffectData")
+//            }
 
 
-                intent.putExtra("affectDataId", newAffectData.id)
-                val pendingIntent =
-                    PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-                Log.v("DataCollectService", "AffectData ID: ${insertedAffectData.id}")
-                createActivityNotification("How do you feel", pendingIntent, newAffectData.id)
-
-
-
-            } else {
-                Log.e("DataCollectService", "Failed to insert AffectData")
-            }
-
-        }
     }
 
     private fun updateNotificationTracker(){
@@ -301,14 +302,21 @@ class DataCollectService : Service() {
 
     }
 
-    private fun createActivityNotification(notificationText: String, intent: PendingIntent, affectDataId: Long) {
+    private fun createActivityNotification(notificationText: String, intent: PendingIntent) {
         Log.v("DataCollectService", "Creating notification: $notificationText")
+
+        getSharedPreferences("NotificationPrefs", Context.MODE_PRIVATE)
+            .edit()
+            .remove("dismissed")
+            .apply()
+
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val notificationId = 3  // Unique ID for the notification
 
         val cancelIntent = Intent(this, NotificationMonitor::class.java)
-        cancelIntent.putExtra("affectDataId", affectDataId)
-        val cancelPendingIntent = PendingIntent.getBroadcast(this, affectDataId.hashCode(), cancelIntent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+//        cancelIntent.putExtra("affectDataId", affectDataId)
+//        cancelIntent.putExtra("affectData", notificationId)
+        val cancelPendingIntent = PendingIntent.getBroadcast(this, notificationId, cancelIntent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
 
         val notification = NotificationCompat.Builder(this, "data_collection_service")
