@@ -83,8 +83,9 @@ class DataCollectService : Service() {
             createNotification("Health data collection is running...")
         )
 
-        phase = intent?.getStringExtra("PHASE")?.let { AppPhase.valueOf(it) }
-            ?: AppPhase.INITIAL_COLLECTION
+        phase = intent?.getSerializableExtra("PHASE") as? AppPhase ?: AppPhase.INITIAL_COLLECTION
+
+        Log.v("DataCollectService", "Phase: $phase")
 
         sessionId = intent?.getLongExtra("sessionId", 0L) ?: 0L
         val shouldCollectData = intent?.getBooleanExtra("COLLECT_DATA", false) ?: false

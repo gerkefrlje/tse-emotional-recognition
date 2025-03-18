@@ -27,6 +27,7 @@ import com.example.tse_emotionalrecognition.presentation.FeedbackActivity
 import com.example.tse_emotionalrecognition.presentation.LabelActivity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import smile.classification.GradientTreeBoost
@@ -87,47 +88,59 @@ class ModelService : Service() {
 
         when (action) {
             ACTION_TRAIN_MODEL -> {
-                loadData()
+                loadData {
 
-                val lastTrainedTime = sharedPreferences.getLong(LAST_TRAINED_KEY, 0L)
-                val currentTime = System.currentTimeMillis()
+                    val lastTrainedTime = sharedPreferences.getLong(LAST_TRAINED_KEY, 0L)
+                    Log.d("ModelService", "Last trained time: $lastTrainedTime")
+                    val currentTime = System.currentTimeMillis()
 
-                if (currentTime - lastTrainedTime > 24 * 60 * 60 * 1000) {
-                    trainModel()
-                }
-
-                predict()
-
-                val intent = Intent(applicationContext, FeedbackActivity::class.java)
-                intent.flags = FLAG_ACTIVITY_NEW_TASK // Hinzufügen des Flags
-                val newAffectData = AffectData(
-                    sessionId = sessionId,
-                    timeOfNotification= System.currentTimeMillis(),
-                    affect = AffectType.NULL)
-
-                //TODO selbes affect Data
-                userRepository.insertAffect(
-                    CoroutineScope(Dispatchers.IO), newAffectData,
-                ) { insertedAffectData ->
-                    if (insertedAffectData != null) {
-                        Log.v("ModelService", "AffectData inserted with ID: ${insertedAffectData.id}")
-
-
-                        intent.putExtra("affectDataId", newAffectData.id)
-                        val pendingIntent =
-                            PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-                        Log.v("ModelService", "AffectData ID: ${insertedAffectData.id}")
-                        createActivityNotification("How do you feel", pendingIntent)
-                    } else {
-                        Log.e("ModelService", "Failed to insert AffectData")
+                    if (currentTime - lastTrainedTime > 24 * 60 * 60 * 1000) {
+                        Log.d("ModelService", "Training model...")
+                        trainModel()
                     }
 
+                    predict()
+
+                    val intent = Intent(applicationContext, FeedbackActivity::class.java)
+                    intent.flags = FLAG_ACTIVITY_NEW_TASK // Hinzufügen des Flags
+                    val newAffectData = AffectData(
+                        sessionId = sessionId,
+                        timeOfNotification = System.currentTimeMillis(),
+                        affect = AffectType.NULL
+                    )
+
+                    //TODO selbes affect Data
+                    userRepository.insertAffect(
+                        CoroutineScope(Dispatchers.IO), newAffectData,
+                    ) { insertedAffectData ->
+                        if (insertedAffectData != null) {
+                            Log.v(
+                                "ModelService",
+                                "AffectData inserted with ID: ${insertedAffectData.id}"
+                            )
+
+
+                            intent.putExtra("affectDataId", newAffectData.id)
+                            val pendingIntent =
+                                PendingIntent.getActivity(
+                                    this,
+                                    0,
+                                    intent,
+                                    PendingIntent.FLAG_IMMUTABLE
+                                )
+                            Log.v("ModelService", "AffectData ID: ${insertedAffectData.id}")
+                            createActivityNotification("How do you feel", pendingIntent)
+                        } else {
+                            Log.e("ModelService", "Failed to insert AffectData")
+                        }
+
+                    }
                 }
             }
             ACTION_PREDICT -> {
-                loadData ()
-
-                predict()
+                loadData {
+                    predict()
+                }
 
                 // TODO: Link to Intervention Helper
             }
@@ -141,6 +154,7 @@ class ModelService : Service() {
     }
 
     private fun trainModel() {
+        Log.d("ModelService", "Preparing training data...")
         val trainingData = prepareTrainingData()
 
         val model = gbm(Formula.lhs(LABEL_COLUMN), trainingData)
@@ -174,20 +188,24 @@ class ModelService : Service() {
         }
     }
 
-    private fun loadData() {
+    private fun loadData(onDataLoaded: () -> Unit) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 heartRateMeasurements = userRepository.getAllHeartRateMeasurements()
-                skinTemperatureMeasurements = userRepository.getAllSkinTemperatureMeasurements()
+                //skinTemperatureMeasurements = userRepository.getAllSkinTemperatureMeasurements()
                 affectData = userRepository.getAllAffectData()
 
                 Log.d("ModelService", "Loaded ${heartRateMeasurements.size} heart rate measurements")
-                Log.d("ModelService", "Loaded ${skinTemperatureMeasurements.size} skin temperature measurements")
+                //Log.d("ModelService", "Loaded ${skinTemperatureMeasurements.size} skin temperature measurements")
                 Log.d("ModelService", "Loaded ${affectData.size} affect data entries")
 
                 heartRateMeasurements.firstOrNull()?.let { Log.d("ModelService", "First HeartRateMeasurement: $it") }
-                skinTemperatureMeasurements.firstOrNull()?.let { Log.d("ModelService", "First SkinTemperatureMeasurement: $it") }
+                //skinTemperatureMeasurements.firstOrNull()?.let { Log.d("ModelService", "First SkinTemperatureMeasurement: $it") }
                 affectData.firstOrNull()?.let { Log.d("ModelService", "First AffectData: $it") }
+
+                withContext(Dispatchers.Main) {
+                    onDataLoaded()
+                }
 
             } catch (e: Exception) {
                 Log.e("ModelService", "Error loading data", e)
@@ -197,132 +215,105 @@ class ModelService : Service() {
 
     private fun prepareTrainingData(): DataFrame {
 
-        // Create the dataframe for heartrate values
-        val heartRateMeasurementsFiltered = heartRateMeasurements.filter { it.hr in 40..200 }
-        val hrTimestamp = heartRateMeasurementsFiltered.map { it.timestamp }
-        val ibi = heartRateMeasurementsFiltered.map { 60000.0 / it.hr }
-        val hrNormalized = normalize(heartRateMeasurementsFiltered.map { it.hr.toDouble() })
-        val ibiNormalized = normalize(ibi)
+        val affects = mutableListOf<Int>()
+        val meanHeartRates = mutableListOf<Double>()
+        val rmssds = mutableListOf<Double>()
+        val meanSkinTemperatures = mutableListOf<Double>()
 
-        val hrDf = DataFrame.of(
-            LongVector.of("timestamp", hrTimestamp.toLongArray()),
-            DoubleVector.of("hr_normalized", hrNormalized.toDoubleArray()),
-            DoubleVector.of("ibi_normalized", ibiNormalized.toDoubleArray())
-        )
+        val tmpAffectData = affectData.filter { it.affect != AffectType.NULL }
+        val tmpHeartRateMeasurements = heartRateMeasurements.filter { it.hr.toLong() in 40L..200L }
 
-        val skinTemperatureMeasurementsFiltered = skinTemperatureMeasurements.filter { it.status == 1 }
-        val skinTimestamp = skinTemperatureMeasurementsFiltered.map { it.timestamp }
-        val skinTemperature = skinTemperatureMeasurementsFiltered.map { it.objectTemperature.toDouble() }
-        val skinTemperatureNormalized = normalize(skinTemperature)
+        Log.d("ModelService", "Filtered ${tmpHeartRateMeasurements.size} heart rate measurements")
 
-        val skinDf = DataFrame.of(
-            LongVector.of("timestamp", skinTimestamp.toLongArray()),
-            DoubleVector.of("skin_temperature_normalized", skinTemperatureNormalized.toDoubleArray())
-        )
+        val meanHr = tmpHeartRateMeasurements.map { it.hr.toLong() }.average()
+        val stdHr = tmpHeartRateMeasurements.map { (it.hr.toLong() - meanHr).pow(2) }.average().pow(0.5)
 
-        val affectDf = DataFrame.of(
-            LongVector.of("timestamp", affectData.map { it.timeOfNotification }.toLongArray()),
-            LongVector.of("affect", affectData.map { it.affect.ordinal.toLong() }.toLongArray())
-        ).filter {
-            it[1] as Long != 3L
-        }
+        Log.d("ModelService", "Mean HR: $meanHr, Std HR: $stdHr")
+
+        val ibi = tmpHeartRateMeasurements.map { 60000.0 / it.hr }
+        val meanIbi = ibi.average()
+        val stdIbi = ibi.map { (it - meanIbi).pow(2) }.average().pow(0.5)
+
+        Log.d("ModelService", "Mean IBI: $meanIbi, Std IBI: $stdIbi")
 
         val rows = mutableListOf<DataRow>()
 
-        for (row in affectDf) {
-            val affectTimestamp = row[0] as Long
-            val affectValue = row[1] as Long
+        for (tmpAffectDatum in tmpAffectData) {
+            Log.d("ModelService", "Processing affect row: $tmpAffectDatum")
 
-            val hrWindow = hrDf.filter { it[0] as Long in (affectTimestamp - DATA_WINDOW_MS)..affectTimestamp }
+            val tmpHeartRateMeasurementsFiltered = tmpHeartRateMeasurements.filter { it.timestamp as Long in (tmpAffectDatum.timeOfNotification - DATA_WINDOW_MS)..tmpAffectDatum.timeOfNotification }
 
-            if (hrWindow.isEmpty()) {
+            if (tmpHeartRateMeasurementsFiltered.isEmpty()) {
+                Log.d("ModelService", "No heart rate measurements found for affect data entry: $tmpAffectDatum")
                 continue
             }
 
-            val hrNormalizedValues = hrWindow.map { it[1] as Double }
-            val meanHrNormalized = hrNormalizedValues.average()
+            val hrNormalized = tmpHeartRateMeasurementsFiltered.map { (it.hr - meanHr) / stdHr }
 
-            val ibiNormalizedValues = hrWindow.map { it[2] as Double }
-            val rmssd = calculateRmssd(ibiNormalizedValues)
+            val meanHrNormalized = hrNormalized.average()
 
-            val skinWindow = skinDf.filter { it[0] as Long in (affectTimestamp - DATA_WINDOW_MS)..affectTimestamp }
+            val ibiFiltered = tmpHeartRateMeasurementsFiltered.map { 60000.0 / it.hr }
 
-            var skinTemperatureNormalizedValues = skinWindow.map { it[1] as Double }
+            val ibiNormalized = ibiFiltered.map { (it - meanIbi) / stdIbi }
 
-            if (skinTemperatureNormalizedValues.isEmpty()) {
-                skinTemperatureNormalizedValues = List(1) { 0.0 }
-            }
+            val rmssd = calculateRmssd(ibiNormalized)
 
-            val meanSkinTemperatureNormalized = skinTemperatureNormalizedValues.average()
-
-            rows.add(DataRow(meanHrNormalized, rmssd, meanSkinTemperatureNormalized, affectValue))
+            affects.add(tmpAffectDatum.affect.ordinal)
+            meanHeartRates.add(meanHrNormalized)
+            rmssds.add(rmssd)
+            meanSkinTemperatures.add(0.0)
         }
+        val df = DataFrame.of(
+            IntVector.of("affect", affects.toIntArray()),
+            DoubleVector.of("meanHeartRateNormalized", meanHeartRates.toDoubleArray()),
+            DoubleVector.of("rmssdNormalized", rmssds.toDoubleArray()),
+            DoubleVector.of("meanSkinTemperatureNormalized", meanSkinTemperatures.toDoubleArray())
+        )
 
-        val df = DataFrame.of(rows, DataRow::class.java)
-
-        // TODO: Add dropna step
+        Log.d("ModelService", "Prepared DataFrame: $df")
 
         return df
     }
 
     private fun preparePredictionData(): DataFrame {
-        val heartRateMeasurementsFiltered = heartRateMeasurements.filter { it.hr in 40..200 }
-        val hrTimestamp = heartRateMeasurementsFiltered.map { it.timestamp }
-        val ibi = heartRateMeasurementsFiltered.map { 60000.0 / it.hr }
-        val hrNormalized = normalize(heartRateMeasurementsFiltered.map { it.hr.toDouble() })
-        val ibiNormalized = normalize(ibi)
 
-        val hrDf = DataFrame.of(
-            LongVector.of("timestamp", hrTimestamp.toLongArray()),
-            DoubleVector.of("hr_normalized", hrNormalized.toDoubleArray()),
-            DoubleVector.of("ibi_normalized", ibiNormalized.toDoubleArray())
-        )
+        val latestTimestamp = heartRateMeasurements.lastOrNull()?.timestamp ?: 0L
 
-        val skinTemperatureMeasurementsFiltered = skinTemperatureMeasurements.filter { it.status == 1 }
-        val skinTimestamp = skinTemperatureMeasurementsFiltered.map { it.timestamp }
-        val skinTemperature = skinTemperatureMeasurementsFiltered.map { it.objectTemperature.toDouble() }
-        val skinTemperatureNormalized = normalize(skinTemperature)
+        val tmpHeartRateMeasurements = heartRateMeasurements.filter { it.hr in 40..200 }
 
-        val skinDf = DataFrame.of(
-            LongVector.of("timestamp", skinTimestamp.toLongArray()),
-            DoubleVector.of("skin_temperature_normalized", skinTemperatureNormalized.toDoubleArray())
-        )
+        val meanHr = tmpHeartRateMeasurements.map { it.hr.toLong() }.average()
+        val stdHr = tmpHeartRateMeasurements.map { (it.hr.toLong() - meanHr).pow(2) }.average().pow(0.5)
 
-        val latestTimestamp = heartRateMeasurementsFiltered.lastOrNull()?.timestamp ?: 0L
+        Log.d("ModelService", "Mean HR: $meanHr, Std HR: $stdHr")
 
-        val hrWindow = hrDf.filter { it[0] as Long in (latestTimestamp - DATA_WINDOW_MS)..latestTimestamp }
+        val ibi = tmpHeartRateMeasurements.map { 60000.0 / it.hr }
+        val meanIbi = ibi.average()
+        val stdIbi = ibi.map { (it - meanIbi).pow(2) }.average().pow(0.5)
 
-        val hrNormalizedValues = hrWindow.map { it[1] as Double }
-        val meanHrNormalized = hrNormalizedValues.average()
+        Log.d("ModelService", "Mean IBI: $meanIbi, Std IBI: $stdIbi")
 
-        val ibiNormalizedValues = hrWindow.map { it[2] as Double }
-        val rmssd = calculateRmssd(ibiNormalizedValues)
+        val heartRateMeasurementsFiltered = tmpHeartRateMeasurements.filter { it.timestamp >= latestTimestamp - DATA_WINDOW_MS }
 
-        val skinWindow = skinDf.filter { it[0] as Long in (latestTimestamp - DATA_WINDOW_MS)..latestTimestamp }
+        Log.d("ModelService", "Filtered ${heartRateMeasurementsFiltered.size} heart rate measurements")
 
-
-
-        var skinTemperatureNormalizedValues = skinWindow.map { it[1] as Double }
-
-        if (skinTemperatureNormalizedValues.isEmpty()) {
-            skinTemperatureNormalizedValues = List(1) { 0.0 }
+        if (heartRateMeasurementsFiltered.isEmpty()) {
+            Log.d("ModelService", "No heart rate measurements found")
+            return DataFrame.of()
         }
 
-        val meanSkinTemperatureNormalized = skinTemperatureNormalizedValues.average()
+        val hrNormalized = heartRateMeasurementsFiltered.map { (it.hr - meanHr) / stdHr }
+        val meanHrNormalized = hrNormalized.average()
+
+        val ibiFiltered = heartRateMeasurementsFiltered.map { 60000.0 / it.hr }
+        val ibiNormalized = ibiFiltered.map { (it - meanIbi) / stdIbi }
+        val rmssd = calculateRmssd(ibiNormalized)
+
 
         return DataFrame.of(
             DoubleVector.of("meanHeartRateNormalized", doubleArrayOf(meanHrNormalized)),
             DoubleVector.of("rmssdNormalized", doubleArrayOf(rmssd)),
-            DoubleVector.of("meanSkinTemperatureNormalized", doubleArrayOf(meanSkinTemperatureNormalized))
+            DoubleVector.of("meanSkinTemperatureNormalized", doubleArrayOf(0.0))
         )
-    }
-
-    private fun normalize(values: List<Double>): List<Double> {
-        val mean = values.average()
-
-        val std = values.map { (it - mean).pow(2) }.average().pow(0.5)
-
-        return values.map { (it - mean) / std }
     }
 
     private fun calculateRmssd(ibiValues: List<Double>): Double {
