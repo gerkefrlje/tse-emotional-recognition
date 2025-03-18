@@ -35,6 +35,8 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
 import com.example.tse_emotionalrecognition.presentation.interventions.InterventionOverviewActivity
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
 import com.example.tse_emotionalrecognition.presentation.utils.EmojiSelector
@@ -210,6 +212,36 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Start Sensor")
+                }
+            }
+            item {
+                Button(
+                    onClick = {
+                        val intent = Intent(context, DataCollectReciever::class.java)
+                        intent.putExtra("COLLECT_DATA", true)
+                        intent.putExtra("PHASE", AppPhase.PREDICTION_WITH_FEEDBACK)
+                        intent.putExtra("sessionId", 1L)
+
+                        context.sendBroadcast(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Model Training")
+                }
+            }
+            item {
+                Button(
+                    onClick = {
+                        val intent = Intent(context, DataCollectReciever::class.java)
+                        intent.putExtra("COLLECT_DATA", true)
+                        intent.putExtra("PHASE", AppPhase.PREDICTION_ONLY)
+                        intent.putExtra("sessionId", 1L)
+
+                        context.sendBroadcast(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Model Prediction")
                 }
             }
             item {

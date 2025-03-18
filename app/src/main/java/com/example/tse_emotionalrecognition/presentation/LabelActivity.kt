@@ -1,5 +1,6 @@
 package com.example.tse_emotionalrecognition.presentation
 
+import android.app.Activity
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -82,54 +83,68 @@ class LabelActivity : ComponentActivity() {
         affectId: Long
     ) {
         val context = LocalContext.current
+        var showThankYou by remember { mutableStateOf(false) }
+
         Box(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-                modifier = Modifier.padding(horizontal = 0.dp)
-            ) {
-                Text(
-                    text = "How are you feeling\nright now?",
-                    textAlign = TextAlign.Center,
-                    color = Color.White
-                )
-                Row(
-                    modifier = Modifier.fillMaxWidth(0.8f),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        16.dp,
-                        Alignment.CenterHorizontally
-                    )
+            if (showThankYou) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(horizontal = 16.dp)
                 ) {
                     Text(
-                        text = "😊",
-                        fontSize = 32.sp,
-                        modifier = Modifier.clickable {
-                            updateAffect(affectId, AffectColumns.AFFECT, AffectType.POSITIVE)
-                        },
-                        textAlign = TextAlign.Center,
-                        color = Color.White
+                        text = "Thank you!",
+                        fontSize = 20.sp,
+                        color = Color.White,
+                        textAlign = TextAlign.Center
                     )
                     Text(
-                        text = "😐",
-                        fontSize = 32.sp,
-                        modifier = Modifier.clickable {
-                            updateAffect(affectId, AffectColumns.AFFECT, AffectType.NONE)
-                        },
-                        textAlign = TextAlign.Center,
-                        color = Color.White
+                        text = "✖",
+                        fontSize = 24.sp,
+                        color = Color.White,
+                        modifier = Modifier.clickable { (context as? Activity)?.finish() },
+                        textAlign = TextAlign.Center
                     )
+                }
+            } else {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                    modifier = Modifier.padding(horizontal = 0.dp)
+                ) {
                     Text(
-                        text = "😞",
-                        fontSize = 32.sp,
-                        modifier = Modifier.clickable {
-                            updateAffect(affectId, AffectColumns.AFFECT, AffectType.NEGATIVE)
-                        },
+                        text = "How are you feeling\nright now?",
                         textAlign = TextAlign.Center,
                         color = Color.White
                     )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(0.8f),
+                        horizontalArrangement = Arrangement.spacedBy(
+                            16.dp,
+                            Alignment.CenterHorizontally
+                        )
+                    ) {
+                        listOf(
+                            "😊" to AffectType.POSITIVE,
+                            "😐" to AffectType.NONE,
+                            "😞" to AffectType.NEGATIVE
+                        ).forEach { (emoji, affectType) ->
+                            Text(
+                                text = emoji,
+                                fontSize = 32.sp,
+                                modifier = Modifier.clickable {
+                                    updateAffect(affectId, AffectColumns.AFFECT, affectType) {
+                                        showThankYou = true
+                                    }
+                                },
+                                textAlign = TextAlign.Center,
+                                color = Color.White
+                            )
+                        }
+                    }
                 }
             }
         }

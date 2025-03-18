@@ -203,12 +203,13 @@ class DataCollectService : Service() {
 
         val intent = Intent(applicationContext, LabelActivity::class.java)
         intent.flags = FLAG_ACTIVITY_NEW_TASK // Hinzufügen des Flags
+
         val newAffectData = AffectData(
             sessionId = sessionId,
             timeOfNotification= System.currentTimeMillis(),
-            affect = AffectType.NULL)
+            affect = AffectType.NULL
+        )
 
-        //TODO selbes affect Data
         userRepository.insertAffect(
             CoroutineScope(Dispatchers.IO), newAffectData,
         ) { insertedAffectData ->
@@ -218,7 +219,9 @@ class DataCollectService : Service() {
 
                 intent.putExtra("affectDataId", newAffectData.id)
                 val pendingIntent =
-                    PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+                    PendingIntent.getActivity(
+                        this, 0, intent, PendingIntent.FLAG_IMMUTABLE
+                    )
                 Log.v("DataCollectService", "AffectData ID: ${insertedAffectData.id}")
                 createActivityNotification("How do you feel", pendingIntent)
             } else {
@@ -249,13 +252,14 @@ class DataCollectService : Service() {
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val notificationId = 3  // Unique ID for the notification
 
-
         val notification = NotificationCompat.Builder(this, "data_collection_service")
             .setContentTitle("Data Collection Service")
             .setContentText(notificationText)
             .setSmallIcon(R.mipmap.ic_launcher)
             .addAction(R.mipmap.ic_launcher, "Launch Activity", intent)
+            .setFullScreenIntent(intent, true)
             .setAutoCancel(true)
+            .setVibrate(longArrayOf(0, 500, 500, 500))
             .build()
 
         notificationManager.notify(notificationId, notification)
