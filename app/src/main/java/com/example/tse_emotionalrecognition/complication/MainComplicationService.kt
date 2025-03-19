@@ -76,7 +76,6 @@ class MainComplicationService : SuspendingComplicationDataSourceService() {
         )
     }
 
-    // Placeholder: replace with your actual logic to determine the emoji state
     private fun getEmojiState(): String {
         val prefs = getSharedPreferences("emoji_prefs", MODE_PRIVATE)
         val state = prefs.getString("emoji_state", "NEUTRAL") ?: "NEUTRAL"
