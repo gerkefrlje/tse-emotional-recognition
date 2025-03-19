@@ -32,6 +32,7 @@ import com.example.tse_emotionalrecognition.common.data.database.entities.Affect
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
 import com.example.tse_emotionalrecognition.presentation.utils.FullText
 import com.example.tse_emotionalrecognition.presentation.utils.RowButton
+import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 
 
 class LabelActivity : ComponentActivity() {
@@ -72,6 +73,15 @@ class LabelActivity : ComponentActivity() {
             id, column, value
         ) {
             if (finished != null) {
+                if (it.affect == AffectType.NEGATIVE){
+                    updateEmoji(applicationContext, com.example.tse_emotionalrecognition.presentation.utils.EmojiState.UNHAPPY_ALERT)
+                }
+                else if(it.affect == AffectType.POSITIVE){
+                    updateEmoji(applicationContext, com.example.tse_emotionalrecognition.presentation.utils.EmojiState.HAPPY)
+                }
+                else{
+                    updateEmoji(applicationContext, com.example.tse_emotionalrecognition.presentation.utils.EmojiState.NEUTRAL)
+                }
                 finished()
             }
         }

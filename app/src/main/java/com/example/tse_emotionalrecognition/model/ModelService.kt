@@ -25,6 +25,8 @@ import com.example.tse_emotionalrecognition.common.data.database.entities.HeartR
 import com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement
 import com.example.tse_emotionalrecognition.presentation.FeedbackActivity
 import com.example.tse_emotionalrecognition.presentation.LabelActivity
+import com.example.tse_emotionalrecognition.presentation.utils.InterventionTriggerHelper
+import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -113,7 +115,6 @@ class ModelService : Service() {
                         affect = AffectType.NULL
                     )
 
-                    //TODO selbes affect Data
                     userRepository.insertAffect(
                         CoroutineScope(Dispatchers.IO), newAffectData,
                     ) { insertedAffectData ->
@@ -147,12 +148,26 @@ class ModelService : Service() {
             ACTION_PREDICT -> {
                 loadData {
                     predict()
+                    //prediction == AffectType.NEGATIVE
+                    val notificationHelper = InterventionTriggerHelper(this)
+                    if (prediction == AffectType.NEGATIVE){
+                        notificationHelper.showRandomIntervention()
+                        updateEmoji(applicationContext, com.example.tse_emotionalrecognition.presentation.utils.EmojiState.UNHAPPY_ALERT)
+                    }
+                    else if(prediction == AffectType.POSITIVE){
+                        updateEmoji(applicationContext, com.example.tse_emotionalrecognition.presentation.utils.EmojiState.HAPPY)
+                    }
+                    else{
+                        updateEmoji(applicationContext, com.example.tse_emotionalrecognition.presentation.utils.EmojiState.NEUTRAL)
+                    }
+
                 }
 
                 // TODO: Link to Intervention Helper
             }
         }
 
+        stopForeground(true)
         return START_NOT_STICKY
     }
 
@@ -252,7 +267,6 @@ class ModelService : Service() {
 
         Log.d("ModelService", "Mean IBI: $meanIbi, Std IBI: $stdIbi")
 
-        val rows = mutableListOf<DataRow>()
 
         for (tmpAffectDatum in tmpAffectData) {
             Log.d("ModelService", "Processing affect row: $tmpAffectDatum")
@@ -333,7 +347,7 @@ class ModelService : Service() {
         val rmssd = calculateRmssd(ibiNormalized)
         Log.d("ModelService", "RMSSD normalized: $rmssd")
 
-        val dummyAffect = IntArray(1) { 0 }
+        val dummyAffect = IntArray(1) { 100000}
 
         return DataFrame.of(
             DoubleVector.of("meanHeartRateNormalized", doubleArrayOf(meanHrNormalized)),

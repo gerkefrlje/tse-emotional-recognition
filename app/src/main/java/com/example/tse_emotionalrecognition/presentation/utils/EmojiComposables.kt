@@ -78,13 +78,14 @@ fun EmojiSelector(currentEmojiState: EmojiState) {
                 ) {
                     when (currentEmojiState) {
                         EmojiState.NEUTRAL_ALERT -> {
-                            Text(text = "Ich sehe du hast ")
+                            Text(text = "aktuell bist du ausgegelichen")
                         }
                         EmojiState.HAPPY_ALERT -> {
+                            Text(text = "aktuell bist du gut gelaunt)")
                         }
                         EmojiState.UNHAPPY_ALERT -> {
                         }
-                        else -> { Text(text = "default text")}
+                        else -> { Text(text = "aktuell bist du unzufrieden")}
                     }
 
                 }
