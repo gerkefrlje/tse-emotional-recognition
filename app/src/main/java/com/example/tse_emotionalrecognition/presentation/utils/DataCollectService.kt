@@ -45,7 +45,7 @@ class DataCollectService : Service() {
     private lateinit var wearDetectionHelper: WearDetectionHelper
 
     private var countDownTimer: CountDownTimer? = null
-    private val dataCollectionInterval: Long = 2L * 10L * 1000L // 2 Minutes
+    private val dataCollectionInterval: Long = 2L * 60L * 1000L // 2 Minutes
     private var isWatchWorn: Boolean = false
     private var sessionId: Long = 0L
     private var phase: AppPhase = AppPhase.INITIAL_COLLECTION
