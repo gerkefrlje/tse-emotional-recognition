@@ -45,7 +45,7 @@ class DataCollectService : Service() {
     private lateinit var wearDetectionHelper: WearDetectionHelper
 
     private var countDownTimer: CountDownTimer? = null
-    private val dataCollectionInterval: Long = 2L * 60L * 1000L // 2 Minutes
+    private val dataCollectionInterval: Long = 2L * 10L * 1000L // 2 Minutes
     private var isWatchWorn: Boolean = false
     private var sessionId: Long = 0L
     private var phase: AppPhase = AppPhase.INITIAL_COLLECTION
@@ -202,8 +202,7 @@ class DataCollectService : Service() {
 
     private fun launchLabelActivity() {
 
-        val intent = Intent(applicationContext, LabelActivity::class.java)
-        intent.flags = FLAG_ACTIVITY_NEW_TASK // Hinzufügen des Flags
+
 
         val newAffectData = AffectData(
             sessionId = sessionId,
@@ -217,11 +216,16 @@ class DataCollectService : Service() {
             if (insertedAffectData != null) {
                 Log.v("DataCollectService", "AffectData inserted with ID: ${insertedAffectData.id}")
 
+                val intent = Intent(applicationContext, LabelActivity::class.java)
+                intent.flags = FLAG_ACTIVITY_NEW_TASK // Hinzufügen des Flags
+
+                Log.d("DataCollectService", "current sessionId: $sessionId")
+                Log.d("DataCollectService", "current affectDataId: ${insertedAffectData}")
 
                 intent.putExtra("affectDataId", insertedAffectData.id)
                 val pendingIntent =
                     PendingIntent.getActivity(
-                        this, 0, intent, PendingIntent.FLAG_IMMUTABLE
+                        this, sessionId.toInt(), intent, PendingIntent.FLAG_IMMUTABLE
                     )
                 createActivityNotification("How do you feel", pendingIntent)
             } else {

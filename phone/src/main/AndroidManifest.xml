@@ -28,6 +28,11 @@
             android:label="@string/app_name"
             android:theme="@style/Theme.TSEEmotionalRecognition">
         </activity>
+        <activity
+            android:name=".MLTest"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:theme="@style/Theme.TSEEmotionalRecognition"/>
     </application>
 
 </manifest>

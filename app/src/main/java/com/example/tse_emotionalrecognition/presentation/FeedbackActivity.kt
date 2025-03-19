@@ -39,14 +39,17 @@ import com.example.tse_emotionalrecognition.common.data.database.entities.Affect
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
 
-class FeedbackActivity: ComponentActivity() {
+class FeedbackActivity : ComponentActivity() {
     private val userRepository by lazy { UserDataStore.getUserRepository(application) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val prediction = intent.getSerializableExtra("prediction") as? AffectType
+        val predictionString = intent.getStringExtra("prediction")
+        // val prediction = intent.getSerializableExtra("prediction") as? AffectType
+        val prediction = predictionString?.let { Json.decodeFromString<AffectType>(it) }
 
         if (prediction == null) {
             Log.e("FeedbackActivity", "No prediction provided")
@@ -133,6 +136,7 @@ class FeedbackActivity: ComponentActivity() {
                         modifier = Modifier.weight(1f),
                         onClick = {
                             updateAffect(affectDataId, AffectColumns.AFFECT, prediction)
+                            (context as? FeedbackActivity)?.finish()
                         }
                     ) {
                         Text(

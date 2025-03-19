@@ -52,4 +52,8 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
 
     implementation(libs.kotlinx.serialization.json) //wandelt Klassen in String um
+
+    // Kotlin Smile
+    implementation(libs.smile.core)
+    implementation(libs.smile.kotlin)
 }

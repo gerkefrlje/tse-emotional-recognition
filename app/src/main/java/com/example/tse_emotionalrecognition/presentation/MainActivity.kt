@@ -49,6 +49,7 @@ import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import java.util.Calendar
 
 class MainActivity : ComponentActivity() {
     private val userRepository by lazy { UserDataStore.getUserRepository(application) }
@@ -173,6 +174,7 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
             item {
                 Button(
                     onClick = {
+
                         val intent = Intent(context, InterventionOverviewActivity::class.java)
                         context.startActivity(intent)
                     },
@@ -202,10 +204,12 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
             item {
                 Button(
                     onClick = {
+                        val sessionId = Calendar.getInstance().timeInMillis
+
                         val intent = Intent(context, DataCollectReciever::class.java)
                         intent.putExtra("COLLECT_DATA", true)
                         intent.putExtra("PHASE", AppPhase.INITIAL_COLLECTION)
-                        intent.putExtra("sessionId", 1L)
+                        intent.putExtra("sessionId", sessionId)
 
                         context.sendBroadcast(intent)
                     },
@@ -217,10 +221,12 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
             item {
                 Button(
                     onClick = {
+                        val sessionId = Calendar.getInstance().timeInMillis
+
                         val intent = Intent(context, DataCollectReciever::class.java)
                         intent.putExtra("COLLECT_DATA", true)
                         intent.putExtra("PHASE", AppPhase.PREDICTION_WITH_FEEDBACK)
-                        intent.putExtra("sessionId", 1L)
+                        intent.putExtra("sessionId", sessionId)
 
                         context.sendBroadcast(intent)
                     },
@@ -250,10 +256,12 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
             item {
                 Button(
                     onClick = {
+                        val sessionId = Calendar.getInstance().timeInMillis
+
                         val intent = Intent(context, DataCollectReciever::class.java)
                         intent.putExtra("COLLECT_DATA", true)
                         intent.putExtra("PHASE", AppPhase.INITIAL_COLLECTION)
-                        intent.putExtra("sessionId", 1L)
+                        intent.putExtra("sessionId", sessionId)
 
                         context.sendBroadcast(intent)
                     },

@@ -30,6 +30,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import smile.classification.GradientTreeBoost
 import smile.classification.gbm
 import smile.data.DataFrame
@@ -94,10 +96,12 @@ class ModelService : Service() {
                     Log.d("ModelService", "Last trained time: $lastTrainedTime")
                     val currentTime = System.currentTimeMillis()
 
-                    if (currentTime - lastTrainedTime > 24 * 60 * 60 * 1000) {
-                        Log.d("ModelService", "Training model...")
-                        trainModel()
-                    }
+//                    if (currentTime - lastTrainedTime > 24 * 60 * 60 * 1000) {
+//                        Log.d("ModelService", "Training model...")
+//                        trainModel()
+//                    }
+
+                    trainModel()
 
                     predict()
 
@@ -120,11 +124,14 @@ class ModelService : Service() {
                             )
 
 
-                            intent.putExtra("affectDataId", newAffectData.id)
+                            intent.putExtra("affectDataId", insertedAffectData.id)
+                            val predictionString = Json.encodeToString(prediction)
+                            intent.putExtra("prediction", predictionString)
+
                             val pendingIntent =
                                 PendingIntent.getActivity(
                                     this,
-                                    0,
+                                    insertedAffectData.id.toInt(),
                                     intent,
                                     PendingIntent.FLAG_IMMUTABLE
                                 )
@@ -157,7 +164,7 @@ class ModelService : Service() {
         Log.d("ModelService", "Preparing training data...")
         val trainingData = prepareTrainingData()
 
-        val model = gbm(Formula.lhs(LABEL_COLUMN), trainingData)
+        val model = gbm(Formula.lhs(trainingData.column(LABEL_COLUMN).name()), trainingData)
 
         val currentTime = System.currentTimeMillis()
         sharedPreferences.edit().putLong(LAST_TRAINED_KEY, currentTime).apply()
@@ -176,7 +183,16 @@ class ModelService : Service() {
 
         val predictionData = preparePredictionData()
 
+        Log.d("ModelService", "Checking prediction data ${predictionData.schema().fields().map { it.name }}")
+
         if (model != null) {
+
+            val result = model.predict(predictionData)
+            for (i in result.indices) {
+                Log.d("ModelService", "Prediction $i: ${result[i]}")
+            }
+            Log.d("ModelService", "Prediction result: $result")
+
             val predictionAsInt = model.predict(predictionData)[0]
 
             prediction = when (predictionAsInt) {
@@ -264,11 +280,18 @@ class ModelService : Service() {
             meanSkinTemperatures.add(0.0)
         }
         val df = DataFrame.of(
-            IntVector.of("affect", affects.toIntArray()),
             DoubleVector.of("meanHeartRateNormalized", meanHeartRates.toDoubleArray()),
             DoubleVector.of("rmssdNormalized", rmssds.toDoubleArray()),
-            DoubleVector.of("meanSkinTemperatureNormalized", meanSkinTemperatures.toDoubleArray())
+            DoubleVector.of("meanSkinTemperatureNormalized", meanSkinTemperatures.toDoubleArray()),
+            IntVector.of(LABEL_COLUMN, affects.toIntArray())
         )
+
+//        val df = DataFrame.of(
+//            DoubleVector.of("meanHeartRateNormalized", doubleArrayOf(0.5, 1.0, -0.5)),
+//            DoubleVector.of("rmssdNormalized", doubleArrayOf(0.1, 0.2, 0.3)),
+//            DoubleVector.of("meanSkinTemperatureNormalized", doubleArrayOf(36.5, 37.0, 36.8)),
+//            IntVector.of("affect", intArrayOf(0, 1, 2)),
+//            )
 
         Log.d("ModelService", "Prepared DataFrame: $df")
 
@@ -303,16 +326,20 @@ class ModelService : Service() {
 
         val hrNormalized = heartRateMeasurementsFiltered.map { (it.hr - meanHr) / stdHr }
         val meanHrNormalized = hrNormalized.average()
+        Log.d("ModelService", "Mean HR normalized: $meanHrNormalized")
 
         val ibiFiltered = heartRateMeasurementsFiltered.map { 60000.0 / it.hr }
         val ibiNormalized = ibiFiltered.map { (it - meanIbi) / stdIbi }
         val rmssd = calculateRmssd(ibiNormalized)
+        Log.d("ModelService", "RMSSD normalized: $rmssd")
 
+        val dummyAffect = IntArray(1) { 0 }
 
         return DataFrame.of(
             DoubleVector.of("meanHeartRateNormalized", doubleArrayOf(meanHrNormalized)),
             DoubleVector.of("rmssdNormalized", doubleArrayOf(rmssd)),
-            DoubleVector.of("meanSkinTemperatureNormalized", doubleArrayOf(0.0))
+            DoubleVector.of("meanSkinTemperatureNormalized", doubleArrayOf(0.0)),
+            IntVector.of("affect", dummyAffect)
         )
     }
 
