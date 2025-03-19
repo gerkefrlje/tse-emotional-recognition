@@ -11,7 +11,7 @@ class DataCollectReciever : BroadcastReceiver() {
         context?.let {
             val serviceIntent = Intent(it, DataCollectService::class.java).apply {
                 putExtra("COLLECT_DATA", intent?.getBooleanExtra("COLLECT_DATA", false))
-                putExtra("PHASE", intent?.getStringExtra("PHASE"))
+                putExtra("PHASE", intent?.getSerializableExtra("PHASE"))
                 putExtra("sessionId", intent?.getLongExtra("sessionId", 0L))
             }
             Log.d("DataCollectReciever", "Starting DataCollectService")

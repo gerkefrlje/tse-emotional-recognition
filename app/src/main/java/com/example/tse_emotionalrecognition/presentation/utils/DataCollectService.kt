@@ -21,6 +21,7 @@ import com.example.tse_emotionalrecognition.common.data.database.entities.Affect
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
 import com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement
 import com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement
+import com.example.tse_emotionalrecognition.model.ModelService
 
 import com.example.tse_emotionalrecognition.presentation.AppPhase
 import com.example.tse_emotionalrecognition.presentation.LabelActivity
@@ -82,8 +83,9 @@ class DataCollectService : Service() {
             createNotification("Health data collection is running...")
         )
 
-        phase = intent?.getStringExtra("PHASE")?.let { AppPhase.valueOf(it) }
-            ?: AppPhase.INITIAL_COLLECTION
+        phase = intent?.getSerializableExtra("PHASE") as? AppPhase ?: AppPhase.INITIAL_COLLECTION
+
+        Log.v("DataCollectService", "Phase: $phase")
 
         sessionId = intent?.getLongExtra("sessionId", 0L) ?: 0L
         val shouldCollectData = intent?.getBooleanExtra("COLLECT_DATA", false) ?: false
@@ -200,22 +202,31 @@ class DataCollectService : Service() {
 
     private fun launchLabelActivity() {
 
-        val intent = Intent(applicationContext, LabelActivity::class.java)
-        intent.flags = FLAG_ACTIVITY_NEW_TASK // Hinzufügen des Flags
-        val newAffectData = AffectData(sessionId = sessionId, affect = AffectType.NONE)
 
-        //TODO selbes affect Data
+
+        val newAffectData = AffectData(
+            sessionId = sessionId,
+            timeOfNotification= System.currentTimeMillis(),
+            affect = AffectType.NULL
+        )
+
         userRepository.insertAffect(
             CoroutineScope(Dispatchers.IO), newAffectData,
         ) { insertedAffectData ->
             if (insertedAffectData != null) {
                 Log.v("DataCollectService", "AffectData inserted with ID: ${insertedAffectData.id}")
 
+                val intent = Intent(applicationContext, LabelActivity::class.java)
+                intent.flags = FLAG_ACTIVITY_NEW_TASK // Hinzufügen des Flags
 
-                intent.putExtra("affectDataId", newAffectData.id)
+                Log.d("DataCollectService", "current sessionId: $sessionId")
+                Log.d("DataCollectService", "current affectDataId: ${insertedAffectData}")
+
+                intent.putExtra("affectDataId", insertedAffectData.id)
                 val pendingIntent =
-                    PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
-                Log.v("DataCollectService", "AffectData ID: ${insertedAffectData.id}")
+                    PendingIntent.getActivity(
+                        this, sessionId.toInt(), intent, PendingIntent.FLAG_IMMUTABLE
+                    )
                 createActivityNotification("How do you feel", pendingIntent)
             } else {
                 Log.e("DataCollectService", "Failed to insert AffectData")
@@ -225,25 +236,34 @@ class DataCollectService : Service() {
     }
 
     private fun launchFeedbackActivity() {
-
+        //Launch ModelService with intent action = ACTION_TRAIN_MODEL
+        val intent = Intent(applicationContext, ModelService::class.java)
+        intent.putExtra("sessionId", sessionId)
+        intent.action = ModelService.ACTION_TRAIN_MODEL
+        ContextCompat.startForegroundService(this, intent)
     }
 
     private fun launchPredictionService() {
-
+        // Launch ModelService with intent action = ACTION_PREDICT
+        val intent = Intent(applicationContext, ModelService::class.java)
+        intent.putExtra("sessionId", sessionId)
+        intent.action = ModelService.ACTION_PREDICT
+        ContextCompat.startForegroundService(this, intent)
     }
 
     private fun createActivityNotification(notificationText: String, intent: PendingIntent) {
         Log.v("DataCollectService", "Creating notification: $notificationText")
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        val notificationId = 3  // Unique ID for the notification
-
+        val notificationId = System.currentTimeMillis().toInt()  // Unique ID for the notification
 
         val notification = NotificationCompat.Builder(this, "data_collection_service")
             .setContentTitle("Data Collection Service")
             .setContentText(notificationText)
             .setSmallIcon(R.mipmap.ic_launcher)
             .addAction(R.mipmap.ic_launcher, "Launch Activity", intent)
+            .setFullScreenIntent(intent, true)
             .setAutoCancel(true)
+            .setVibrate(longArrayOf(0, 500, 500, 500))
             .build()
 
         notificationManager.notify(notificationId, notification)

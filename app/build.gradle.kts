@@ -102,4 +102,8 @@ dependencies {
     // Wearable Data Layer API für Kommunikation mit dem Smartphone
     implementation(libs.play.services.wearable)
 
+
+    // Kotlin Smile
+    implementation(libs.smile.core)
+    implementation(libs.smile.kotlin)
 }

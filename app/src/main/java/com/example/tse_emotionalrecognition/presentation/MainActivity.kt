@@ -1,3 +1,8 @@
+/* While this template provides a good starting point for using Wear Compose, you can always
+ * take a look at https://github.com/android/wear-os-samples/tree/main/ComposeStarter to find the
+ * most up to date changes to the libraries and their usages.
+ */
+
 package com.example.tse_emotionalrecognition.presentation
 
 
@@ -30,6 +35,8 @@ import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequest
 import androidx.work.WorkManager
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
 import com.example.tse_emotionalrecognition.presentation.interventions.InterventionOverviewActivity
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
 import com.example.tse_emotionalrecognition.presentation.utils.EmojiSelector
@@ -41,6 +48,8 @@ import com.example.tse_emotionalrecognition.presentation.utils.DataCollectWorker
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import java.util.Calendar
 
 class MainActivity : ComponentActivity() {
     private val userRepository by lazy { UserDataStore.getUserRepository(application) }
@@ -126,7 +135,22 @@ class MainActivity : ComponentActivity() {
         WorkManager.getInstance(this).enqueueUniquePeriodicWork("DataCollectionWork", ExistingPeriodicWorkPolicy.KEEP, periodicWorkRequest)
 
     }
+
+    private fun getAppPhase(): AppPhase {
+        val firstLaunchTime = sharedPreferences.getLong(FIRST_LAUNCH_KEY, 0L)
+        val currentTime = System.currentTimeMillis()
+        val elapsedTime = currentTime - firstLaunchTime
+        val daysElapsed = TimeUnit.MILLISECONDS.toDays(elapsedTime)
+
+        return when {
+            daysElapsed < 2 -> AppPhase.INITIAL_COLLECTION
+            daysElapsed < 4 -> AppPhase.PREDICTION_WITH_FEEDBACK
+            else -> AppPhase.PREDICTION_ONLY
+        }
+    }
 }
+
+
 
 @Composable
 fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.common.data.database.UserRepository) {
@@ -150,6 +174,7 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
             item {
                 Button(
                     onClick = {
+
                         val intent = Intent(context, InterventionOverviewActivity::class.java)
                         context.startActivity(intent)
                     },
@@ -162,13 +187,9 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                 Button(
                     onClick = {
                         userRepository.insertAffect(
-                            CoroutineScope(Dispatchers.IO)
-                            ,
-                            com.example.tse_emotionalrecognition.common.data.database.entities.AffectData(
-                                sessionId = 1,
-                                affect = com.example.tse_emotionalrecognition.common.data.database.entities.AffectType.HAPPY_RELAXED
-                            )
-                        ){
+                            CoroutineScope(Dispatchers.IO),
+                            AffectData(sessionId = 1, affect = AffectType.POSITIVE)
+                        ) {
                             val affectDataID = it.id
                             val intent = Intent(context, LabelActivity::class.java)
                             intent.putExtra("affectDataId", affectDataID)
@@ -183,10 +204,12 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
             item {
                 Button(
                     onClick = {
+                        val sessionId = Calendar.getInstance().timeInMillis
+
                         val intent = Intent(context, DataCollectReciever::class.java)
                         intent.putExtra("COLLECT_DATA", true)
                         intent.putExtra("PHASE", AppPhase.INITIAL_COLLECTION)
-                        intent.putExtra("sessionId", 1L)
+                        intent.putExtra("sessionId", sessionId)
 
                         context.sendBroadcast(intent)
                     },
@@ -196,15 +219,49 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                 }
             }
             item {
-                Spacer(modifier = Modifier.height(16.dp))
+                Button(
+                    onClick = {
+                        val sessionId = Calendar.getInstance().timeInMillis
+
+                        val intent = Intent(context, DataCollectReciever::class.java)
+                        intent.putExtra("COLLECT_DATA", true)
+                        intent.putExtra("PHASE", AppPhase.PREDICTION_WITH_FEEDBACK)
+                        intent.putExtra("sessionId", sessionId)
+
+                        context.sendBroadcast(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Model Training")
+                }
             }
             item {
                 Button(
                     onClick = {
                         val intent = Intent(context, DataCollectReciever::class.java)
                         intent.putExtra("COLLECT_DATA", true)
-                        intent.putExtra("PHASE", AppPhase.INITIAL_COLLECTION)
+                        intent.putExtra("PHASE", AppPhase.PREDICTION_ONLY)
                         intent.putExtra("sessionId", 1L)
+
+                        context.sendBroadcast(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Model Prediction")
+                }
+            }
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            item {
+                Button(
+                    onClick = {
+                        val sessionId = Calendar.getInstance().timeInMillis
+
+                        val intent = Intent(context, DataCollectReciever::class.java)
+                        intent.putExtra("COLLECT_DATA", true)
+                        intent.putExtra("PHASE", AppPhase.INITIAL_COLLECTION)
+                        intent.putExtra("sessionId", sessionId)
 
                         context.sendBroadcast(intent)
                     },

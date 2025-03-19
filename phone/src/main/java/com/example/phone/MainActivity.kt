@@ -227,7 +227,7 @@ fun MenuButton() {
             CenteredMenuDialog(
                 onDismissRequest = { expanded = false },
                 onContactConfig = {
-                    // TODO: forward to Contact Configuration activity
+                    context.startActivity(Intent(context, MLTest::class.java))
                     expanded = false
                 },
                 onMusicConfig = {
