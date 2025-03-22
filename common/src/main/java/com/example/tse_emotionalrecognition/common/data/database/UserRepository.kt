@@ -57,13 +57,20 @@ class UserRepository(db: com.example.tse_emotionalrecognition.common.data.databa
         onFinished: (entity: MutableList<com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement>) -> Unit = {}
     ) {
         scope.launch(Dispatchers.IO) {
-            val listOfIds = heartRateDao.insertAll(entities)
-            entities.forEachIndexed() { index, element ->
-                element.id = listOfIds[index]
+            try {
+                val listOfIds = heartRateDao.insertAll(entities)
+                entities.forEachIndexed() { index, element ->
+                    element.id = listOfIds[index]
+                }
+                withContext(Dispatchers.IO) {
+                    onFinished(entities)
+                }
+            }catch (
+                e: Exception
+            ){
+                Log.e("insertHeartRateMeasurementList", "Error inserting heart rate measurements", e)
             }
-            withContext(Dispatchers.IO) {
-                onFinished(entities)
-            }
+
         }
     }
 
@@ -73,12 +80,16 @@ class UserRepository(db: com.example.tse_emotionalrecognition.common.data.databa
         onFinished: (entity: MutableList<com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement>) -> Unit = {}
     ) {
         scope.launch(Dispatchers.IO) {
-            val listOfIds = skinTemperatureDao.insertAll(entities)
-            entities.forEachIndexed() { index, element ->
-                element.id = listOfIds[index]
-            }
-            withContext(Dispatchers.IO) {
-                onFinished(entities)
+            try {
+                val listOfIds = skinTemperatureDao.insertAll(entities)
+                entities.forEachIndexed() { index, element ->
+                    element.id = listOfIds[index]
+                }
+                withContext(Dispatchers.IO) {
+                    onFinished(entities)
+                }
+            }catch (e: Exception){
+                Log.e("insertSkinTemperatureMeasurementList", "Error inserting skin temperature measurements", e)
             }
         }
     }
