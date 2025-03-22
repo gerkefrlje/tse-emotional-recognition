@@ -102,6 +102,17 @@ dependencies {
     // Wearable Data Layer API für Kommunikation mit dem Smartphone
     implementation(libs.play.services.wearable)
 
+    //Tiles
+    implementation(libs.androidx.tiles.v141)
+
+    // Use to utilize standard components and layouts in your tiles
+    implementation(libs.androidx.protolayout)
+
+    // Use to include dynamic expressions in your tiles
+    implementation(libs.androidx.protolayout.expression)
+
+    // Use to utilize components and layouts with Material Design in your tiles
+    implementation(libs.androidx.protolayout.material)
 
     // Kotlin Smile
     implementation(libs.smile.core)

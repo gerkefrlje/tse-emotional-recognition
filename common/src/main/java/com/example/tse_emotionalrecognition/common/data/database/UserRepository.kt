@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
 import com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement
 import com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement
+import com.example.tse_emotionalrecognition.common.data.database.entities.TAG
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -15,6 +16,7 @@ class UserRepository(db: com.example.tse_emotionalrecognition.common.data.databa
     val sessionDao = db.getSessionDao()
     val heartRateDao = db.getHeartRateMeasurementDao()
     val skinTemperatureDao = db.getSkinTemperatureMeasurementDao()
+    val interventionStatsDao = db.getInterventionStatsDao()
 
     fun getActiveSession(
         scope: CoroutineScope,
@@ -152,6 +154,66 @@ class UserRepository(db: com.example.tse_emotionalrecognition.common.data.databa
                 }
             }
         }
+
+        fun insertInterventionStats(
+            scope: CoroutineScope,
+            entity: com.example.tse_emotionalrecognition.common.data.database.entities.InterventionStats,
+            onFinished: (entity: com.example.tse_emotionalrecognition.common.data.database.entities.InterventionStats) -> Unit = {}
+            ) {
+            scope.launch(Dispatchers.IO) {
+                entity.id = interventionStatsDao.insert(entity)
+                withContext(Dispatchers.Main) {
+                    Log.v("InterventionStats", "created to ${entity.toString()}")
+                    onFinished(entity)
+                }
+            }
+        }
+
+        suspend fun getInterventionStatsByTag(tag: TAG) : com.example.tse_emotionalrecognition.common.data.database.entities.InterventionStats {
+            return interventionStatsDao.getInterventionStatsByTag(tag)
+        }
+
+        suspend fun getInterventionStatsById(id: Long) : com.example.tse_emotionalrecognition.common.data.database.entities.InterventionStats{
+            return interventionStatsDao.getInterventionStatsById(id)
+        }
+
+
+        fun incrementTriggered(
+            scope: CoroutineScope,
+            id: Long,
+            onFinished: ((entity: com.example.tse_emotionalrecognition.common.data.database.entities.InterventionStats) -> Unit)? = null
+        ){
+            scope.launch(Dispatchers.IO) {
+                val entity = interventionStatsDao.getInterventionStatsById(id)
+                if(entity != null) {
+                    entity.triggeredCount++
+                    interventionStatsDao.update(entity)
+                    Log.v("InterventionStats", "updated to ${entity.toString()}")
+                    onFinished?.invoke(entity)
+
+                }
+
+            }
+        }
+
+        fun incrementDismissed(
+            scope: CoroutineScope,
+            id: Long,
+            onFinished: ((entity: com.example.tse_emotionalrecognition.common.data.database.entities.InterventionStats) -> Unit)? = null
+        ) {
+            scope.launch(Dispatchers.IO) {
+                val entity = interventionStatsDao.getInterventionStatsById(id)
+                if(entity != null) {
+                    entity.dismissedCount++
+                    interventionStatsDao.update(entity)
+                    Log.v("InterventionStats", "updated to ${entity.toString()}")
+                    onFinished?.invoke(entity)
+
+                }
+
+            }
+        }
+
 
         fun insertSession(
             scope: CoroutineScope,

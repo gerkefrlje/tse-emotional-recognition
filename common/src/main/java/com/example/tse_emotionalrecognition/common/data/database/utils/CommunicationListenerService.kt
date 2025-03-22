@@ -1,9 +1,11 @@
 package com.example.tse_emotionalrecognition.common.data.database.utils
 
+import android.content.Context
 import android.util.Log
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.common.data.database.UserRepository
 import com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement
+import com.example.tse_emotionalrecognition.common.data.database.entities.InterventionStats
 import com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement
 import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataEventBuffer
@@ -22,7 +24,7 @@ class CommunicationListenerService : WearableListenerService() {
 
     private lateinit var userRepository: UserRepository
 
-    private lateinit var applicationContextSafe: android.content.Context // speichere den Context nach der Initialisierung
+    private lateinit var applicationContextSafe: Context // speichere den Context nach der Initialisierung
 
     override fun onCreate() {
         super.onCreate()
@@ -109,6 +111,21 @@ class CommunicationListenerService : WearableListenerService() {
                     }
                 }
             }
+
+            "/notification" -> {
+                Log.d("WearListenerService", "Neue InterventionTracker Daten empfangen")
+                val interventionStatsString = dataMap.getString("data")
+                interventionStatsString?.let {
+                    val interventionStat = Json.decodeFromString<InterventionStats>(it)
+                    CoroutineScope(Dispatchers.IO).launch {
+                        userRepository.insertInterventionStats(
+                            CoroutineScope(Dispatchers.IO),
+                            interventionStat
+                        )
+                    }
+                }
+            }
+
         }
     }
 
