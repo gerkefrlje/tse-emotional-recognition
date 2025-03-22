@@ -99,13 +99,14 @@ class InterventionTriggerHelper(private val context: Context) {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
+
+        //Todo info button
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(com.example.tse_emotionalrecognition.R.drawable.splash_icon) // Ersetze durch dein Icon
             .setContentTitle("Intervention suggested")
             .setContentText(notificationText(activityClass))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
-            .setContentInfo("You seem to be feeling unwell. A short break might help")
             .setAutoCancel(true)
 
         with(NotificationManagerCompat.from(context)) {

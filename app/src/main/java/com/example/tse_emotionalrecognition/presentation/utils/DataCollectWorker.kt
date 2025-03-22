@@ -21,7 +21,6 @@ import java.util.concurrent.TimeUnit
 class DataCollectWorker(private val context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
     companion object {
         const val CHANNEL_ID = "DataCollectChannel"
-        const val NOTIFICATION_ID = 1
     }
 
 
@@ -30,48 +29,13 @@ class DataCollectWorker(private val context: Context, workerParams: WorkerParame
 
         createNotification()
 
-//        if(isFirstRun()) {
-//            startDataCollectionService()
-//        }
-//        else{
-//            createNotification()
-//        }
-/**
-        //createNotificationChannel()
+        if(isFirstRun()) {
+            startDataCollectionService()
+        }
+        else{
+            createNotification()
+        }
 
-//        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-//            .setContentTitle("Data Collection")
-//            .setContentText("Collecting data in the background...")
-//            .setSmallIcon(android.R.drawable.ic_dialog_info)
-//            .build()
-//
-//        Log.d("DataCollectWorker", "Creating foreground info")
-//        //val foregroundInfo = ForegroundInfo(NOTIFICATION_ID, notification, FOREGROUND_SERVICE_TYPE_HEALTH)
-//
-//        Log.d("DataCollectWorker", "Setting foreground info")
-//        setForegroundAsync(createForegroundInfo())
-//
-//        val phase = getAppPhase(context)
-//
-//        Log.d("DataCollectWorker", "Creating Intent for DataCollectService")
-//        val sessionId = Calendar.getInstance().timeInMillis
-//        val intent = Intent(applicationContext, DataCollectService::class.java)
-//
-//        intent.putExtra("COLLECT_DATA", true)
-//        intent.putExtra("sessionId", sessionId)
-//        intent.putExtra("PHASE", phase.name)
-//
-//        Log.d("DataCollectWorker", "Starting DataCollectService")
-//        //ContextCompat.startForegroundService(applicationContext, intent)
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//            applicationContext.startForegroundService(intent) // WICHTIG: `startForegroundService()` statt `startService()`
-//        } else {
-//            applicationContext.startService(intent)
-//        }
-
-        Log.d("DataCollectWorker", "Worker finished")
-        Log.d("DataCollectWorker", "Result is " + Result.success())
-**/
         return Result.success()
     }
 
@@ -105,13 +69,6 @@ class DataCollectWorker(private val context: Context, workerParams: WorkerParame
     private fun createNotification() {
         val sessionId = Calendar.getInstance().timeInMillis
         val phase = getAppPhase(context)
-
-
-//        val intent = Intent(context, DataCollectService::class.java).apply {
-//            putExtra("COLLECT_DATA", true)
-//            putExtra("PHASE", phase)
-//            putExtra("sessionId", sessionId)
-//        }
 
         val notificationIntent = Intent(context, DataCollectReciever::class.java).apply {
             putExtra("COLLECT_DATA", true)

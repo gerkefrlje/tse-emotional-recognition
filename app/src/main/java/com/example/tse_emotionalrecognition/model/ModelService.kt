@@ -163,7 +163,7 @@ class ModelService : Service() {
 
                 }
 
-                // TODO: Link to Intervention Helper
+
             }
         }
 
@@ -299,13 +299,6 @@ class ModelService : Service() {
             DoubleVector.of("meanSkinTemperatureNormalized", meanSkinTemperatures.toDoubleArray()),
             IntVector.of(LABEL_COLUMN, affects.toIntArray())
         )
-
-//        val df = DataFrame.of(
-//            DoubleVector.of("meanHeartRateNormalized", doubleArrayOf(0.5, 1.0, -0.5)),
-//            DoubleVector.of("rmssdNormalized", doubleArrayOf(0.1, 0.2, 0.3)),
-//            DoubleVector.of("meanSkinTemperatureNormalized", doubleArrayOf(36.5, 37.0, 36.8)),
-//            IntVector.of("affect", intArrayOf(0, 1, 2)),
-//            )
 
         Log.d("ModelService", "Prepared DataFrame: $df")
 

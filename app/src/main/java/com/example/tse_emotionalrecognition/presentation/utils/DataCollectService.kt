@@ -270,10 +270,14 @@ class DataCollectService : Service() {
     }
 
     private fun createNotification(contentText: String): Notification {
+        val wearableExtender = NotificationCompat.WearableExtender()
+
+
         return NotificationCompat.Builder(this, "data_collection_service")
             .setContentTitle("Data Collection Service")
             .setContentText(contentText)
             .setSmallIcon(R.mipmap.ic_launcher)
+            .extend(wearableExtender)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .build()
     }

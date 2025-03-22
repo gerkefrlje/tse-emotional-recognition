@@ -37,6 +37,7 @@ import com.example.tse_emotionalrecognition.common.data.database.entities.Affect
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
 import com.example.tse_emotionalrecognition.presentation.utils.FullText
+import com.example.tse_emotionalrecognition.presentation.utils.InterventionTriggerHelper
 import com.example.tse_emotionalrecognition.presentation.utils.RowButton
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -44,7 +45,11 @@ import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 
 
 class LabelActivity : ComponentActivity() {
-    private val userRepository by lazy { com.example.tse_emotionalrecognition.common.data.database.UserDataStore.getUserRepository(application) }
+    private val userRepository by lazy {
+        com.example.tse_emotionalrecognition.common.data.database.UserDataStore.getUserRepository(
+            application
+        )
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -60,7 +65,8 @@ class LabelActivity : ComponentActivity() {
         }
     }
 
-
+    private fun insertAffect() {
+    }
 
     private fun insertEngagementTime(id: Long) {
         userRepository.updateAffectColumn(
@@ -80,14 +86,21 @@ class LabelActivity : ComponentActivity() {
             id, column, value
         ) {
             if (finished != null) {
-                if (it.affect == AffectType.NEGATIVE){
-                    updateEmoji(applicationContext, com.example.tse_emotionalrecognition.presentation.utils.EmojiState.UNHAPPY_ALERT)
-                }
-                else if(it.affect == AffectType.POSITIVE){
-                    updateEmoji(applicationContext, com.example.tse_emotionalrecognition.presentation.utils.EmojiState.HAPPY)
-                }
-                else{
-                    updateEmoji(applicationContext, com.example.tse_emotionalrecognition.presentation.utils.EmojiState.NEUTRAL)
+                if (it.affect == AffectType.NEGATIVE) {
+                    updateEmoji(
+                        applicationContext,
+                        com.example.tse_emotionalrecognition.presentation.utils.EmojiState.UNHAPPY_ALERT
+                    )
+                } else if (it.affect == AffectType.POSITIVE) {
+                    updateEmoji(
+                        applicationContext,
+                        com.example.tse_emotionalrecognition.presentation.utils.EmojiState.HAPPY
+                    )
+                } else {
+                    updateEmoji(
+                        applicationContext,
+                        com.example.tse_emotionalrecognition.presentation.utils.EmojiState.NEUTRAL
+                    )
                 }
                 finished()
             }
@@ -156,7 +169,7 @@ class LabelActivity : ComponentActivity() {
                                     updateAffect(affectId, AffectColumns.AFFECT, affectType) {
                                         showThankYou = true
                                     }
-                                    startLabelActivity(context)
+                                    startIntervention(context)
                                 },
                                 textAlign = TextAlign.Center,
                                 color = Color.White
@@ -168,6 +181,11 @@ class LabelActivity : ComponentActivity() {
         }
     }
 
+    private fun startIntervention(context: Context) {
+        val triggerHelper = InterventionTriggerHelper(context)
+        triggerHelper.showRandomIntervention()
+    }
+
     @Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true)
     @Composable
     fun PreviewLabelWatch() {
@@ -176,38 +194,6 @@ class LabelActivity : ComponentActivity() {
         )
     }
 
-    private fun startLabelActivity(context: Context){
-        val sessionId = Calendar.getInstance().timeInMillis
 
-        val newAffectData = AffectData(
-            sessionId = sessionId,
-            timeOfNotification= System.currentTimeMillis(),
-            affect = AffectType.NULL
-        )
-
-        userRepository.insertAffect(
-            CoroutineScope(Dispatchers.IO), newAffectData,
-        ) { insertedAffectData ->
-            if (insertedAffectData != null) {
-                Log.v("DataCollectService", "AffectData inserted with ID: ${insertedAffectData.id}")
-
-                val intent = Intent(applicationContext, LabelActivity::class.java)
-                intent.flags = FLAG_ACTIVITY_NEW_TASK // Hinzufügen des Flags
-
-                Log.d("DataCollectService", "current sessionId: $sessionId")
-                Log.d("DataCollectService", "current affectDataId: ${insertedAffectData}")
-
-                CoroutineScope(Dispatchers.IO).launch {
-                    delay(1000)
-                    intent.putExtra("affectDataId", insertedAffectData.id)
-                    context.startActivity(intent)
-                }
-
-            } else {
-                Log.e("DataCollectService", "Failed to insert AffectData")
-            }
-
-        }
-    }
 }
 
