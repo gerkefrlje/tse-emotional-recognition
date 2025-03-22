@@ -1,6 +1,7 @@
 package com.example.tse_emotionalrecognition.presentation.utils
 
 import androidx.annotation.DrawableRes
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.AlertDialog
@@ -19,8 +20,12 @@ import coil.request.repeatCount
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.wear.compose.material.CircularProgressIndicator
+import com.example.tse_emotionalrecognition.R
 
 
 @Composable
@@ -50,11 +55,20 @@ fun LoopingGifImage(
 fun EmojiSelector(currentEmojiState: EmojiState) {
     var showDialog by remember { mutableStateOf(false) }
     var isNonAlertState = false
-    LoopingGifImage(
-        gifRes = getEmojiResForState(currentEmojiState),
-        modifier = Modifier.clickable { showDialog = true }
-    )
+    var isLoading by remember { mutableStateOf(true) } // Ladezustand
 
+    Box(contentAlignment = Alignment.Center) {
+        if (isLoading) {
+            CircularProgressIndicator() // Platzhalter (Ladesymbol)
+        }
+
+        LoopingGifImage(
+            gifRes = getEmojiResForState(currentEmojiState),
+            modifier = Modifier
+                .clickable { showDialog = true }
+                .onGloballyPositioned { isLoading = false } // Setzt isLoading auf false, wenn geladen
+        )
+    }
     isNonAlertState = currentEmojiState == EmojiState.NEUTRAL || currentEmojiState == EmojiState.HAPPY || currentEmojiState == EmojiState.UNHAPPY
 
     if (showDialog && !isNonAlertState) {

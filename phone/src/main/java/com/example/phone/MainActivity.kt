@@ -2,7 +2,6 @@ package com.example.phone
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -32,8 +31,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.phone.ui.theme.TSEEmotionalRecognitionTheme
-import com.example.phone.utils.InterventionTrackerViewModel
-import com.example.phone.utils.InterventionTrackerViewModelFactory
+import com.example.tse_emotionalrecognition.common.data.database.utils.InterventionTrackerViewModel
+import com.example.tse_emotionalrecognition.common.data.database.utils.InterventionTrackerViewModelFactory
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 
 
@@ -46,7 +45,6 @@ class MainActivity : ComponentActivity() {
             )
         )
     }
-
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,18 +60,6 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-
-    override fun onResume() {
-        super.onResume()
-        interventionTrackerViewModel.interventionStats.observe(this) { stats ->
-            stats?.let {
-                val completedCount = it.triggeredCount
-                val missedCount = it.dismissedCount
-                // Reagiere auf die neuen Werte
-                println("Neue Daten: Completed=$completedCount, Missed=$missedCount")
-                Log.d("MainActivity", "Neue Daten: Completed=$completedCount, Missed=$missedCount")
-            }
-        }    }
 }
 
 /**
@@ -146,7 +132,10 @@ fun MainScreen(completedCount: Int, missedCount: Int) {
                     color = Color(0xFF202020),
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp)
                 )
-                .padding(horizontal = 16.dp, vertical = 8.dp), // Adjust this value for your top third position
+                .padding(
+                    horizontal = 16.dp,
+                    vertical = 8.dp
+                ), // Adjust this value for your top third position
             contentAlignment = Alignment.Center // Centers content inside the Box
         ) {
             Text(
@@ -339,6 +328,6 @@ fun MenuDialogItem(text: String, onClick: () -> Unit) {
 @Composable
 fun MainScreenPreview() {
     TSEEmotionalRecognitionTheme {
-        MainScreen(0,0)
+        MainScreen(0, 0)
     }
 }

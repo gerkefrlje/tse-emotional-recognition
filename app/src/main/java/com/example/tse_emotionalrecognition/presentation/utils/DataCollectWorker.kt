@@ -79,16 +79,6 @@ class DataCollectWorker(private val context: Context, workerParams: WorkerParame
 
         val pedingIntent = PendingIntent.getBroadcast(context, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
-        val intent = Intent(context, DataCollectReciever::class.java).apply {
-            putExtra("COLLECT_DATA", true)
-            putExtra("PHASE", phase)
-            putExtra("sessionId", sessionId)
-        }
-
-//        val pendingIntent = PendingIntent.getService(
-//            context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-//        )
-
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
@@ -114,7 +104,6 @@ class DataCollectWorker(private val context: Context, workerParams: WorkerParame
             .setAutoCancel(true)
             .build()
 
-        //notificationManager.notify(1, notification)
         notificationManager.notify(69, broadcastNotification)
     }
 

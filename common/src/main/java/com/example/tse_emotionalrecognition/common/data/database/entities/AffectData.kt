@@ -2,8 +2,10 @@ package com.example.tse_emotionalrecognition.common.data.database.entities
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import kotlinx.serialization.Serializable
 
 @Entity
+@Serializable
 data class AffectData(
     @PrimaryKey(autoGenerate = true)
     var id: Long = 0L,

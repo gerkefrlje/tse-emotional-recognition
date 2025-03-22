@@ -32,6 +32,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import androidx.navigation.compose.*
 import androidx.wear.compose.material.Button
+import androidx.wear.compose.material.CircularProgressIndicator
 import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import androidx.wear.tooling.preview.devices.WearDevices
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
@@ -42,6 +43,7 @@ import com.example.tse_emotionalrecognition.presentation.utils.EmojiState
 import com.example.tse_emotionalrecognition.presentation.utils.FullText
 import com.example.tse_emotionalrecognition.presentation.utils.InterventionTriggerHelper
 import com.example.tse_emotionalrecognition.presentation.utils.RowButton
+import kotlinx.serialization.json.Json
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
@@ -57,18 +59,41 @@ class LabelActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val affectDataId = intent.getLongExtra("affectDataId", -1)
+            val affectDataString = intent.getStringExtra("affectData")
+            var newAffectData by remember { mutableStateOf(
+            affectDataString?.let { Json.decodeFromString<AffectData>(it) }
+                ?: AffectData(id = -1, sessionId = 0, affect = AffectType.NONE) // Standardwert
+            )
+        }
+            var isAffectDataInserted by remember { mutableStateOf(false) }  // State für Ladezustand
 
-            Log.d("LabelActivity", "affectDataId from intent: $affectDataId") // Logging hinzufügen
+            LaunchedEffect(Unit) {  // Wird nur einmal ausgeführt
+                affectDataString?.let {
+                    newAffectData = Json.decodeFromString<AffectData>(it)
+                    userRepository.insertAffect(CoroutineScope(Dispatchers.IO), newAffectData) {
+                        isAffectDataInserted = true  // UI wird aktualisiert, sobald Daten eingefügt wurden
+                    }
+                } ?: run {
+                    isAffectDataInserted = true  // Falls kein AffectData vorhanden ist, direkt UI laden
+                }
+            }
+
+
+            Log.d("LabelActivity", "affectDataId from intent: ${newAffectData.id}") // Logging hinzufügen
 
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.cancel(3) // Verwende die NotificationId
             Log.d("LabelActivity", "Notification canceled") // Logging hinzufügen
 
-            insertEngagementTime(affectDataId)
-            LabelWatch(
-                affectDataId,
-            )
+            if (isAffectDataInserted) {
+                insertEngagementTime(newAffectData.id)
+                LabelWatch(
+                    newAffectData.id,
+
+                )
+            } else {
+                LoadingScreen()  // Ladeanzeige, bis AffectData eingefügt ist
+            }
         }
     }
 
@@ -113,6 +138,16 @@ class LabelActivity : ComponentActivity() {
             }
         }
 
+    }
+
+    @Composable
+    fun LoadingScreen() {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()  // Wear Compose oder Standard Compose
+        }
     }
 
     @Composable

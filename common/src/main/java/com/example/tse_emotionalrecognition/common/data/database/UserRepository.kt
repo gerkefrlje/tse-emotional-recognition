@@ -187,6 +187,7 @@ class UserRepository(db: com.example.tse_emotionalrecognition.common.data.databa
                 val entity = interventionStatsDao.getInterventionStatsById(id)
                 if(entity != null) {
                     entity.triggeredCount++
+
                     interventionStatsDao.update(entity)
                     Log.v("InterventionStats", "updated to ${entity.toString()}")
                     onFinished?.invoke(entity)
