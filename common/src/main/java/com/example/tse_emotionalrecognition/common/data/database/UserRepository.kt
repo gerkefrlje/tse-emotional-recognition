@@ -36,11 +36,11 @@ class UserRepository(db: com.example.tse_emotionalrecognition.common.data.databa
     }
 
     suspend fun getHeartRateMeasurements(): List<com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement> {
-            return try {
-                heartRateDao.getAll()
-            } catch (e: Exception) {
-                emptyList()
-            }
+        return try {
+            heartRateDao.getAll()
+        } catch (e: Exception) {
+            emptyList()
+        }
     }
 
     suspend fun getSkinTemperatureMeasurements(): List<com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement> {
@@ -98,67 +98,93 @@ class UserRepository(db: com.example.tse_emotionalrecognition.common.data.databa
         }
     }
 
-    fun updateAffectColumn(
+    fun deleteAffect(
         scope: CoroutineScope,
         id: Long,
-        column: com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns,
-        value: Any,
-        onFinished: (entity: com.example.tse_emotionalrecognition.common.data.database.entities.AffectData) -> Unit = {}
+        onFinished: (entity: Long) -> Unit
     ) {
         scope.launch(Dispatchers.IO) {
-            val entity = affectDao.getAffectById(id)
-            when (column) {
-                com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns.TIME_OF_ENGAGEMENT -> entity.timeOfEngagement = value as Long
-                com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns.TIME_OF_FINISHED -> entity.timeOfFinished = value as Long
-                com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns.AFFECT -> {
-                    entity.affect = value as com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
-                    entity.timeOfAffect = System.currentTimeMillis()
+            affectDao.deleteAffectById(id)
+            withContext(Dispatchers.IO) {
+                Log.v("Affect", "deleted $id")
+                onFinished(id)
+            }
+        }
+    }
+
+        fun updateAffectColumn(
+            scope: CoroutineScope,
+            id: Long,
+            column: com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns,
+            value: Any,
+            onFinished: (entity: com.example.tse_emotionalrecognition.common.data.database.entities.AffectData) -> Unit = {}
+        ) {
+            scope.launch(Dispatchers.IO) {
+                val entity = affectDao.getAffectById(id)
+                when (column) {
+                    com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns.TIME_OF_ENGAGEMENT -> entity.timeOfEngagement =
+                        value as Long
+
+                    com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns.TIME_OF_FINISHED -> entity.timeOfFinished =
+                        value as Long
+
+                    com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns.AFFECT -> {
+                        entity.affect =
+                            value as com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
+                        entity.timeOfAffect = System.currentTimeMillis()
+                    }
+                }
+                affectDao.insert(entity)
+                withContext(Dispatchers.IO) {
+                    Log.v("Affect", "updated to ${entity.toString()}")
+                    onFinished(entity)
                 }
             }
-            affectDao.insert(entity)
-            withContext(Dispatchers.IO) {
-                Log.v("Affect", "updated to ${entity.toString()}")
-                onFinished(entity)
-            }
         }
-    }
 
-    fun insertSession(
-        scope: CoroutineScope,
-        entity: com.example.tse_emotionalrecognition.common.data.database.entities.SessionData,
-        onFinished: (entity: com.example.tse_emotionalrecognition.common.data.database.entities.SessionData) -> Unit
-    ) {
-        scope.launch(Dispatchers.IO) {
-            entity.id = sessionDao.insert(entity)
-            withContext(Dispatchers.Main) {
-                Log.v("Session", "created to ${entity.toString()}")
-                onFinished(entity)
+        fun insertSession(
+            scope: CoroutineScope,
+            entity: com.example.tse_emotionalrecognition.common.data.database.entities.SessionData,
+            onFinished: (entity: com.example.tse_emotionalrecognition.common.data.database.entities.SessionData) -> Unit
+        ) {
+            scope.launch(Dispatchers.IO) {
+                entity.id = sessionDao.insert(entity)
+                withContext(Dispatchers.Main) {
+                    Log.v("Session", "created to ${entity.toString()}")
+                    onFinished(entity)
+                }
             }
         }
-    }
 
-    fun updateSessionColumn(
-        scope: CoroutineScope,
-        id: Long,
-        column: com.example.tse_emotionalrecognition.common.data.database.entities.SessionDataColumns,
-        value: Any,
-        onFinished: (entity: com.example.tse_emotionalrecognition.common.data.database.entities.SessionData) -> Unit
-    ) {
-        scope.launch(Dispatchers.IO) {
-            val entity = sessionDao.getSessionById(id)
-            when (column) {
-                com.example.tse_emotionalrecognition.common.data.database.entities.SessionDataColumns.START_TIME_MILLIS -> entity.startTimeMillis = value as Long
-                com.example.tse_emotionalrecognition.common.data.database.entities.SessionDataColumns.END_TIME_MILLIS -> entity.endTimeMillis = value as Long
-                com.example.tse_emotionalrecognition.common.data.database.entities.SessionDataColumns.SYNCED -> entity.synced = value as Long
-                com.example.tse_emotionalrecognition.common.data.database.entities.SessionDataColumns.COUNT -> entity.count = value as Int
-            }
-            sessionDao.insert(entity)
-            withContext(Dispatchers.IO) {
-                Log.v("Session", "updated to ${entity.toString()}")
-                onFinished(entity)
+        fun updateSessionColumn(
+            scope: CoroutineScope,
+            id: Long,
+            column: com.example.tse_emotionalrecognition.common.data.database.entities.SessionDataColumns,
+            value: Any,
+            onFinished: (entity: com.example.tse_emotionalrecognition.common.data.database.entities.SessionData) -> Unit
+        ) {
+            scope.launch(Dispatchers.IO) {
+                val entity = sessionDao.getSessionById(id)
+                when (column) {
+                    com.example.tse_emotionalrecognition.common.data.database.entities.SessionDataColumns.START_TIME_MILLIS -> entity.startTimeMillis =
+                        value as Long
+
+                    com.example.tse_emotionalrecognition.common.data.database.entities.SessionDataColumns.END_TIME_MILLIS -> entity.endTimeMillis =
+                        value as Long
+
+                    com.example.tse_emotionalrecognition.common.data.database.entities.SessionDataColumns.SYNCED -> entity.synced =
+                        value as Long
+
+                    com.example.tse_emotionalrecognition.common.data.database.entities.SessionDataColumns.COUNT -> entity.count =
+                        value as Int
+                }
+                sessionDao.insert(entity)
+                withContext(Dispatchers.IO) {
+                    Log.v("Session", "updated to ${entity.toString()}")
+                    onFinished(entity)
+                }
             }
         }
-    }
 
     suspend fun getAllHeartRateMeasurements(): List<HeartRateMeasurement> {
         return withContext(Dispatchers.IO) {
