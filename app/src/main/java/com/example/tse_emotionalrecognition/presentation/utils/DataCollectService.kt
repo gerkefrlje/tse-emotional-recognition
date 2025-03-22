@@ -201,7 +201,6 @@ class DataCollectService : Service() {
                 skinTemperatureTracker.flush()
                 skinTemperatureTracker.unsetEventListener()
             }
-
             delay(1000L)
             healthTrackingService.disconnectService()
             delay(1000L)
@@ -245,7 +244,7 @@ class DataCollectService : Service() {
 
     private fun launchNextStep() {
         Log.v("DataCollectService", "Launching next phase: $phase")
-
+        sendToPhone()
         if (phase == AppPhase.INITIAL_COLLECTION) {
             launchLabelActivity()
         } else if (phase == AppPhase.PREDICTION_WITH_FEEDBACK) {
@@ -282,7 +281,7 @@ class DataCollectService : Service() {
                     PendingIntent.getActivity(
                         this, sessionId.toInt(), intent, PendingIntent.FLAG_IMMUTABLE
                     )
-                createActivityNotification("How do you feel", pendingIntent, newAffectData.id)
+                createActivityNotification("How do you feel", pendingIntent)
             } else {
                 Log.e("DataCollectService", "Failed to insert AffectData")
             }
@@ -318,14 +317,21 @@ class DataCollectService : Service() {
         ContextCompat.startForegroundService(this, intent)
     }
 
-    private fun createActivityNotification(notificationText: String, intent: PendingIntent, affectDataId: Long) {
+    private fun createActivityNotification(notificationText: String, intent: PendingIntent) {
         Log.v("DataCollectService", "Creating notification: $notificationText")
+
+        getSharedPreferences("NotificationPrefs", Context.MODE_PRIVATE)
+            .edit()
+            .remove("dismissed")
+            .apply()
+
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val notificationId = System.currentTimeMillis().toInt()  // Unique ID for the notification
 
         val cancelIntent = Intent(this, NotificationMonitor::class.java)
-        cancelIntent.putExtra("affectDataId", affectDataId)
-        val cancelPendingIntent = PendingIntent.getBroadcast(this, affectDataId.hashCode(), cancelIntent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+//        cancelIntent.putExtra("affectDataId", affectDataId)
+//        cancelIntent.putExtra("affectData", notificationId)
+        val cancelPendingIntent = PendingIntent.getBroadcast(this, notificationId, cancelIntent,PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
         val notification = NotificationCompat.Builder(this, "data_collection_service")
             .setContentTitle("Data Collection Service")

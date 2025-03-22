@@ -115,35 +115,17 @@ class DataCollectWorker(private val context: Context, workerParams: WorkerParame
 
         val pedingIntent = PendingIntent.getBroadcast(context, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
-        val intent = Intent(context, DataCollectReciever::class.java).apply {
-            putExtra("COLLECT_DATA", true)
-            putExtra("PHASE", phase)
-            putExtra("sessionId", sessionId)
-        }
-
-//        val pendingIntent = PendingIntent.getService(
-//            context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-//        )
-
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                "data_collection_request",
-                "Data Collection Request",
-                NotificationManager.IMPORTANCE_HIGH
-            )
-            notificationManager.createNotificationChannel(channel)
-        }
 
-//        val notification = NotificationCompat.Builder(context, "data_collection_request")
-//            .setContentTitle("Datenaufzeichnung starten")
-//            .setContentText("Tippe hier, um die Erfassung zu starten.")
-//            .setSmallIcon(R.drawable.splash_icon)
-//            .setContentIntent(pendingIntent)
-//            .setAutoCancel(true)
-//            .build()
+
+        val channel = NotificationChannel(
+            "data_collection_request",
+            "Data Collection Request",
+            NotificationManager.IMPORTANCE_HIGH
+        )
+        notificationManager.createNotificationChannel(channel)
 
         val broadcastNotification = NotificationCompat.Builder(context, "data_collection_request")
             .setContentTitle("Datenaufzeichnung starten")
@@ -153,7 +135,6 @@ class DataCollectWorker(private val context: Context, workerParams: WorkerParame
             .setAutoCancel(true)
             .build()
 
-        //notificationManager.notify(1, notification)
         notificationManager.notify(69, broadcastNotification)
     }
 

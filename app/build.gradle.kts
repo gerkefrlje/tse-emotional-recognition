@@ -114,6 +114,9 @@ dependencies {
     // Use to utilize components and layouts with Material Design in your tiles
     implementation(libs.androidx.protolayout.material)
 
+
+    // Use to preview wear tiles in your own app
+
     // Kotlin Smile
     implementation(libs.smile.core)
     implementation(libs.smile.kotlin)

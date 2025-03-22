@@ -11,6 +11,7 @@ import android.os.Looper
 import android.service.notification.StatusBarNotification
 import android.util.Log
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.common.data.database.UserRepository
 import com.example.tse_emotionalrecognition.common.data.database.entities.TAG
@@ -25,45 +26,45 @@ import kotlinx.serialization.json.Json
 
 class NotificationMonitor() : BroadcastReceiver() {
 
-
-
     override fun onReceive(context: Context, intent: Intent) {
         val userRepository = UserDataStore.getUserRepository(context)
 
-        Log.v("NotificationMonitor", "Notification dismissed")
-        val affectDataId = intent.getLongExtra("affectDataId", -1L)
-        if (affectDataId != -1L) {
-            userRepository.deleteAffect(
-                CoroutineScope(Dispatchers.IO), affectDataId,
-            ) { deletedID ->
-                if (deletedID != null) {
-                    Log.v("NotificationMonitor", "AffectData deleted with ID: $deletedID")
-                    CoroutineScope(Dispatchers.IO).launch {
-                        updateNotificationTracker(userRepository, context)
-                    }
-                } else {
-                    Log.e("NotificationMonitor", "Failed to delete AffectData")
-                }
+        val sharedPreferences =
+            context.getSharedPreferences("NotificationPrefs", Context.MODE_PRIVATE)
+        val isAlreadyHandled = sharedPreferences.getBoolean(
+            "dismissed",
+            false
+        )
 
-
-            }
+        if (isAlreadyHandled) {
+            Log.v("NotificationMonitor", "Notification already handled, skipping...")
+            return
         }
 
+        // Setze das Flag auf "true", damit es nicht erneut verarbeitet wird
+        sharedPreferences.edit()
+            .putBoolean("dismissed", true).apply()
 
 
+        updateNotificationTracker(userRepository, context)
 
 
+        Log.v("NotificationMonitor", "Notification dismissed")
     }
 
-    private suspend fun updateNotificationTracker(userRepository: UserRepository, context: Context){
-        Log.v("NotificationMonitor", "Notification dismissed")
+
+}
+
+private fun updateNotificationTracker(userRepository: UserRepository, context: Context) {
+
+    CoroutineScope(Dispatchers.IO).launch {
 
         userRepository.incrementDismissed(CoroutineScope(Dispatchers.IO), MainActivity.trackerID)
         val sender = CommunicationDataSender(context)
 
         delay(5000L)
 
-        val interventionStats = userRepository.getInterventionStatsByTag(TAG.INTERVENTIONS)
+        val interventionStats = userRepository.getInterventionStatsById(MainActivity.trackerID)
         val interventionStatsString = Json.encodeToString(interventionStats)
 
         sender.sendStringData("/phone/notification", interventionStatsString)

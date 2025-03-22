@@ -234,7 +234,7 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                     onClick = {
                         userRepository.insertAffect(
                             CoroutineScope(Dispatchers.IO),
-                            AffectData(sessionId = 1, affect = AffectType.POSITIVE)
+                            AffectData(sessionId = 1, affect = AffectType.NULL)
                         ) {
                             val affectDataID = it.id
                             val intent = Intent(context, LabelActivity::class.java)
