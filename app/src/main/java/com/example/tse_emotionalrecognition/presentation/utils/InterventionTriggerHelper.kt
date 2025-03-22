@@ -67,6 +67,12 @@ class InterventionTriggerHelper(private val context: Context) {
         }
     }
 
+    fun showRandomIntervention(){
+        val activityToStart = selectRandomActivity()
+        showNotification(activityToStart)
+        lastTriggeredActivity = activityToStart
+    }
+
     private fun selectRandomActivity(): Class<*> {
         val activities = listOf(
             BreathingActivity::class.java,
