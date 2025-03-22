@@ -2,20 +2,22 @@ package com.example.phone
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,18 +32,48 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.phone.ui.theme.TSEEmotionalRecognitionTheme
+import com.example.phone.utils.InterventionTrackerViewModel
+import com.example.phone.utils.InterventionTrackerViewModelFactory
+import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 
 
 class MainActivity : ComponentActivity() {
+
+    private val interventionTrackerViewModel: InterventionTrackerViewModel by viewModels {
+        InterventionTrackerViewModelFactory(
+            UserDataStore.getUserRepository(
+                applicationContext
+            )
+        )
+    }
+
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
+            val interventionStats by interventionTrackerViewModel.interventionStats.observeAsState()
+            val completedCount = interventionStats?.triggeredCount ?: 0
+            val missedCount = interventionStats?.dismissedCount ?: 0
+
             TSEEmotionalRecognitionTheme {
-                MainScreen()
+                MainScreen(completedCount, missedCount)
             }
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        interventionTrackerViewModel.interventionStats.observe(this) { stats ->
+            stats?.let {
+                val completedCount = it.triggeredCount
+                val missedCount = it.dismissedCount
+                // Reagiere auf die neuen Werte
+                println("Neue Daten: Completed=$completedCount, Missed=$missedCount")
+                Log.d("MainActivity", "Neue Daten: Completed=$completedCount, Missed=$missedCount")
+            }
+        }    }
 }
 
 /**
@@ -96,10 +128,9 @@ fun DonutChart(
  * It also includes a Menu button at the bottom center.
  */
 @Composable
-fun MainScreen() {
+fun MainScreen(completedCount: Int, missedCount: Int) {
     // Example dynamic values; replace these with dynamic state or repository values as needed.
-    val completed = 1
-    val missed = 2
+    val completed = completedCount
 
     Box(
         modifier = Modifier
@@ -155,7 +186,7 @@ fun MainScreen() {
                 // Draw the donut chart.
                 DonutChart(
                     completed = completed,
-                    missed = missed,
+                    missed = missedCount,
                     modifier = Modifier.fillMaxSize(),
                     donutThickness = 35.dp
                 )
@@ -182,7 +213,7 @@ fun MainScreen() {
                         fontSize = 18.sp
                     )
                     Text(
-                        text = "$missed",
+                        text = "$missedCount",
                         color = Color.Red,
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold
@@ -308,6 +339,6 @@ fun MenuDialogItem(text: String, onClick: () -> Unit) {
 @Composable
 fun MainScreenPreview() {
     TSEEmotionalRecognitionTheme {
-        MainScreen()
+        MainScreen(0,0)
     }
 }
