@@ -9,10 +9,16 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,7 +42,7 @@ import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import kotlinx.serialization.json.Json
 
-class ReceiveDataActivity : ComponentActivity(), DataClient.OnDataChangedListener {
+class ReceiveDataActivity : ComponentActivity() {//, DataClient.OnDataChangedListener
 
     /**
      * Todo for communication between phone and watch:
@@ -55,8 +61,10 @@ class ReceiveDataActivity : ComponentActivity(), DataClient.OnDataChangedListene
         super.onCreate(savedInstanceState)
 
         //Necessary for recieving data from watch
-        Wearable.getDataClient(this).addListener(this)
         //look in app/SendDataActivity for watch implementation
+        //Wearable.getDataClient(this).addListener(this)
+
+        getDataFromPreference()
 
         enableEdgeToEdge()
         setContent {
@@ -64,18 +72,29 @@ class ReceiveDataActivity : ComponentActivity(), DataClient.OnDataChangedListene
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     val standardModifier = Modifier.padding(innerPadding)
 
-                    Row {
+                    LazyRow(modifier = standardModifier) {
+                        item {
+                            Greeting(
+                                modifier = standardModifier,
+                                count = wearCount,
+                                this@ReceiveDataActivity
+                            )
 
+                        }
+                        item {
+                            HeartRateView(
+                                modifier = standardModifier.verticalScroll(rememberScrollState()),
+                                heartRateList = heartRateList
+                            )
+                        }
 
-                        Greeting(modifier = standardModifier, count = wearCount, this@ReceiveDataActivity)
-                        HeartRateView(
-                            modifier = standardModifier.verticalScroll(rememberScrollState()),
-                            heartRateList = heartRateList
-                        )
-                        SkinTemperatureView(
-                            modifier = standardModifier.verticalScroll(rememberScrollState()),
-                            skinTemperatureList = skinTemperatureList
-                        )
+                        item {
+                            SkinTemperatureView(
+                                modifier = standardModifier.verticalScroll(rememberScrollState()),
+                                skinTemperatureList = skinTemperatureList
+                            )
+
+                        }
 
 
                     }
@@ -99,56 +118,81 @@ class ReceiveDataActivity : ComponentActivity(), DataClient.OnDataChangedListene
 
     }
 
-    // when data from phone is recieved this function is called
-    override fun onDataChanged(dataEvents: DataEventBuffer) {
-        Log.d("WearableReceiver", "DataEventBuffer received!")
-        for (event in dataEvents) {
-            if (event.type == DataEvent.TYPE_CHANGED) {// checks for data event. look in documention for different options
-                val dataItem = event.dataItem // gets data from event -> data which was send
-                val dataMap = DataMapItem.fromDataItem(dataItem).dataMap
-                when (dataItem.uri.path) { // now checks which data was send
-                    "/button" -> {
-                        val count = dataMap.getInt("count") // compare to data send
-                        wearCount = count
-                        Log.d("WearableReceiver", "Empfangene Count-Daten: $count")
-                    }
-
-                    "/hr" -> {
-                        val hrJson = dataMap.getString("hr")
-                        hrJson?.let {
-                            val list = Json.decodeFromString<List<HeartRateMeasurement>>(it)
-                            heartRateList.clear() // Vorherige Werte löschen
-                            heartRateList.addAll(list)
-                            Log.d("WearableMessage", "Herzfrequenz-Daten empfangen: $list")
-                        }
-                    }
-
-                    "/skin" -> {
-                        val skinJson = dataMap.getString("skin")
-                        skinJson?.let {
-                            val list =
-                                Json.decodeFromString<List<SkinTemperatureMeasurement>>(it)
-                            skinTemperatureList.clear() // Vorherige
-                            skinTemperatureList.addAll(list)
-                            Log.d("WearableMessage", "Hauttemperatur-Daten empfangen: $list")
-                        }
-                    }
-                }
+    private fun getDataFromPreference() {
+        val sharedPreferences = getSharedPreferences("my_shared_prefs", Context.MODE_PRIVATE)
+        val count = sharedPreferences.getInt("count", 0)
+        val hrListString = sharedPreferences.getString("hrListString", "")
+        val skinListString = sharedPreferences.getString("skinListString", "")
+        try {
+            val hrList = hrListString?.let { Json.decodeFromString<List<HeartRateMeasurement>>(it) }
+            if (hrList != null) {
+                heartRateList.clear()
+                heartRateList.addAll(hrList)
             }
+
+            val skinList =
+                skinListString?.let { Json.decodeFromString<List<SkinTemperatureMeasurement>>(it) }
+            if (skinList != null) {
+                Log.d("WearableReceiver", "SkinList: $skinList")
+                skinTemperatureList.addAll(skinList)
+            }
+        } catch (_: Exception) {
+
         }
+
+        wearCount = count
     }
 
+    /**
+    // when data from phone is recieved this function is called
+    override fun onDataChanged(dataEvents: DataEventBuffer) {
+    Log.d("WearableReceiver", "DataEventBuffer received!")
+    for (event in dataEvents) {
+    if (event.type == DataEvent.TYPE_CHANGED) {// checks for data event. look in documention for different options
+    val dataItem = event.dataItem // gets data from event -> data which was send
+    val dataMap = DataMapItem.fromDataItem(dataItem).dataMap
+    when (dataItem.uri.path) { // now checks which data was send
+    //                    "/button" -> {
+    //                        val count = dataMap.getInt("count") // compare to data send
+    //                        wearCount = count
+    //                        Log.d("WearableReceiver", "Empfangene Count-Daten: $count")
+    //                    }
+    //
+    //                    "/hr" -> {
+    //                        val hrJson = dataMap.getString("hr")
+    //                        hrJson?.let {
+    //                            val list = Json.decodeFromString<List<HeartRateMeasurement>>(it)
+    //                            heartRateList.clear() // Vorherige Werte löschen
+    //                            heartRateList.addAll(list)
+    //                            Log.d("WearableMessage", "Herzfrequenz-Daten empfangen: $list")
+    //                        }
+    //                    }
+
+    "/skin" -> {
+    val skinJson = dataMap.getString("skin")
+    skinJson?.let {
+    val list =
+    Json.decodeFromString<List<SkinTemperatureMeasurement>>(it)
+    skinTemperatureList.clear() // Vorherige
+    skinTemperatureList.addAll(list)
+    Log.d("WearableMessage", "Hauttemperatur-Daten empfangen: $list")
+    }
+    }
+    }
+    }
+    }
+    }
+     **/
     override fun onResume() {
         super.onResume()
         Log.d("WearableReceiver", "DataClient wird registriert...")
-        Wearable.getDataClient(this).addListener(this) // Listener aktivieren
+        //Wearable.getDataClient(this).addListener(this) // Listener aktivieren
     }
 
     override fun onPause() {
         super.onPause()
         Log.d("WearableReceiver", "DataClient wird deaktiviert...")
-        Wearable.getDataClient(this)
-            .removeListener(this) // Listener entfernen, um Speicherlecks zu vermeiden
+        //Wearable.getDataClient(this).removeListener(this) // Listener entfernen, um Speicherlecks zu vermeiden
     }
 
 
@@ -223,7 +267,8 @@ fun HeartRateView(heartRateList: List<HeartRateMeasurement>, modifier: Modifier)
         heartRateList.forEach { measurement ->
             Row(
             ) {
-                Text(text = "Heart Rate: ${measurement.hr}")
+                Text(text = "HR: ${measurement.hr}")
+                Text(text = "ID: ${measurement.sessionId}")
             }
         }
     }
@@ -234,17 +279,24 @@ fun SkinTemperatureView(
     skinTemperatureList: List<SkinTemperatureMeasurement>,
     modifier: Modifier
 ) {
-    Column(
-        modifier = modifier
-    ) {
-        Text(
-            text = "Skin Temperature",
-        )
-        skinTemperatureList.forEach { measurement ->
-            Row()
-            {
-                Text(text = "Skin Temperature: ${measurement.objectTemperature}")
+    Column(modifier = modifier) {
+        Text(text = "Session ID")
+
+        LazyColumn {
+            items(skinTemperatureList) { measurement ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(8.dp),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text(text = "Temp: ${measurement.objectTemperature}")
+                        Text(text = "ID: ${measurement.sessionId}")
+                    }
+                }
             }
         }
     }
 }
+

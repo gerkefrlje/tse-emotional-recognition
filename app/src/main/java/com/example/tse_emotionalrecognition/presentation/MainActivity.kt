@@ -46,6 +46,7 @@ import com.example.tse_emotionalrecognition.presentation.utils.EmojiState
 import com.example.tse_emotionalrecognition.presentation.utils.scheduleDailyEmojiUpdateWorkManager
 import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 import com.example.tse_emotionalrecognition.presentation.utils.DataCollectReciever
+import com.example.tse_emotionalrecognition.presentation.utils.DataCollectService
 import com.example.tse_emotionalrecognition.presentation.utils.DataCollectWorker
 import com.example.tse_emotionalrecognition.presentation.utils.InfoActivity
 import java.util.concurrent.TimeUnit

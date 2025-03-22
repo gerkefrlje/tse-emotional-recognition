@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
 
     id("com.google.devtools.ksp")
-
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.22" //oder die neueste Version
 }
 
 android {

@@ -85,12 +85,9 @@ class DataCollectWorker(private val context: Context, workerParams: WorkerParame
             putExtra("sessionId", sessionId)
         }
 
-        //context.sendBroadcast(intent)
-
-
-        val pendingIntent = PendingIntent.getService(
-            context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
+//        val pendingIntent = PendingIntent.getService(
+//            context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+//        )
 
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
