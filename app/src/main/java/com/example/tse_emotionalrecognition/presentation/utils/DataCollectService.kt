@@ -259,10 +259,9 @@ class DataCollectService : Service() {
     private fun launchLabelActivity() {
 
 
-
         val newAffectData = AffectData(
             sessionId = sessionId,
-            timeOfNotification= System.currentTimeMillis(),
+            timeOfNotification = System.currentTimeMillis(),
             affect = AffectType.NULL
         )
 
