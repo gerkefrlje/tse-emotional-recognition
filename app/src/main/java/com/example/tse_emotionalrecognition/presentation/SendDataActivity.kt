@@ -156,8 +156,15 @@ fun Screen(wearCount: Int, onCountChange: (Int) -> Unit) {
 fun Greeting(wearCount: Int = 0, onCountChange: (Int) -> Unit) {
 
     val context = androidx.compose.ui.platform.LocalContext.current
-    val userRepository = com.example.tse_emotionalrecognition.common.data.database.UserDataStore.getUserRepository(context.applicationContext)
-    var heartRateMeasurements by remember { mutableStateOf<List<com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement>>(emptyList()) }
+    val userRepository =
+        com.example.tse_emotionalrecognition.common.data.database.UserDataStore.getUserRepository(
+            context.applicationContext
+        )
+    var heartRateMeasurements by remember {
+        mutableStateOf<List<com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement>>(
+            emptyList()
+        )
+    }
     var skinTemperatureMeasurements by remember {
         mutableStateOf<List<com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement>>(
             emptyList()
@@ -204,11 +211,13 @@ fun Greeting(wearCount: Int = 0, onCountChange: (Int) -> Unit) {
                 onCountChange(count)
 
 
-                val dataClient = Wearable.getDataClient(context) //dataClient in this case is the phone
+                val dataClient =
+                    Wearable.getDataClient(context) //dataClient in this case is the phone
                 val putDataRequest = PutDataMapRequest.create("/button").apply {
                     dataMap.putInt("count", count)
                     dataMap.putLong("timeStamp", System.currentTimeMillis())
-                }.asPutDataRequest().setUrgent() //this request creates a "package" which should be send to phone
+                }.asPutDataRequest()
+                    .setUrgent() //this request creates a "package" which should be send to phone
                 dataClient.putDataItem(putDataRequest).addOnSuccessListener { // sends data to phone
                     Log.d("MainActivity", "Data sent $count") // for debug purposes
                 }.addOnFailureListener { e -> // can be removed in when app is finished
@@ -218,44 +227,30 @@ fun Greeting(wearCount: Int = 0, onCountChange: (Int) -> Unit) {
 
 
 
-                Log.v("MainActivity", "count % 10: ${count % 10}")
-                if (count % 10 == 0) {
 
-                    if (heartRateMeasurements.isNotEmpty()) {
+                val sender =
+                    com.example.tse_emotionalrecognition.common.data.database.utils.CommunicationDataSender(
+                        context
+                    )
 
-                        // Convert the list of HeartRateMeasurement objects to a JSON string
-                        // Use the kotlinx.serialization library for this
-                        val jsonString =
-                            Json.encodeToString(heartRateMeasurements) // currently limited to 20 measurements due to limitations
 
-                        val byteArray = jsonString.toByteArray(Charsets.UTF_8)
+                if (heartRateMeasurements.isNotEmpty()) {
 
-                        val compressedByteArray = compressByteArray(byteArray)
+                    // Convert the list of HeartRateMeasurement objects to a JSON string
+                    // Use the kotlinx.serialization library for this
+                    val jsonString =
+                        Json.encodeToString(heartRateMeasurements) // currently limited to 20 measurements due to limitations
 
-                        val sendHR = PutDataMapRequest.create("/hr").apply {
-                            dataMap.putString("hr", jsonString) // JSON-String speichern
-                            //dataMap.putByteArray("hr", compressedByteArray)
-                            dataMap.putLong("timeStamp", System.currentTimeMillis()) //added timestamp because DataClient only sends data when the data has been changed
-                        }.asPutDataRequest() // creates "package" which should be send to phone
-
-                        dataClient.putDataItem(sendHR).addOnSuccessListener {
-                            Log.d("WearableMessage", "Herzfrequenz-Daten gesendet: $jsonString")
-
-                        } // sends data to phone
-                    }
-
-                    if (skinTemperatureMeasurements.isNotEmpty()) {
-                        val jsonString =
-                            Json.encodeToString(skinTemperatureMeasurements) // Ganze Liste
-                        val sendSkin = PutDataMapRequest.create("/skin").apply {
-                            dataMap.putString("skin", jsonString) // JSON-String speichern
-                            dataMap.putLong("timeStamp", System.currentTimeMillis())
-                        }.asPutDataRequest()
-                        dataClient.putDataItem(sendSkin)
-                        Log.d("WearableMessage", "Hauttemperatur-Daten gesendet: $jsonString")
-                    }
-
+                    sender.sendStringData("/phone/hr", jsonString)
                 }
+
+                if (skinTemperatureMeasurements.isNotEmpty()) {
+                    val jsonString =
+                        Json.encodeToString(skinTemperatureMeasurements) // Ganze Liste
+
+                    sender.sendStringData("/phone/skin", jsonString)
+                }
+
 
             },
         ) {

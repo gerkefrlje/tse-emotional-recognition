@@ -31,6 +31,7 @@ import com.example.tse_emotionalrecognition.common.data.database.entities.Affect
 import com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement
 import com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement
 import com.example.tse_emotionalrecognition.model.ModelService
+import com.example.tse_emotionalrecognition.common.data.database.utils.CommunicationDataSender
 
 import com.example.tse_emotionalrecognition.presentation.AppPhase
 import com.example.tse_emotionalrecognition.presentation.LabelActivity
@@ -202,14 +203,27 @@ class DataCollectService : Service() {
             healthTrackingService.disconnectService()
             delay(1000L)
 
-            sendSensorData()
+            sendToPhone()
         }
         Log.d("DataCollectService", "Data collection stopped")
     }
 
-    private suspend fun sendSensorData() {
-        var heartRateMeasurements = userRepository.getHeartRateMeasurements().takeLast(100)
+    private suspend fun sendToPhone() {
         var skinTemperatureMeasurements = userRepository.getSkinTemperatureMeasurements()
+        var heartRateMeasurements = userRepository.getHeartRateMeasurements().takeLast(100)
+
+        val heartRateMeasurementString = Json.encodeToString(heartRateMeasurements)
+        val skinTemperatureMeasurementString = Json.encodeToString(skinTemperatureMeasurements)
+
+        val sender = CommunicationDataSender(applicationContext)
+        sender.sendStringData("/phone/hr", heartRateMeasurementString)
+        sender.sendStringData("/phone/skin", skinTemperatureMeasurementString)
+
+    }
+
+    private suspend fun sendSensorData() {
+        var skinTemperatureMeasurements = userRepository.getSkinTemperatureMeasurements()
+        var heartRateMeasurements = userRepository.getHeartRateMeasurements().takeLast(100)
 
         val heartRateMeasurementString = Json.encodeToString(heartRateMeasurements)
         val skinTemperatureMeasurementString = Json.encodeToString(skinTemperatureMeasurements)

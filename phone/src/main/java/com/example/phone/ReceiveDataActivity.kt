@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.setValue
@@ -32,6 +34,10 @@ import androidx.compose.ui.unit.dp
 import com.example.phone.data.HeartRateMeasurement
 import com.example.phone.data.SkinTemperatureMeasurement
 import com.example.phone.ui.theme.TSEEmotionalRecognitionTheme
+import com.example.phone.utils.HealthDataViewModelFactory
+import com.example.phone.utils.HealthViewModel
+import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
+import com.example.tse_emotionalrecognition.common.data.database.UserRepository
 import com.google.android.gms.wearable.DataClient
 import com.google.android.gms.wearable.DataEvent
 import com.google.android.gms.wearable.DataEventBuffer
@@ -56,21 +62,27 @@ class ReceiveDataActivity : ComponentActivity() {//, DataClient.OnDataChangedLis
      */
 
     var wearCount by mutableIntStateOf(0) // State in der Activity deklarieren
-    private val heartRateList = mutableStateListOf<HeartRateMeasurement>()
-    private val skinTemperatureList = mutableStateListOf<SkinTemperatureMeasurement>()
+    private lateinit var userRepository: UserRepository
+
+    private val viewModel: HealthViewModel by viewModels {
+        HealthDataViewModelFactory(UserDataStore.getUserRepository(applicationContext))
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        userRepository = UserDataStore.getUserRepository(applicationContext)
         //Necessary for recieving data from watch
         //look in app/SendDataActivity for watch implementation
         //Wearable.getDataClient(this).addListener(this)
 
-        getDataFromPreference()
 
         enableEdgeToEdge()
         setContent {
+            val heartRateList by viewModel.heartRateList.observeAsState(initial = emptyList())
+            Log.d("WearableReceiver", "HeartRateList: $heartRateList")
+            val skinTemperatureList by viewModel.skinTemperatureList.observeAsState(initial = emptyList())
             TSEEmotionalRecognitionTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     val standardModifier = Modifier.padding(innerPadding)
@@ -119,30 +131,7 @@ class ReceiveDataActivity : ComponentActivity() {//, DataClient.OnDataChangedLis
 
     }
 
-    private fun getDataFromPreference() {
-        val sharedPreferences = getSharedPreferences("my_shared_prefs", Context.MODE_PRIVATE)
-        val count = sharedPreferences.getInt("count", 0)
-        val hrListString = sharedPreferences.getString("hrListString", "")
-        val skinListString = sharedPreferences.getString("skinListString", "")
-        try {
-            val hrList = hrListString?.let { Json.decodeFromString<List<HeartRateMeasurement>>(it) }
-            if (hrList != null) {
-                heartRateList.clear()
-                heartRateList.addAll(hrList)
-            }
 
-            val skinList =
-                skinListString?.let { Json.decodeFromString<List<SkinTemperatureMeasurement>>(it) }
-            if (skinList != null) {
-                Log.d("WearableReceiver", "SkinList: $skinList")
-                skinTemperatureList.addAll(skinList)
-            }
-        } catch (_: Exception) {
-
-        }
-
-        wearCount = count
-    }
 
     /**
     // when data from phone is recieved this function is called
@@ -257,17 +246,12 @@ fun Greeting(modifier: Modifier = Modifier, count: Int, context: Context) {
 }
 
 @Composable
-fun HeartRateView(heartRateList: List<HeartRateMeasurement>) {
+fun HeartRateView(heartRateList: List<com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement>) {
 
     Column {
         Text(text = "Heart Rate")
         LazyColumn(
         ) {
-
-            item {
-                Text(
-                    text = "Heart Rate",
-                )}
             items(heartRateList) { measurement ->
                 Card(
                     modifier = Modifier
@@ -287,7 +271,7 @@ fun HeartRateView(heartRateList: List<HeartRateMeasurement>) {
 
 @Composable
 fun SkinTemperatureView(
-    skinTemperatureList: List<SkinTemperatureMeasurement>,
+    skinTemperatureList: List<com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement>,
 ) {
     Column() {
         Text(text = "Skin Temperature")
@@ -311,7 +295,8 @@ fun SkinTemperatureView(
 
 fun formatTimeOnly(sessionId: Long): String {
     val date = Date(sessionId)
-    val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault()) // Format für Stunden, Minuten, Sekunden
+    val sdf =
+        SimpleDateFormat("HH:mm:ss", Locale.getDefault()) // Format für Stunden, Minuten, Sekunden
     return sdf.format(date)
 }
 
