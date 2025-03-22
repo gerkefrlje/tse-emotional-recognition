@@ -1,6 +1,11 @@
 package com.example.tse_emotionalrecognition.presentation
 
 import android.app.Activity
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.icu.util.Calendar
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -29,9 +34,12 @@ import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import androidx.wear.tooling.preview.devices.WearDevices
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
 import com.example.tse_emotionalrecognition.presentation.utils.FullText
 import com.example.tse_emotionalrecognition.presentation.utils.RowButton
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 
 
@@ -52,19 +60,18 @@ class LabelActivity : ComponentActivity() {
         }
     }
 
-    private fun insertAffect() {
-    }
+
 
     private fun insertEngagementTime(id: Long) {
         userRepository.updateAffectColumn(
             CoroutineScope(Dispatchers.IO),
-            id, com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns.TIME_OF_ENGAGEMENT, System.currentTimeMillis()
+            id, AffectColumns.TIME_OF_ENGAGEMENT, System.currentTimeMillis()
         )
     }
 
     private fun updateAffect(
         id: Long,
-        column: com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns,
+        column: AffectColumns,
         value: Any,
         finished: (() -> Unit)? = null
     ) {
@@ -149,6 +156,7 @@ class LabelActivity : ComponentActivity() {
                                     updateAffect(affectId, AffectColumns.AFFECT, affectType) {
                                         showThankYou = true
                                     }
+                                    startLabelActivity(context)
                                 },
                                 textAlign = TextAlign.Center,
                                 color = Color.White
@@ -166,6 +174,40 @@ class LabelActivity : ComponentActivity() {
         LabelWatch(
             affectId = 1L
         )
+    }
+
+    private fun startLabelActivity(context: Context){
+        val sessionId = Calendar.getInstance().timeInMillis
+
+        val newAffectData = AffectData(
+            sessionId = sessionId,
+            timeOfNotification= System.currentTimeMillis(),
+            affect = AffectType.NULL
+        )
+
+        userRepository.insertAffect(
+            CoroutineScope(Dispatchers.IO), newAffectData,
+        ) { insertedAffectData ->
+            if (insertedAffectData != null) {
+                Log.v("DataCollectService", "AffectData inserted with ID: ${insertedAffectData.id}")
+
+                val intent = Intent(applicationContext, LabelActivity::class.java)
+                intent.flags = FLAG_ACTIVITY_NEW_TASK // Hinzufügen des Flags
+
+                Log.d("DataCollectService", "current sessionId: $sessionId")
+                Log.d("DataCollectService", "current affectDataId: ${insertedAffectData}")
+
+                CoroutineScope(Dispatchers.IO).launch {
+                    delay(1000)
+                    intent.putExtra("affectDataId", insertedAffectData.id)
+                    context.startActivity(intent)
+                }
+
+            } else {
+                Log.e("DataCollectService", "Failed to insert AffectData")
+            }
+
+        }
     }
 }
 

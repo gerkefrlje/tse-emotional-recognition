@@ -14,6 +14,7 @@ import com.example.tse_emotionalrecognition.presentation.interventions.MusicActi
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import kotlin.time.Duration.Companion.seconds
 
 class InterventionTriggerHelper(private val context: Context) {
     companion object {
@@ -100,10 +101,11 @@ class InterventionTriggerHelper(private val context: Context) {
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(com.example.tse_emotionalrecognition.R.drawable.splash_icon) // Ersetze durch dein Icon
-            .setContentTitle("Intervention Needed")
-            .setContentText("Tap to start the intervention")
+            .setContentTitle("Intervention suggested")
+            .setContentText(notificationText(activityClass))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
+            .setContentInfo("You seem to be feeling unwell. A short break might help")
             .setAutoCancel(true)
 
         with(NotificationManagerCompat.from(context)) {
@@ -112,13 +114,6 @@ class InterventionTriggerHelper(private val context: Context) {
                     Manifest.permission.POST_NOTIFICATIONS
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
                 return
             }
             notify(NOTIFICATION_ID, builder.build())
@@ -136,5 +131,14 @@ class InterventionTriggerHelper(private val context: Context) {
         val notificationManager: NotificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
+    }
+
+    private fun notificationText(activityClass: Class<*>): String {
+        return when (activityClass) {
+            BreathingActivity::class.java -> "Let's take a breath"
+            ContactActivity::class.java -> "Do you want to call someone?"
+            MusicActivity::class.java -> "How about listening to your favorite song?"
+            else -> "Unknown"
+        }
     }
 }
