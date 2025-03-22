@@ -78,14 +78,15 @@ fun EmojiSelector(currentEmojiState: EmojiState) {
                 ) {
                     when (currentEmojiState) {
                         EmojiState.NEUTRAL_ALERT -> {
-                            Text(text = "aktuell bist du ausgegelichen")
+                            Text(text = "aktuell bist du ausgegelichen", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
                         }
                         EmojiState.HAPPY_ALERT -> {
-                            Text(text = "aktuell bist du gut gelaunt)")
+                            Text(text = "aktuell bist du gut gelaunt", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
                         }
                         EmojiState.UNHAPPY_ALERT -> {
+                            Text(text = "bist du aktuell unzufrieden?", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
                         }
-                        else -> { Text(text = "aktuell bist du unzufrieden")}
+                        else -> { Text(text = "aktuell bist du unzufrieden", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)}
                     }
 
                 }

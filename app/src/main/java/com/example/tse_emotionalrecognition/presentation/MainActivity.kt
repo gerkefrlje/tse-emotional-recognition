@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.content.ContextCompat
@@ -37,6 +38,7 @@ import androidx.work.WorkManager
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
+import com.example.tse_emotionalrecognition.presentation.MainActivity.Companion.getAppPhase
 import com.example.tse_emotionalrecognition.presentation.interventions.InterventionOverviewActivity
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
 import com.example.tse_emotionalrecognition.presentation.utils.EmojiSelector
@@ -51,7 +53,23 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import java.util.Calendar
 
+
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        fun getAppPhase(firstLaunchTime: Long): AppPhase {
+            val currentTime = System.currentTimeMillis()
+            val elapsedTime = currentTime - firstLaunchTime
+            val daysElapsed = TimeUnit.MILLISECONDS.toDays(elapsedTime)
+
+            return when {
+                daysElapsed < 1 -> AppPhase.INITIAL_COLLECTION
+                daysElapsed < 2 -> AppPhase.PREDICTION_WITH_FEEDBACK
+                else -> AppPhase.PREDICTION_ONLY
+            }
+        }
+    }
+
     private val userRepository by lazy { UserDataStore.getUserRepository(application) }
 
     private lateinit var sharedPreferences: SharedPreferences
@@ -106,7 +124,11 @@ class MainActivity : ComponentActivity() {
             val permissionsToRequest = mutableListOf<String>()
 
             requestedPermissions.forEach { permission ->
-                if (ContextCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
+                if (ContextCompat.checkSelfPermission(
+                        this,
+                        permission
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
                     permissionsToRequest.add(permission)
                 }
             }
@@ -125,31 +147,25 @@ class MainActivity : ComponentActivity() {
     private fun scheduleDataCollection() {
         Log.d("DataCollectService", "Scheduling data collection")
 
-        val constraints = Constraints.Builder().setRequiredNetworkType(NetworkType.NOT_REQUIRED).build()
+        val constraints =
+            Constraints.Builder().setRequiredNetworkType(NetworkType.NOT_REQUIRED).build()
 
         //val dataCollectionRequest = PeriodicWorkRequest.Builder(DataCollectWorker::class.java, 15, TimeUnit.MINUTES).setConstraints(constraints).build()
 
-        val periodicWorkRequest = PeriodicWorkRequest.Builder(DataCollectWorker::class.java, 15, TimeUnit.MINUTES)
-            .setConstraints(constraints).build()
+        val periodicWorkRequest =
+            PeriodicWorkRequest.Builder(DataCollectWorker::class.java, 15, TimeUnit.MINUTES)
+                .setConstraints(constraints).build()
 
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork("DataCollectionWork", ExistingPeriodicWorkPolicy.KEEP, periodicWorkRequest)
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "DataCollectionWork",
+            ExistingPeriodicWorkPolicy.KEEP,
+            periodicWorkRequest
+        )
 
     }
 
-    private fun getAppPhase(): AppPhase {
-        val firstLaunchTime = sharedPreferences.getLong(FIRST_LAUNCH_KEY, 0L)
-        val currentTime = System.currentTimeMillis()
-        val elapsedTime = currentTime - firstLaunchTime
-        val daysElapsed = TimeUnit.MILLISECONDS.toDays(elapsedTime)
 
-        return when {
-            daysElapsed < 1 -> AppPhase.INITIAL_COLLECTION
-            daysElapsed < 2 -> AppPhase.PREDICTION_WITH_FEEDBACK
-            else -> AppPhase.PREDICTION_ONLY
-        }
-    }
 }
-
 
 
 @Composable
@@ -157,8 +173,17 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("emoji_prefs", Context.MODE_PRIVATE)
     var currentEmojiState by remember {
-        mutableStateOf(EmojiState.valueOf(prefs.getString("emoji_state", EmojiState.NEUTRAL.name)!!))
+        mutableStateOf(
+            EmojiState.valueOf(
+                prefs.getString(
+                    "emoji_state",
+                    EmojiState.NEUTRAL.name
+                )!!
+            )
+        )
     }
+    val sharedPreferences = context.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
+    val firstLaunchTime = sharedPreferences.getLong("first_launch_time", 0L)
 
     TSEEmotionalRecognitionTheme {
         ScalingLazyColumn(
@@ -184,102 +209,33 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
             item {
                 Button(
                     onClick = {
-                        userRepository.insertAffect(
-                            CoroutineScope(Dispatchers.IO),
-                            AffectData(sessionId = 1, affect = AffectType.POSITIVE)
-                        ) {
-                            val affectDataID = it.id
-                            val intent = Intent(context, LabelActivity::class.java)
-                            intent.putExtra("affectDataId", affectDataID)
-                            context.startActivity(intent)
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Label Activity")
-                }
-            }
-            item {
-                Button(
-                    onClick = {
                         val sessionId = Calendar.getInstance().timeInMillis
 
-                        val intent = Intent(context, DataCollectReciever::class.java)
+                        val intent =
+                            Intent(context, DataCollectReciever::class.java)
                         intent.putExtra("COLLECT_DATA", true)
-                        intent.putExtra("PHASE", AppPhase.INITIAL_COLLECTION)
+                        intent.putExtra("PHASE", getAppPhase(firstLaunchTime))
                         intent.putExtra("sessionId", sessionId)
 
                         context.sendBroadcast(intent)
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Start Sensor")
+                    Text("Manual Data Collection", textAlign = TextAlign.Center)
                 }
             }
             item {
                 Button(
                     onClick = {
-                        val sessionId = Calendar.getInstance().timeInMillis
-
-                        val intent = Intent(context, DataCollectReciever::class.java)
-                        intent.putExtra("COLLECT_DATA", true)
-                        intent.putExtra("PHASE", AppPhase.PREDICTION_WITH_FEEDBACK)
-                        intent.putExtra("sessionId", sessionId)
-
-                        context.sendBroadcast(intent)
+                        val debugIntent = Intent(context, DebugActivity::class.java)
+                        context.startActivity(debugIntent)
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Model Training")
+                    Text("Debug-Menu")
                 }
             }
-            item {
-                Button(
-                    onClick = {
-                        val intent = Intent(context, DataCollectReciever::class.java)
-                        intent.putExtra("COLLECT_DATA", true)
-                        intent.putExtra("PHASE", AppPhase.PREDICTION_ONLY)
-                        intent.putExtra("sessionId", 1L)
 
-                        context.sendBroadcast(intent)
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Model Prediction")
-                }
-            }
-            item {
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-            item {
-                Button(
-                    onClick = {
-                        val sessionId = Calendar.getInstance().timeInMillis
-
-                        val intent = Intent(context, DataCollectReciever::class.java)
-                        intent.putExtra("COLLECT_DATA", true)
-                        intent.putExtra("PHASE", AppPhase.INITIAL_COLLECTION)
-                        intent.putExtra("sessionId", sessionId)
-
-                        context.sendBroadcast(intent)
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Start Sensor")
-                }
-            }
-            item {
-                Button(
-                    onClick = {  val newEmojiState = EmojiState.entries.random()
-                        updateEmoji(context, newEmojiState)
-
-                        // Force UI Update
-                        currentEmojiState = newEmojiState },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Randomize Emoji")
-                }
-            }
         }
     }
 }
