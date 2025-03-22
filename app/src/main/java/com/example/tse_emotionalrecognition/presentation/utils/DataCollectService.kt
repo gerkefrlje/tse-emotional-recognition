@@ -258,10 +258,9 @@ class DataCollectService : Service() {
     private fun launchLabelActivity() {
 
 
-
         val newAffectData = AffectData(
             sessionId = sessionId,
-            timeOfNotification= System.currentTimeMillis(),
+            timeOfNotification = System.currentTimeMillis(),
             affect = AffectType.NULL
         )
 
@@ -287,16 +286,7 @@ class DataCollectService : Service() {
                 Log.e("DataCollectService", "Failed to insert AffectData")
             }
 
-    private fun updateNotificationTracker(){
-        userRepository.incrementTriggered(CoroutineScope(Dispatchers.IO), MainActivity.trackerID)
-        val sender = CommunicationDataSender(applicationContext)
-        CoroutineScope(Dispatchers.IO).launch {
-            val interventionStats = userRepository.getInterventionStatsByTag(TAG.INTERVENTIONS)
-            val interventionStatsString = Json.encodeToString(interventionStats)
-
-            sender.sendStringData("/phone/notification", interventionStatsString)
         }
-
     }
 
     private fun updateNotificationTracker(){
