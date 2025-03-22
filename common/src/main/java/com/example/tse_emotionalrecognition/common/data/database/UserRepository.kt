@@ -212,7 +212,10 @@ class UserRepository(db: com.example.tse_emotionalrecognition.common.data.databa
                 }
 
             }
-        }fun insertSession(
+        }
+
+
+        fun insertSession(
             scope: CoroutineScope,
             entity: com.example.tse_emotionalrecognition.common.data.database.entities.SessionData,
             onFinished: (entity: com.example.tse_emotionalrecognition.common.data.database.entities.SessionData) -> Unit
