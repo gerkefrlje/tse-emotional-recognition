@@ -98,7 +98,7 @@ class ReceiveDataActivity : ComponentActivity() {//, DataClient.OnDataChangedLis
                         }
                         item {
                             HeartRateView(
-                                
+
                                 heartRateList = heartRateList
                             )
                         }
@@ -299,8 +299,7 @@ fun SkinTemperatureView(
 
 fun formatTimeOnly(sessionId: Long): String {
     val date = Date(sessionId)
-    val sdf =
-        SimpleDateFormat("HH:mm:ss", Locale.getDefault()) // Format für Stunden, Minuten, Sekunden
+    val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault()) // Format für Stunden, Minuten, Sekunden
     return sdf.format(date)
 }
 
