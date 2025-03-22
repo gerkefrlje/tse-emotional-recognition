@@ -83,16 +83,12 @@ class ReceiveDataActivity : ComponentActivity() {//, DataClient.OnDataChangedLis
                         }
                         item {
                             HeartRateView(
-
                                 heartRateList = heartRateList
                             )
                         }
 
                         item {
-                            }
-
-                        item {
-                                SkinTemperatureView(
+                            SkinTemperatureView(
                                 skinTemperatureList = skinTemperatureList
                             )
 

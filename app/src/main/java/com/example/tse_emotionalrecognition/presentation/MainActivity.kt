@@ -1,6 +1,5 @@
 package com.example.tse_emotionalrecognition.presentation
 
-
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -313,7 +312,7 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                         intent.putExtra("PHASE", AppPhase.INITIAL_COLLECTION)
                         intent.putExtra("sessionId", sessionId)
 
-                        context.sendBroadcast(intent)
+                        context.startActivity(intent)
                     },
                     modifier = Modifier.fillMaxWidth()
                 ) {

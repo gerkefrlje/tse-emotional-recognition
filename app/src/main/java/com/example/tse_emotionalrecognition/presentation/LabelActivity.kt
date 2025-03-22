@@ -76,7 +76,9 @@ class LabelActivity : ComponentActivity() {
                 insertEngagementTime(newAffectData.id)
                 LabelWatch(
                     newAffectData.id,
-
+                    startDestination = "Select",
+                    navController = rememberSwipeDismissableNavController(),
+                    modifier = Modifier.fillMaxSize(),
                 )
             } else {
                 LoadingScreen()  // Ladeanzeige, bis AffectData eingefügt ist
