@@ -1,8 +1,3 @@
-/* While this template provides a good starting point for using Wear Compose, you can always
- * take a look at https://github.com/android/wear-os-samples/tree/main/ComposeStarter to find the
- * most up to date changes to the libraries and their usages.
- */
-
 package com.example.tse_emotionalrecognition.presentation
 
 
@@ -205,9 +200,10 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
             item {
                 Button(
                     onClick = {
-                        val sessionId = Calendar.getInstance().timeInMillis
 
                         val intent = Intent(context, DataCollectReciever::class.java)
+                        val sessionId = Calendar.getInstance().timeInMillis
+
                         intent.putExtra("COLLECT_DATA", true)
                         intent.putExtra("PHASE", AppPhase.INITIAL_COLLECTION)
                         intent.putExtra("sessionId", sessionId)
@@ -239,10 +235,12 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
             item {
                 Button(
                     onClick = {
+                        val sessionId = Calendar.getInstance().timeInMillis
+
                         val intent = Intent(context, DataCollectReciever::class.java)
                         intent.putExtra("COLLECT_DATA", true)
                         intent.putExtra("PHASE", AppPhase.PREDICTION_ONLY)
-                        intent.putExtra("sessionId", 1L)
+                        intent.putExtra("sessionId", sessionId)
 
                         context.sendBroadcast(intent)
                     },

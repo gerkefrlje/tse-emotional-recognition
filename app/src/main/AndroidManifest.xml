@@ -6,6 +6,7 @@
     <uses-feature android:name="android.hardware.type.watch" />
 
     <uses-permission android:name="android.permission.BODY_SENSORS" />
+    <uses-permission android:name="android.permission.BODY_SENSORS_BACKGROUND"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -16,6 +17,8 @@
 
     <uses-permission android:name="android.permission.READ_CONTACTS" />
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+
     <queries>
         <package android:name="com.google.android.deskclock" />
         <package android:name="com.spotify.music" />
@@ -25,7 +28,6 @@
     <!-- additional sensors required by the sensor sdk-->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="android.permission.HIGH_SAMPLING_RATE_SENSORS" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_HEALTH" />
 
     <application
         android:allowBackup="true"
@@ -36,6 +38,13 @@
         <receiver android:name=".presentation.utils.DataCollectReciever"
             android:enabled="true"
             android:exported="false"/>
+        <receiver android:name=".presentation.utils.NotificationMonitor"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.NOTIFICATION_CANCELLED" />
+            </intent-filter>
+        </receiver>
         <service
             android:name=".complication.MainComplicationService"
             android:exported="true">
@@ -63,7 +72,8 @@
             android:name=".presentation.utils.DataCollectService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="health" />
+            android:foregroundServiceType="health|dataSync"
+            />
         <service
             android:name="androidx.work.impl.foreground.SystemForegroundService"
             android:foregroundServiceType="health"
@@ -73,6 +83,7 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="health" />
+
 
 
 
