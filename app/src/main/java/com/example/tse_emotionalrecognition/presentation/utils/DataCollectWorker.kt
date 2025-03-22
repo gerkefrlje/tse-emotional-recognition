@@ -174,8 +174,8 @@ class DataCollectWorker(private val context: Context, workerParams: WorkerParame
         val daysElapsed = TimeUnit.MILLISECONDS.toDays(elapsedTime)
 
         return when {
-            daysElapsed < 2 -> AppPhase.INITIAL_COLLECTION
-            daysElapsed < 5 -> AppPhase.PREDICTION_WITH_FEEDBACK
+            daysElapsed < 1 -> AppPhase.INITIAL_COLLECTION
+            daysElapsed < 2 -> AppPhase.PREDICTION_WITH_FEEDBACK
             else -> AppPhase.PREDICTION_ONLY
         }
     }

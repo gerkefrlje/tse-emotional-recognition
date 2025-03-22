@@ -282,12 +282,8 @@ class DataCollectService : Service() {
             val channel = NotificationChannel(
                 "data_collection_service",
                 "Data Collection Service",
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                setShowBadge(false) // Keine Symbol-Badge für den Kanal
-                enableLights(false)
-                enableVibration(false)
-            }
+                NotificationManager.IMPORTANCE_HIGH
+            )
             val manager = getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
         }

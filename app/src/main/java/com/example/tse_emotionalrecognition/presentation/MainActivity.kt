@@ -143,8 +143,8 @@ class MainActivity : ComponentActivity() {
         val daysElapsed = TimeUnit.MILLISECONDS.toDays(elapsedTime)
 
         return when {
-            daysElapsed < 2 -> AppPhase.INITIAL_COLLECTION
-            daysElapsed < 4 -> AppPhase.PREDICTION_WITH_FEEDBACK
+            daysElapsed < 1 -> AppPhase.INITIAL_COLLECTION
+            daysElapsed < 2 -> AppPhase.PREDICTION_WITH_FEEDBACK
             else -> AppPhase.PREDICTION_ONLY
         }
     }
@@ -159,7 +159,6 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
     var currentEmojiState by remember {
         mutableStateOf(EmojiState.valueOf(prefs.getString("emoji_state", EmojiState.NEUTRAL.name)!!))
     }
-    scheduleDailyEmojiUpdateWorkManager(context)
 
     TSEEmotionalRecognitionTheme {
         ScalingLazyColumn(
@@ -174,7 +173,6 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
             item {
                 Button(
                     onClick = {
-
                         val intent = Intent(context, InterventionOverviewActivity::class.java)
                         context.startActivity(intent)
                     },
