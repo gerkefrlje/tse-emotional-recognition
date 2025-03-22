@@ -13,7 +13,12 @@ import android.os.IBinder
 import android.os.CountDownTimer
 import androidx.core.content.ContextCompat
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.core.app.NotificationCompat
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.tse_emotionalrecognition.R
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.common.data.database.UserRepository
@@ -25,6 +30,8 @@ import com.example.tse_emotionalrecognition.model.ModelService
 
 import com.example.tse_emotionalrecognition.presentation.AppPhase
 import com.example.tse_emotionalrecognition.presentation.LabelActivity
+import com.google.android.gms.wearable.PutDataMapRequest
+import com.google.android.gms.wearable.Wearable
 import com.samsung.android.service.health.tracking.ConnectionListener
 import com.samsung.android.service.health.tracking.HealthTracker
 import com.samsung.android.service.health.tracking.HealthTrackerException
@@ -36,6 +43,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 
 class DataCollectService : Service() {
     private lateinit var userRepository: UserRepository
@@ -45,7 +54,7 @@ class DataCollectService : Service() {
     private lateinit var wearDetectionHelper: WearDetectionHelper
 
     private var countDownTimer: CountDownTimer? = null
-    private val dataCollectionInterval: Long = 2L * 60L * 1000L // 2 Minutes
+    private val dataCollectionInterval: Long = 2L * 10L * 1000L // 2 Minutes
     private var isWatchWorn: Boolean = false
     private var sessionId: Long = 0L
     private var phase: AppPhase = AppPhase.INITIAL_COLLECTION
@@ -167,8 +176,41 @@ class DataCollectService : Service() {
             delay(1000L)
             healthTrackingService.disconnectService()
             delay(1000L)
+
+            sendSensorData()
         }
         Log.d("DataCollectService", "Data collection stopped")
+    }
+
+    private suspend fun sendSensorData() {
+        var heartRateMeasurements = userRepository.getHeartRateMeasurements().takeLast(100)
+        var skinTemperatureMeasurements = userRepository.getSkinTemperatureMeasurements()
+
+        val heartRateMeasurementString = Json.encodeToString(heartRateMeasurements)
+        val skinTemperatureMeasurementString = Json.encodeToString(skinTemperatureMeasurements)
+
+        if(heartRateMeasurements.isEmpty() || skinTemperatureMeasurements.isEmpty()) {
+            Log.d("DataCollectService", "No sensor data to send")
+        }
+
+        val dataClient = Wearable.getDataClient(applicationContext)
+
+        val putDataRequestHR = PutDataMapRequest.create("/hr").apply {
+            dataMap.putString("hr", heartRateMeasurementString)
+            dataMap.putLong("timeStamp", System.currentTimeMillis())
+        }.asPutDataRequest()
+
+        val putDataRequestST = PutDataMapRequest.create("/skin").apply {
+            dataMap.putString("skin", skinTemperatureMeasurementString)
+            dataMap.putLong("timeStamp", System.currentTimeMillis())
+        }.asPutDataRequest()
+
+        dataClient.putDataItem(putDataRequestHR).addOnSuccessListener {
+            Log.d("DataCollectService", "HR Sensor Data sent to phone")
+        }
+        dataClient.putDataItem(putDataRequestST).addOnSuccessListener {
+            Log.d("DataCollectService", "ST Sensor Data sent to phone")
+        }
     }
 
     private fun startTimer() {
