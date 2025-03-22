@@ -107,7 +107,6 @@ class InterventionTriggerHelper(private val context: Context) {
             .setContentText(notificationText(activityClass))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setContentIntent(pendingIntent)
-            .setContentInfo("You seem to be feeling unwell. A short break might help")
             .setAutoCancel(true)
 
         with(NotificationManagerCompat.from(context)) {

@@ -164,20 +164,8 @@ class MainActivity : ComponentActivity() {
 
     }
 
-    private fun getAppPhase(): AppPhase {
-        val firstLaunchTime = sharedPreferences.getLong(FIRST_LAUNCH_KEY, 0L)
-        val currentTime = System.currentTimeMillis()
-        val elapsedTime = currentTime - firstLaunchTime
-        val daysElapsed = TimeUnit.MILLISECONDS.toDays(elapsedTime)
 
-        return when {
-            daysElapsed < 1 -> AppPhase.INITIAL_COLLECTION
-            daysElapsed < 2 -> AppPhase.PREDICTION_WITH_FEEDBACK
-            else -> AppPhase.PREDICTION_ONLY
-        }
-    }
 }
-
 
 @Composable
 fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.common.data.database.UserRepository) {
@@ -215,41 +203,6 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text("Interventions")
-                }
-            }
-            item {
-                Button(
-                    onClick = {
-                        userRepository.insertAffect(
-                            CoroutineScope(Dispatchers.IO),
-                            AffectData(sessionId = 1, affect = AffectType.POSITIVE)
-                        ) {
-                            val affectDataID = it.id
-                            val intent = Intent(context, LabelActivity::class.java)
-                            intent.putExtra("affectDataId", affectDataID)
-                            context.startActivity(intent)
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Label Activity")
-                }
-            }
-            item {
-                Button(
-                    onClick = {
-                        val sessionId = Calendar.getInstance().timeInMillis
-
-                        val intent = Intent(context, DataCollectReciever::class.java)
-                        intent.putExtra("COLLECT_DATA", true)
-                        intent.putExtra("PHASE", AppPhase.INITIAL_COLLECTION)
-                        intent.putExtra("sessionId", sessionId)
-
-                        context.sendBroadcast(intent)
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Start Sensor")
                 }
             }
             item {

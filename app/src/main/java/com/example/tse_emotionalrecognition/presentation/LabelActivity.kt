@@ -65,7 +65,8 @@ class LabelActivity : ComponentActivity() {
         }
     }
 
-
+    private fun insertAffect() {
+    }
 
     private fun insertEngagementTime(id: Long) {
         userRepository.updateAffectColumn(
