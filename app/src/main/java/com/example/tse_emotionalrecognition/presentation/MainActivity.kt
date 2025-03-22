@@ -299,6 +299,7 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                         val sessionId = Calendar.getInstance().timeInMillis
 
                         val intent = Intent(context, DataCollectReciever::class.java)
+
                         intent.putExtra("COLLECT_DATA", true)
                         intent.putExtra("PHASE", AppPhase.INITIAL_COLLECTION)
                         intent.putExtra("sessionId", sessionId)
