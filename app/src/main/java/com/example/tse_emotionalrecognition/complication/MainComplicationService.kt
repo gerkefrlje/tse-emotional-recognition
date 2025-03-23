@@ -50,6 +50,13 @@ class MainComplicationService : SuspendingComplicationDataSourceService() {
             else -> Pair(R.drawable.neutral_emoji, "Neutral Emoji")
         }
 
+//        val (emojiIconResource, text) = when (emojiState) {
+//            "sad_alert" -> Pair(R.drawable.unhappy_emoji_alert, "Sad Alert Emoji")
+//            else -> Pair(R.drawable.mo, "Neutral Emoji")
+//        }
+
+
+
         val icon = Icon.createWithResource(this, emojiIconRes)
         val smallImage = SmallImage.Builder(icon, SmallImageType.PHOTO).build()
         val tapIntent = createMainActivityTapIntent()

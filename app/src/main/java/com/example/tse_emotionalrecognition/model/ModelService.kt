@@ -163,7 +163,7 @@ class ModelService : Service() {
 
                 }
 
-                // TODO: Link to Intervention Helper
+
             }
         }
 
@@ -300,13 +300,6 @@ class ModelService : Service() {
             IntVector.of(LABEL_COLUMN, affects.toIntArray())
         )
 
-//        val df = DataFrame.of(
-//            DoubleVector.of("meanHeartRateNormalized", doubleArrayOf(0.5, 1.0, -0.5)),
-//            DoubleVector.of("rmssdNormalized", doubleArrayOf(0.1, 0.2, 0.3)),
-//            DoubleVector.of("meanSkinTemperatureNormalized", doubleArrayOf(36.5, 37.0, 36.8)),
-//            IntVector.of("affect", intArrayOf(0, 1, 2)),
-//            )
-
         Log.d("ModelService", "Prepared DataFrame: $df")
 
         return df
@@ -412,10 +405,11 @@ class ModelService : Service() {
         val notificationId = 4  // Unique ID for the notification
 
 
-        val notification = NotificationCompat.Builder(this, "data_collection_service")
-            .setContentTitle("Data Collection Service")
+        val notification = NotificationCompat.Builder(this, "start_activity")
+            .setContentTitle("Label Feeling")
             .setContentText(notificationText)
             .setSmallIcon(R.mipmap.ic_launcher)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .addAction(R.mipmap.ic_launcher, "Launch Activity", intent)
             .setAutoCancel(true)
             .build()
@@ -428,7 +422,7 @@ class ModelService : Service() {
             .setContentTitle("Data Collection Service")
             .setContentText(contentText)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
     }
 }

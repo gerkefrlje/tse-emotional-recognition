@@ -101,31 +101,43 @@
         <activity
             android:name=".presentation.interventions.InterventionOverviewActivity"
             android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
             android:taskAffinity="" />
 
         <activity
             android:name=".presentation.interventions.BreathingActivity"
             android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
             android:taskAffinity="" />
 
         <activity
             android:name=".presentation.interventions.CallInterventionActivity"
             android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
             android:taskAffinity="" />
 
         <activity
             android:name=".presentation.LabelActivity"
             android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
             android:taskAffinity="" />
 
         <activity
             android:name=".presentation.SendDataActivity"
             android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
             android:taskAffinity="" />
 
         <activity
             android:name=".presentation.interventions.MusicActivity"
             android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
             android:taskAffinity="">
                 <intent-filter>
                     <action android:name="android.intent.action.VIEW" />
@@ -140,14 +152,30 @@
         <activity
             android:name=".presentation.interventions.ContactActivity"
             android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
             android:taskAffinity=""/>
 
         <activity
             android:name=".presentation.FeedbackActivity"
             android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
             android:taskAffinity=""/>
 
+        <activity
+            android:name=".presentation.DebugActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""/>
 
+        <activity
+            android:name=".presentation.utils.InfoActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:noHistory="true"
+            android:taskAffinity=""/>
 
     </application>
     <queries>

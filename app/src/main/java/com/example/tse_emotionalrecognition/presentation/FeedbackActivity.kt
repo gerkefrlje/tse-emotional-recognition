@@ -65,13 +65,18 @@ class FeedbackActivity : ComponentActivity() {
             FeedbackScreen(
                 affectDataId = affectDataId,
                 prediction = prediction,
-            ) {
-                startActivity(
-                    Intent(this, LabelActivity::class.java).apply {
-                        putExtra("affectDataId", affectDataId)
-                    }
-                )
-            }
+                onIncorrect = {
+                    startActivity(
+                        Intent(this, LabelActivity::class.java).apply {
+                            putExtra("affectDataId", affectDataId)
+                        }
+                    )
+                    finish()
+                },
+                onCorrect = {
+                    finish()
+                }
+            )
         }
     }
 
@@ -103,7 +108,8 @@ class FeedbackActivity : ComponentActivity() {
     fun FeedbackScreen(
         affectDataId: Long = -1,
         prediction: AffectType,
-        onIncorrect: () -> Unit
+        onIncorrect: () -> Unit,
+        onCorrect: () -> Unit
     ) {
         val context = LocalContext.current
         val predictionString = when (prediction) {
@@ -136,7 +142,7 @@ class FeedbackActivity : ComponentActivity() {
                         modifier = Modifier.weight(1f),
                         onClick = {
                             updateAffect(affectDataId, AffectColumns.AFFECT, prediction)
-                            (context as? FeedbackActivity)?.finish()
+                            onCorrect() // Call the onCorrect lambda
                         }
                     ) {
                         Text(
@@ -149,7 +155,6 @@ class FeedbackActivity : ComponentActivity() {
                         modifier = Modifier.weight(1f),
                         onClick = {
                             onIncorrect()
-                            (context as? FeedbackActivity)?.finish()
                         }
                     ) {
                         Text(
@@ -170,7 +175,8 @@ class FeedbackActivity : ComponentActivity() {
         FeedbackScreen(
             affectDataId = 1L,
             prediction = AffectType.POSITIVE,
-            onIncorrect = {}
+            onIncorrect = {},
+            onCorrect = {}
         )
     }
 }

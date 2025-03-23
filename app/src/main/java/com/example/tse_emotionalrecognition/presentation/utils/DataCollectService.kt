@@ -256,13 +256,14 @@ class DataCollectService : Service() {
         val notificationManager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         val notificationId = System.currentTimeMillis().toInt()  // Unique ID for the notification
 
-        val notification = NotificationCompat.Builder(this, "data_collection_service")
+        val notification = NotificationCompat.Builder(this, "start_activity")
             .setContentTitle("Data Collection Service")
             .setContentText(notificationText)
             .setSmallIcon(R.mipmap.ic_launcher)
             .addAction(R.mipmap.ic_launcher, "Launch Activity", intent)
             .setFullScreenIntent(intent, true)
             .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setVibrate(longArrayOf(0, 500, 500, 500))
             .build()
 
@@ -270,27 +271,35 @@ class DataCollectService : Service() {
     }
 
     private fun createNotification(contentText: String): Notification {
+        val wearableExtender = NotificationCompat.WearableExtender()
+
+
         return NotificationCompat.Builder(this, "data_collection_service")
             .setContentTitle("Data Collection Service")
             .setContentText(contentText)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .extend(wearableExtender)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
     }
     private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                "data_collection_service",
-                "Data Collection Service",
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                setShowBadge(false) // Keine Symbol-Badge für den Kanal
-                enableLights(false)
-                enableVibration(false)
-            }
-            val manager = getSystemService(NotificationManager::class.java)
-            manager.createNotificationChannel(channel)
+        val channel = NotificationChannel(
+            "data_collection_service",
+            "Data Collection Service",
+            NotificationManager.IMPORTANCE_LOW
+        ).apply {
+            enableVibration(false) // Disable vibration
+            setSound(null, null)
         }
+        val manager = getSystemService(NotificationManager::class.java)
+        manager.createNotificationChannel(channel)
+
+        val activityChannel = NotificationChannel(
+            "start_activity",
+            "Start Activity",
+            NotificationManager.IMPORTANCE_HIGH
+        )
+        manager.createNotificationChannel(activityChannel)
     }
 }
 

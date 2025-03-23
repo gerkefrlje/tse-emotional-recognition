@@ -1,5 +1,6 @@
 package com.example.tse_emotionalrecognition.presentation.utils
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -21,7 +22,6 @@ import java.util.concurrent.TimeUnit
 class DataCollectWorker(private val context: Context, workerParams: WorkerParameters) : CoroutineWorker(context, workerParams) {
     companion object {
         const val CHANNEL_ID = "DataCollectChannel"
-        const val NOTIFICATION_ID = 1
     }
 
 
@@ -30,48 +30,13 @@ class DataCollectWorker(private val context: Context, workerParams: WorkerParame
 
         createNotification()
 
-//        if(isFirstRun()) {
-//            startDataCollectionService()
-//        }
-//        else{
-//            createNotification()
-//        }
-/**
-        //createNotificationChannel()
+        if(isFirstRun()) {
+            startDataCollectionService()
+        }
+        else{
+            createNotification()
+        }
 
-//        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-//            .setContentTitle("Data Collection")
-//            .setContentText("Collecting data in the background...")
-//            .setSmallIcon(android.R.drawable.ic_dialog_info)
-//            .build()
-//
-//        Log.d("DataCollectWorker", "Creating foreground info")
-//        //val foregroundInfo = ForegroundInfo(NOTIFICATION_ID, notification, FOREGROUND_SERVICE_TYPE_HEALTH)
-//
-//        Log.d("DataCollectWorker", "Setting foreground info")
-//        setForegroundAsync(createForegroundInfo())
-//
-//        val phase = getAppPhase(context)
-//
-//        Log.d("DataCollectWorker", "Creating Intent for DataCollectService")
-//        val sessionId = Calendar.getInstance().timeInMillis
-//        val intent = Intent(applicationContext, DataCollectService::class.java)
-//
-//        intent.putExtra("COLLECT_DATA", true)
-//        intent.putExtra("sessionId", sessionId)
-//        intent.putExtra("PHASE", phase.name)
-//
-//        Log.d("DataCollectWorker", "Starting DataCollectService")
-//        //ContextCompat.startForegroundService(applicationContext, intent)
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-//            applicationContext.startForegroundService(intent) // WICHTIG: `startForegroundService()` statt `startService()`
-//        } else {
-//            applicationContext.startService(intent)
-//        }
-
-        Log.d("DataCollectWorker", "Worker finished")
-        Log.d("DataCollectWorker", "Result is " + Result.success())
-**/
         return Result.success()
     }
 
@@ -106,13 +71,6 @@ class DataCollectWorker(private val context: Context, workerParams: WorkerParame
         val sessionId = Calendar.getInstance().timeInMillis
         val phase = getAppPhase(context)
 
-
-//        val intent = Intent(context, DataCollectService::class.java).apply {
-//            putExtra("COLLECT_DATA", true)
-//            putExtra("PHASE", phase)
-//            putExtra("sessionId", sessionId)
-//        }
-
         val notificationIntent = Intent(context, DataCollectReciever::class.java).apply {
             putExtra("COLLECT_DATA", true)
             putExtra("PHASE", phase)
@@ -137,28 +95,25 @@ class DataCollectWorker(private val context: Context, workerParams: WorkerParame
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                "data_collection_request",
-                "Data Collection Request",
-                NotificationManager.IMPORTANCE_HIGH
-            )
-            notificationManager.createNotificationChannel(channel)
-        }
+        val channel = NotificationChannel(
+            "data_collection_request",
+            "Data Collection Request",
+            NotificationManager.IMPORTANCE_HIGH
+        )
+        notificationManager.createNotificationChannel(channel)
 
-        val notification = NotificationCompat.Builder(context, "data_collection_request")
-            .setContentTitle("Datenaufzeichnung starten")
-            .setContentText("Tippe hier, um die Erfassung zu starten.")
-            .setSmallIcon(R.drawable.splash_icon)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-            .build()
+
+        val broadcastAction = NotificationCompat.Action.Builder(
+            R.drawable.splash_icon,
+            "Start data collection",
+            pedingIntent
+        ).build()
 
         val broadcastNotification = NotificationCompat.Builder(context, "data_collection_request")
-            .setContentTitle("Datenaufzeichnung starten")
-            .setContentText("Tippe hier, um die Erfassung zu starten.")
+            .setContentTitle("Start data collection")
+            .setContentText("Press to start the collection")
             .setSmallIcon(R.drawable.splash_icon)
-            .setContentIntent(pedingIntent)
+            .addAction(broadcastAction)
             .setAutoCancel(true)
             .build()
 
@@ -174,8 +129,8 @@ class DataCollectWorker(private val context: Context, workerParams: WorkerParame
         val daysElapsed = TimeUnit.MILLISECONDS.toDays(elapsedTime)
 
         return when {
-            daysElapsed < 2 -> AppPhase.INITIAL_COLLECTION
-            daysElapsed < 5 -> AppPhase.PREDICTION_WITH_FEEDBACK
+            daysElapsed < 1 -> AppPhase.INITIAL_COLLECTION
+            daysElapsed < 2 -> AppPhase.PREDICTION_WITH_FEEDBACK
             else -> AppPhase.PREDICTION_ONLY
         }
     }

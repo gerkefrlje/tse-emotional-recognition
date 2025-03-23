@@ -1,6 +1,11 @@
 package com.example.tse_emotionalrecognition.presentation
 
 import android.app.Activity
+import android.app.PendingIntent
+import android.content.Context
+import android.content.Intent
+import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
+import android.icu.util.Calendar
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -29,14 +34,23 @@ import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import androidx.wear.tooling.preview.devices.WearDevices
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns
+import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
+import com.example.tse_emotionalrecognition.presentation.utils.EmojiState
 import com.example.tse_emotionalrecognition.presentation.utils.FullText
+import com.example.tse_emotionalrecognition.presentation.utils.InterventionTriggerHelper
 import com.example.tse_emotionalrecognition.presentation.utils.RowButton
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 
 
 class LabelActivity : ComponentActivity() {
-    private val userRepository by lazy { com.example.tse_emotionalrecognition.common.data.database.UserDataStore.getUserRepository(application) }
+    private val userRepository by lazy {
+        com.example.tse_emotionalrecognition.common.data.database.UserDataStore.getUserRepository(
+            application
+        )
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,13 +72,13 @@ class LabelActivity : ComponentActivity() {
     private fun insertEngagementTime(id: Long) {
         userRepository.updateAffectColumn(
             CoroutineScope(Dispatchers.IO),
-            id, com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns.TIME_OF_ENGAGEMENT, System.currentTimeMillis()
+            id, AffectColumns.TIME_OF_ENGAGEMENT, System.currentTimeMillis()
         )
     }
 
     private fun updateAffect(
         id: Long,
-        column: com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns,
+        column: AffectColumns,
         value: Any,
         finished: (() -> Unit)? = null
     ) {
@@ -73,14 +87,21 @@ class LabelActivity : ComponentActivity() {
             id, column, value
         ) {
             if (finished != null) {
-                if (it.affect == AffectType.NEGATIVE){
-                    updateEmoji(applicationContext, com.example.tse_emotionalrecognition.presentation.utils.EmojiState.UNHAPPY_ALERT)
-                }
-                else if(it.affect == AffectType.POSITIVE){
-                    updateEmoji(applicationContext, com.example.tse_emotionalrecognition.presentation.utils.EmojiState.HAPPY)
-                }
-                else{
-                    updateEmoji(applicationContext, com.example.tse_emotionalrecognition.presentation.utils.EmojiState.NEUTRAL)
+                if (it.affect == AffectType.NEGATIVE) {
+                    updateEmoji(
+                        applicationContext,
+                        com.example.tse_emotionalrecognition.presentation.utils.EmojiState.UNHAPPY_ALERT
+                    )
+                } else if (it.affect == AffectType.POSITIVE) {
+                    updateEmoji(
+                        applicationContext,
+                        com.example.tse_emotionalrecognition.presentation.utils.EmojiState.HAPPY
+                    )
+                } else {
+                    updateEmoji(
+                        applicationContext,
+                        com.example.tse_emotionalrecognition.presentation.utils.EmojiState.NEUTRAL
+                    )
                 }
                 finished()
             }
@@ -115,10 +136,13 @@ class LabelActivity : ComponentActivity() {
                         text = "✖",
                         fontSize = 24.sp,
                         color = Color.White,
-                        modifier = Modifier.clickable { (context as? Activity)?.finish() },
+                        modifier = Modifier.clickable { finish() },
                         textAlign = TextAlign.Center
                     )
                 }
+
+                finish()
+
             } else {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -148,7 +172,13 @@ class LabelActivity : ComponentActivity() {
                                 modifier = Modifier.clickable {
                                     updateAffect(affectId, AffectColumns.AFFECT, affectType) {
                                         showThankYou = true
+                                        updateEmojiUi(context, affectType)
                                     }
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        delay(1000)
+                                        startIntervention(context)
+                                    }
+                                    finish()
                                 },
                                 textAlign = TextAlign.Center,
                                 color = Color.White
@@ -160,6 +190,35 @@ class LabelActivity : ComponentActivity() {
         }
     }
 
+    private fun updateEmojiUi(context: Context, affectType: AffectType) {
+        when (affectType) {
+            AffectType.POSITIVE -> {
+                updateEmoji(
+                    context,
+                    EmojiState.HAPPY
+                )
+            }
+            AffectType.NEGATIVE -> {
+                updateEmoji(
+                    context,
+                    EmojiState.UNHAPPY_ALERT
+                )
+            }
+            AffectType.NONE -> {
+                updateEmoji(
+                    context,
+                    EmojiState.NEUTRAL
+                )
+            }
+            AffectType.NULL -> {}
+        }
+    }
+
+    private fun startIntervention(context: Context) {
+        val triggerHelper = InterventionTriggerHelper(context)
+        triggerHelper.showRandomIntervention()
+    }
+
     @Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true)
     @Composable
     fun PreviewLabelWatch() {
@@ -167,5 +226,7 @@ class LabelActivity : ComponentActivity() {
             affectId = 1L
         )
     }
+
+
 }
 
