@@ -405,10 +405,11 @@ class ModelService : Service() {
         val notificationId = 4  // Unique ID for the notification
 
 
-        val notification = NotificationCompat.Builder(this, "data_collection_service")
-            .setContentTitle("Data Collection Service")
+        val notification = NotificationCompat.Builder(this, "start_activity")
+            .setContentTitle("Label Feeling")
             .setContentText(notificationText)
             .setSmallIcon(R.mipmap.ic_launcher)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
             .addAction(R.mipmap.ic_launcher, "Launch Activity", intent)
             .setAutoCancel(true)
             .build()
@@ -421,7 +422,7 @@ class ModelService : Service() {
             .setContentTitle("Data Collection Service")
             .setContentText(contentText)
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()
     }
 }

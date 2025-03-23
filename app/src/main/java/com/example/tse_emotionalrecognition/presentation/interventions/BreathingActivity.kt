@@ -126,7 +126,7 @@ class BreathingActivity : ComponentActivity() {
                 }
                 buttonText = "Done"
 
-                delay(2000)
+                delay(1000)
                 // Return to the previous intent by finishing the current activity
                 finish()
             }
