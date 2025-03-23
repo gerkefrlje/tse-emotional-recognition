@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -34,6 +35,8 @@ import com.example.tse_emotionalrecognition.presentation.utils.EmojiState
 import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
 
@@ -61,13 +64,11 @@ class DebugActivity : ComponentActivity() {
         val sharedPreferences =
             applicationContext.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val firstLaunchTime = sharedPreferences.getLong("first_launch_time", 0L)
+        val elapsedTime = System.currentTimeMillis() - firstLaunchTime
 
-        val detail = getDetailedAppPhase(firstLaunchTime)
-        val appPhase = detail.appPhase
-        val timeUntilNextPhaseMillis = detail.timeUntilNextPhaseMillis
-        val timeUntilNextPhase = formatMillisToHHMMSS(timeUntilNextPhaseMillis)
 
-        Log.d("DebugActivity", "next App Phase in ${timeUntilNextPhase}")
+
+
 
         setContent {
             TSEEmotionalRecognitionTheme {
@@ -86,6 +87,22 @@ class DebugActivity : ComponentActivity() {
                     )
                 }
 
+                var formattedElapsedTime by remember { mutableStateOf(formatMillisToHHMMSS(0)) }
+                var timeUntilNextPhase by remember { mutableStateOf(formatMillisToHHMMSS(0)) }
+
+                LaunchedEffect(Unit) {
+                    launch {
+                        while (true) {
+                            val elapsedTime = System.currentTimeMillis() - firstLaunchTime
+                            formattedElapsedTime = formatMillisToHHMMSS(elapsedTime)
+
+                            val detail = getDetailedAppPhase(firstLaunchTime)
+                            timeUntilNextPhase = formatMillisToHHMMSS(detail.timeUntilNextPhaseMillis)
+
+                            delay(1000 * 10L) // Update every 10 second
+                        }
+                    }
+                }
 
 
                 ScalingLazyColumn(
@@ -105,6 +122,9 @@ class DebugActivity : ComponentActivity() {
                             )
                             Text(
                                 "Next App Phase in: $timeUntilNextPhase",
+                                maxLines = 2
+                            )
+                            Text("App is running for: $formattedElapsedTime",
                                 maxLines = 2
                             )
                         }
