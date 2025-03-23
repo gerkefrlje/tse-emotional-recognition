@@ -1,5 +1,6 @@
 package com.example.tse_emotionalrecognition.presentation.utils
 
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -94,28 +95,25 @@ class DataCollectWorker(private val context: Context, workerParams: WorkerParame
         val notificationManager =
             context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                "data_collection_request",
-                "Data Collection Request",
-                NotificationManager.IMPORTANCE_HIGH
-            )
-            notificationManager.createNotificationChannel(channel)
-        }
+        val channel = NotificationChannel(
+            "data_collection_request",
+            "Data Collection Request",
+            NotificationManager.IMPORTANCE_HIGH
+        )
+        notificationManager.createNotificationChannel(channel)
 
-        val notification = NotificationCompat.Builder(context, "data_collection_request")
-            .setContentTitle("Datenaufzeichnung starten")
-            .setContentText("Tippe hier, um die Erfassung zu starten.")
-            .setSmallIcon(R.drawable.splash_icon)
-            .setContentIntent(pendingIntent)
-            .setAutoCancel(true)
-            .build()
+
+        val broadcastAction = NotificationCompat.Action.Builder(
+            R.drawable.splash_icon,
+            "Start data collection",
+            pedingIntent
+        ).build()
 
         val broadcastNotification = NotificationCompat.Builder(context, "data_collection_request")
-            .setContentTitle("Datenaufzeichnung starten")
-            .setContentText("Tippe hier, um die Erfassung zu starten.")
+            .setContentTitle("Start data collection")
+            .setContentText("Press to start the collection")
             .setSmallIcon(R.drawable.splash_icon)
-            .setContentIntent(pedingIntent)
+            .addAction(broadcastAction)
             .setAutoCancel(true)
             .build()
 

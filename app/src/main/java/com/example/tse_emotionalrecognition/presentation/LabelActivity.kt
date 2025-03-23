@@ -36,6 +36,7 @@ import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
+import com.example.tse_emotionalrecognition.presentation.utils.EmojiState
 import com.example.tse_emotionalrecognition.presentation.utils.FullText
 import com.example.tse_emotionalrecognition.presentation.utils.InterventionTriggerHelper
 import com.example.tse_emotionalrecognition.presentation.utils.RowButton
@@ -135,10 +136,13 @@ class LabelActivity : ComponentActivity() {
                         text = "✖",
                         fontSize = 24.sp,
                         color = Color.White,
-                        modifier = Modifier.clickable { (context as? Activity)?.finish() },
+                        modifier = Modifier.clickable { finish() },
                         textAlign = TextAlign.Center
                     )
                 }
+
+                finish()
+
             } else {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -168,8 +172,13 @@ class LabelActivity : ComponentActivity() {
                                 modifier = Modifier.clickable {
                                     updateAffect(affectId, AffectColumns.AFFECT, affectType) {
                                         showThankYou = true
+                                        updateEmojiUi(context, affectType)
                                     }
-                                    startIntervention(context)
+                                    CoroutineScope(Dispatchers.IO).launch {
+                                        delay(1000)
+                                        startIntervention(context)
+                                    }
+                                    finish()
                                 },
                                 textAlign = TextAlign.Center,
                                 color = Color.White
@@ -178,6 +187,30 @@ class LabelActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    private fun updateEmojiUi(context: Context, affectType: AffectType) {
+        when (affectType) {
+            AffectType.POSITIVE -> {
+                updateEmoji(
+                    context,
+                    EmojiState.HAPPY
+                )
+            }
+            AffectType.NEGATIVE -> {
+                updateEmoji(
+                    context,
+                    EmojiState.UNHAPPY_ALERT
+                )
+            }
+            AffectType.NONE -> {
+                updateEmoji(
+                    context,
+                    EmojiState.NEUTRAL
+                )
+            }
+            AffectType.NULL -> {}
         }
     }
 

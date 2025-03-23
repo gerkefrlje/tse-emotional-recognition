@@ -47,6 +47,7 @@ import com.example.tse_emotionalrecognition.presentation.utils.scheduleDailyEmoj
 import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 import com.example.tse_emotionalrecognition.presentation.utils.DataCollectReciever
 import com.example.tse_emotionalrecognition.presentation.utils.DataCollectWorker
+import com.example.tse_emotionalrecognition.presentation.utils.InfoActivity
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -66,6 +67,32 @@ class MainActivity : ComponentActivity() {
                 daysElapsed < 1 -> AppPhase.INITIAL_COLLECTION
                 daysElapsed < 2 -> AppPhase.PREDICTION_WITH_FEEDBACK
                 else -> AppPhase.PREDICTION_ONLY
+            }
+        }
+
+        fun getDetailedAppPhase(firstLaunchTimeMillis: Long,
+                                initialCollectionDurationDays: Long = 1,
+                                predictionWithFeedbackDurationDays: Long = 1): AppPhaseResult {
+            val currentTimeMillis = System.currentTimeMillis()
+
+            // Error handling for invalid first launch time
+            if (firstLaunchTimeMillis == 0L) {
+                return AppPhaseResult(AppPhase.INITIAL_COLLECTION, Long.MAX_VALUE) // Or throw an exception
+            }
+
+            val initialCollectionEndMillis = firstLaunchTimeMillis + TimeUnit.DAYS.toMillis(initialCollectionDurationDays)
+            val predictionWithFeedbackEndMillis = firstLaunchTimeMillis + TimeUnit.DAYS.toMillis(initialCollectionDurationDays + predictionWithFeedbackDurationDays)
+
+            return when {
+                currentTimeMillis < initialCollectionEndMillis -> {
+                    AppPhaseResult(AppPhase.INITIAL_COLLECTION, initialCollectionEndMillis - currentTimeMillis)
+                }
+                currentTimeMillis < predictionWithFeedbackEndMillis -> {
+                    AppPhaseResult(AppPhase.PREDICTION_WITH_FEEDBACK, predictionWithFeedbackEndMillis - currentTimeMillis)
+                }
+                else -> {
+                    AppPhaseResult(AppPhase.PREDICTION_ONLY, 0L)
+                }
             }
         }
     }
@@ -150,7 +177,6 @@ class MainActivity : ComponentActivity() {
         val constraints =
             Constraints.Builder().setRequiredNetworkType(NetworkType.NOT_REQUIRED).build()
 
-        //val dataCollectionRequest = PeriodicWorkRequest.Builder(DataCollectWorker::class.java, 15, TimeUnit.MINUTES).setConstraints(constraints).build()
 
         val periodicWorkRequest =
             PeriodicWorkRequest.Builder(DataCollectWorker::class.java, 15, TimeUnit.MINUTES)
@@ -227,6 +253,17 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
             item {
                 Button(
                     onClick = {
+                        val intent = Intent(context, InfoActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Info")
+                }
+            }
+            item {
+                Button(
+                    onClick = {
                         val debugIntent = Intent(context, DebugActivity::class.java)
                         context.startActivity(debugIntent)
                     },
@@ -246,3 +283,8 @@ enum class AppPhase {
     PREDICTION_WITH_FEEDBACK,
     PREDICTION_ONLY
 }
+
+data class AppPhaseResult(
+    val appPhase: AppPhase,
+    val timeUntilNextPhaseMillis: Long
+)

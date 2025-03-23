@@ -3,6 +3,7 @@ package com.example.tse_emotionalrecognition.presentation
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -17,6 +18,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
 import androidx.wear.compose.material.Button
@@ -25,6 +27,7 @@ import androidx.wear.compose.material.MaterialTheme
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
+import com.example.tse_emotionalrecognition.presentation.MainActivity.Companion.getDetailedAppPhase
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
 import com.example.tse_emotionalrecognition.presentation.utils.DataCollectReciever
 import com.example.tse_emotionalrecognition.presentation.utils.EmojiState
@@ -32,11 +35,23 @@ import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import java.util.Calendar
+import java.util.concurrent.TimeUnit
 
 class DebugActivity : ComponentActivity() {
 
     private val userRepository by lazy { UserDataStore.getUserRepository(application) }
 
+    fun formatMillisToHHMMSS(millis: Long): String {
+        if (millis < 0) {
+            return "00:00:00" // Or handle negative values as needed
+        }
+
+        val hours = TimeUnit.MILLISECONDS.toHours(millis)
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(millis % TimeUnit.HOURS.toMillis(1))
+        val seconds = TimeUnit.MILLISECONDS.toSeconds(millis % TimeUnit.MINUTES.toMillis(1))
+
+        return String.format("%02d:%02d:%02d", hours, minutes, seconds)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,8 +62,18 @@ class DebugActivity : ComponentActivity() {
             applicationContext.getSharedPreferences("app_prefs", Context.MODE_PRIVATE)
         val firstLaunchTime = sharedPreferences.getLong("first_launch_time", 0L)
 
+        val detail = getDetailedAppPhase(firstLaunchTime)
+        val appPhase = detail.appPhase
+        val timeUntilNextPhaseMillis = detail.timeUntilNextPhaseMillis
+        val timeUntilNextPhase = formatMillisToHHMMSS(timeUntilNextPhaseMillis)
+
+        Log.d("DebugActivity", "next App Phase in ${timeUntilNextPhase}")
+
         setContent {
             TSEEmotionalRecognitionTheme {
+
+                val context = LocalContext.current
+
 
                 var currentEmojiState by remember {
                     mutableStateOf(
@@ -73,24 +98,29 @@ class DebugActivity : ComponentActivity() {
                         Text("Debug Menu")
                     }
                     item {
-                        Text(
-                            "Current App Phase: ${MainActivity.getAppPhase(firstLaunchTime)}",
-                            maxLines = 2
-                        )
-
+                        Column {
+                            Text(
+                                "Current App Phase: ${MainActivity.getAppPhase(firstLaunchTime)}",
+                                maxLines = 2
+                            )
+                            Text(
+                                "Next App Phase in: $timeUntilNextPhase",
+                                maxLines = 2
+                            )
+                        }
                     }
                     item {
                         Button(
                             onClick = {
                                 userRepository.insertAffect(
                                     CoroutineScope(Dispatchers.IO),
-                                    AffectData(sessionId = 1, affect = AffectType.POSITIVE)
+                                    AffectData(sessionId = 1, affect = AffectType.NULL)
                                 ) {
                                     val affectDataID = it.id
                                     val intent =
-                                        Intent(applicationContext, LabelActivity::class.java)
+                                        Intent(context, LabelActivity::class.java)
                                     intent.putExtra("affectDataId", affectDataID)
-                                    applicationContext.startActivity(intent)
+                                    context.startActivity(intent)
                                 }
                             },
                             modifier = Modifier.fillMaxWidth()

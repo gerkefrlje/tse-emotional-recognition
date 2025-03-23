@@ -99,6 +99,21 @@ class InterventionTriggerHelper(private val context: Context) {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
+        val generalMessage = "We noticed you might need a moment to unwind. Here's a suggestion."
+
+
+        val actionLabel = when (activityClass) {
+            BreathingActivity::class.java -> "Start Breathing"
+            ContactActivity::class.java -> "Call a Contact"
+            MusicActivity::class.java -> "Play Music"
+            else -> "View Activity"
+        }
+
+        val action = NotificationCompat.Action.Builder(
+            0, // Icon (0 for no icon)
+            actionLabel,
+            pendingIntent
+        ).build()
 
         //Todo info button
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
@@ -106,7 +121,8 @@ class InterventionTriggerHelper(private val context: Context) {
             .setContentTitle("Intervention suggested")
             .setContentText(notificationText(activityClass))
             .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setContentIntent(pendingIntent)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(generalMessage)) // Full text when expanded
+            .addAction(action)
             .setAutoCancel(true)
 
         with(NotificationManagerCompat.from(context)) {
@@ -136,10 +152,10 @@ class InterventionTriggerHelper(private val context: Context) {
 
     private fun notificationText(activityClass: Class<*>): String {
         return when (activityClass) {
-            BreathingActivity::class.java -> "Let's take a breath"
-            ContactActivity::class.java -> "Do you want to call someone?"
-            MusicActivity::class.java -> "How about listening to your favorite song?"
-            else -> "Unknown"
+            BreathingActivity::class.java -> "Try some calming breathing exercises to relax."
+            ContactActivity::class.java -> "Reach out to a friend or loved one for support."
+            MusicActivity::class.java -> "Listen to some uplifting music to brighten your day."
+            else -> "Here's a helpful activity to improve your mood."
         }
     }
 }
