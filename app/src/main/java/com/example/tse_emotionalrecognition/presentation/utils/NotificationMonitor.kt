@@ -27,7 +27,6 @@ import kotlinx.serialization.json.Json
 class NotificationMonitor() : BroadcastReceiver() {
 
 
-
     override fun onReceive(context: Context, intent: Intent) {
         val userRepository = UserDataStore.getUserRepository(context)
 
@@ -67,23 +66,27 @@ class NotificationMonitor() : BroadcastReceiver() {
                 }
 
 
-}
+            }
         }
-        }
-
-private fun updateNotificationTracker(userRepository: UserRepository, context: Context) {
-
-    CoroutineScope(Dispatchers.IO).launch {
-
-        userRepository.incrementDismissed(CoroutineScope(Dispatchers.IO), MainActivity.trackerID)
-        val sender = CommunicationDataSender(context)
-
-        delay(5000L)
-
-        val interventionStats = userRepository.getInterventionStatsById(MainActivity.trackerID)
-        val interventionStatsString = Json.encodeToString(interventionStats)
-
-        sender.sendStringData("/phone/notification", interventionStatsString)
     }
 
+    private fun updateNotificationTracker(userRepository: UserRepository, context: Context) {
+
+        CoroutineScope(Dispatchers.IO).launch {
+
+            userRepository.incrementDismissed(
+                CoroutineScope(Dispatchers.IO),
+                MainActivity.trackerID
+            )
+            val sender = CommunicationDataSender(context)
+
+            delay(5000L)
+
+            val interventionStats = userRepository.getInterventionStatsById(MainActivity.trackerID)
+            val interventionStatsString = Json.encodeToString(interventionStats)
+
+            sender.sendStringData("/phone/notification", interventionStatsString)
+        }
+
+    }
 }

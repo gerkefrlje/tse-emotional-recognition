@@ -1,6 +1,5 @@
 package com.example.tse_emotionalrecognition.presentation
 
-
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -44,13 +43,11 @@ import com.example.tse_emotionalrecognition.presentation.utils.EmojiState
 import com.example.tse_emotionalrecognition.presentation.utils.scheduleDailyEmojiUpdateWorkManager
 import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 import com.example.tse_emotionalrecognition.presentation.utils.DataCollectReciever
-import com.example.tse_emotionalrecognition.presentation.utils.DataCollectService
 import com.example.tse_emotionalrecognition.presentation.utils.DataCollectWorker
 import com.example.tse_emotionalrecognition.presentation.utils.InfoActivity
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -259,6 +256,18 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
             }
             item {
                 Button(
+                    onClick = {  val newEmojiState = EmojiState.entries.random()
+                        updateEmoji(context, newEmojiState)
+
+                        // Force UI Update
+                        currentEmojiState = newEmojiState },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Randomize Emoji")
+                }
+            }
+            item {
+                Button(
                     onClick = {
                         val intent = Intent(context, InterventionOverviewActivity::class.java)
                         context.startActivity(intent)
@@ -308,7 +317,6 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                     Text("Debug-Menu")
                 }
             }
-
         }
     }
 }
