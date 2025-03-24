@@ -1,4 +1,4 @@
-package com.example.tse_emotionalrecognition.presentation.utils
+package com.example.tse_emotionalrecognition.data.collection
 
 import android.content.Context
 import android.hardware.Sensor

@@ -33,7 +33,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault">
-        <receiver android:name=".presentation.utils.DataCollectReciever"
+        <receiver android:name=".data.collection.DataCollectReciever"
             android:enabled="true"
             android:exported="false"/>
         <service
@@ -60,7 +60,7 @@
                 android:resource="@drawable/tile_preview" />
         </service>
         <service
-            android:name=".presentation.utils.DataCollectService"
+            android:name=".data.collection.DataCollectService"
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="health" />

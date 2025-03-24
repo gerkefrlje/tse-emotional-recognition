@@ -21,7 +21,7 @@ import com.example.tse_emotionalrecognition.common.data.database.entities.Affect
 import com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement
 import com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement
 import com.example.tse_emotionalrecognition.presentation.FeedbackActivity
-import com.example.tse_emotionalrecognition.presentation.utils.InterventionTriggerHelper
+import com.example.tse_emotionalrecognition.presentation.interventions.InterventionTriggerHelper
 import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

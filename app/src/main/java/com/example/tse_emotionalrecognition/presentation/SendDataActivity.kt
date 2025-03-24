@@ -31,13 +31,10 @@ import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
 import com.example.tse_emotionalrecognition.R
-import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
-import com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement
-import com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement
 import com.example.tse_emotionalrecognition.presentation.interventions.BreathingActivity
 import com.example.tse_emotionalrecognition.presentation.interventions.CallInterventionActivity
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
-import com.example.tse_emotionalrecognition.presentation.utils.DataCollectService
+import com.example.tse_emotionalrecognition.data.collection.DataCollectService
 import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.PutDataMapRequest
