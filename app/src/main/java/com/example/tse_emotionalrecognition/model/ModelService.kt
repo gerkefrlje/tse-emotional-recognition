@@ -4,7 +4,6 @@ import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.app.Service
-import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
 import android.content.SharedPreferences
@@ -12,10 +11,8 @@ import android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_HEALTH
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
-import androidx.activity.result.launch
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import androidx.work.impl.close
 import com.example.tse_emotionalrecognition.R
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.common.data.database.UserRepository
@@ -24,12 +21,10 @@ import com.example.tse_emotionalrecognition.common.data.database.entities.Affect
 import com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement
 import com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement
 import com.example.tse_emotionalrecognition.presentation.FeedbackActivity
-import com.example.tse_emotionalrecognition.presentation.LabelActivity
 import com.example.tse_emotionalrecognition.presentation.utils.InterventionTriggerHelper
 import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
@@ -38,13 +33,13 @@ import smile.classification.GradientTreeBoost
 import smile.classification.gbm
 import smile.data.DataFrame
 import smile.data.formula.Formula
-import smile.data.vector.*
+import smile.data.vector.DoubleVector
+import smile.data.vector.IntVector
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
-import kotlin.io.path.exists
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -70,6 +65,8 @@ class ModelService : Service() {
 
     private var prediction = AffectType.NONE
 
+    private var debug = false
+
     override fun onCreate() {
         super.onCreate()
         sharedPreferences = getSharedPreferences("app_prefs", MODE_PRIVATE)
@@ -90,6 +87,8 @@ class ModelService : Service() {
 
         sessionId = intent?.getLongExtra("sessionId", 0L) ?: 0L
 
+        debug = intent?.getBooleanExtra("debug", false) ?: false
+
         when (action) {
             ACTION_TRAIN_MODEL -> {
                 loadData {
@@ -98,12 +97,15 @@ class ModelService : Service() {
                     Log.d("ModelService", "Last trained time: $lastTrainedTime")
                     val currentTime = System.currentTimeMillis()
 
-//                    if (currentTime - lastTrainedTime > 24 * 60 * 60 * 1000) {
-//                        Log.d("ModelService", "Training model...")
-//                        trainModel()
-//                    }
-
-                    trainModel()
+                    if (!debug) {
+                        if (currentTime - lastTrainedTime > 24 * 60 * 60 * 1000) {
+                            Log.d("ModelService", "Training model...")
+                            trainModel()
+                        }
+                    } else {
+                        Log.d("ModelService", "Debug: training model...")
+                        trainModel()
+                    }
 
                     predict()
 
@@ -145,20 +147,45 @@ class ModelService : Service() {
                     }
                 }
             }
+
             ACTION_PREDICT -> {
+
+
                 loadData {
+
+                    if (!debug) {
+                        val firstPrediction = sharedPreferences.getBoolean("first_prediction", false)
+                        if (!firstPrediction) {
+                            sharedPreferences.edit().putBoolean("first_prediction", true).apply()
+                            trainModel()
+                        }
+                    }
+                    else {
+                        Log.d("ModelService", "Debug: starting prediction...")
+                    }
+
                     predict()
-                    //prediction == AffectType.NEGATIVE
                     val notificationHelper = InterventionTriggerHelper(this)
-                    if (prediction == AffectType.NEGATIVE){
-                        notificationHelper.showRandomIntervention()
-                        updateEmoji(applicationContext, com.example.tse_emotionalrecognition.presentation.utils.EmojiState.UNHAPPY_ALERT)
-                    }
-                    else if(prediction == AffectType.POSITIVE){
-                        updateEmoji(applicationContext, com.example.tse_emotionalrecognition.presentation.utils.EmojiState.HAPPY)
-                    }
-                    else{
-                        updateEmoji(applicationContext, com.example.tse_emotionalrecognition.presentation.utils.EmojiState.NEUTRAL)
+                    when (prediction) {
+                        AffectType.NEGATIVE -> {
+                            notificationHelper.showRandomIntervention()
+                            updateEmoji(
+                                applicationContext,
+                                com.example.tse_emotionalrecognition.presentation.utils.EmojiState.UNHAPPY_ALERT
+                            )
+                        }
+                        AffectType.POSITIVE -> {
+                            updateEmoji(
+                                applicationContext,
+                                com.example.tse_emotionalrecognition.presentation.utils.EmojiState.HAPPY
+                            )
+                        }
+                        else -> {
+                            updateEmoji(
+                                applicationContext,
+                                com.example.tse_emotionalrecognition.presentation.utils.EmojiState.NEUTRAL
+                            )
+                        }
                     }
 
                 }
@@ -196,26 +223,39 @@ class ModelService : Service() {
             model = loadModel()
         }
 
-        val predictionData = preparePredictionData()
+        try {
+            val predictionData = preparePredictionData()
 
-        Log.d("ModelService", "Checking prediction data ${predictionData.schema().fields().map { it.name }}")
+            Log.d(
+                "ModelService",
+                "Checking prediction data ${predictionData.schema().fields().map { it.name }}"
+            )
 
-        if (model != null) {
+            if (model != null) {
+                val result = model.predict(predictionData)
+                for (i in result.indices) {
+                    Log.d("ModelService", "Prediction $i: ${result[i]}")
+                }
+                Log.d("ModelService", "Prediction result: $result")
 
-            val result = model.predict(predictionData)
-            for (i in result.indices) {
-                Log.d("ModelService", "Prediction $i: ${result[i]}")
+                val predictionAsInt = model.predict(predictionData)[0]
+
+                prediction = when (predictionAsInt) {
+                    0 -> AffectType.NEGATIVE
+                    1 -> AffectType.POSITIVE
+                    2 -> AffectType.NONE
+                    else -> AffectType.NULL
+                }
             }
-            Log.d("ModelService", "Prediction result: $result")
-
-            val predictionAsInt = model.predict(predictionData)[0]
-
-            prediction = when (predictionAsInt) {
-                0 -> AffectType.NEGATIVE
-                1 -> AffectType.POSITIVE
-                2 -> AffectType.NONE
-                else -> AffectType.NULL
-            }
+        } catch (e: IllegalArgumentException) {
+            Log.e("ModelService", "Error during prediction: ${e.message}", e)
+            // Handle the error gracefully. For example:
+            prediction = AffectType.NONE // Default prediction
+            // Or, use the last known prediction, if you have it stored.
+            // Or, return from the function.
+        } catch (e: Exception) { //Catch all other Exceptions
+            Log.e("ModelService", "An unexpected error occurred: ${e.message}", e)
+            prediction = AffectType.NONE
         }
     }
 
@@ -226,11 +266,15 @@ class ModelService : Service() {
                 //skinTemperatureMeasurements = userRepository.getAllSkinTemperatureMeasurements()
                 affectData = userRepository.getAllAffectData()
 
-                Log.d("ModelService", "Loaded ${heartRateMeasurements.size} heart rate measurements")
+                Log.d(
+                    "ModelService",
+                    "Loaded ${heartRateMeasurements.size} heart rate measurements"
+                )
                 //Log.d("ModelService", "Loaded ${skinTemperatureMeasurements.size} skin temperature measurements")
                 Log.d("ModelService", "Loaded ${affectData.size} affect data entries")
 
-                heartRateMeasurements.firstOrNull()?.let { Log.d("ModelService", "First HeartRateMeasurement: $it") }
+                heartRateMeasurements.firstOrNull()
+                    ?.let { Log.d("ModelService", "First HeartRateMeasurement: $it") }
                 //skinTemperatureMeasurements.firstOrNull()?.let { Log.d("ModelService", "First SkinTemperatureMeasurement: $it") }
                 affectData.firstOrNull()?.let { Log.d("ModelService", "First AffectData: $it") }
 
@@ -257,7 +301,8 @@ class ModelService : Service() {
         Log.d("ModelService", "Filtered ${tmpHeartRateMeasurements.size} heart rate measurements")
 
         val meanHr = tmpHeartRateMeasurements.map { it.hr.toLong() }.average()
-        val stdHr = tmpHeartRateMeasurements.map { (it.hr.toLong() - meanHr).pow(2) }.average().pow(0.5)
+        val stdHr =
+            tmpHeartRateMeasurements.map { (it.hr.toLong() - meanHr).pow(2) }.average().pow(0.5)
 
         Log.d("ModelService", "Mean HR: $meanHr, Std HR: $stdHr")
 
@@ -274,7 +319,10 @@ class ModelService : Service() {
             val tmpHeartRateMeasurementsFiltered = tmpHeartRateMeasurements.filter { it.timestamp as Long in (tmpAffectDatum.timeOfNotification - DATA_WINDOW_MS)..tmpAffectDatum.timeOfNotification }
 
             if (tmpHeartRateMeasurementsFiltered.isEmpty()) {
-                Log.d("ModelService", "No heart rate measurements found for affect data entry: $tmpAffectDatum")
+                Log.d(
+                    "ModelService",
+                    "No heart rate measurements found for affect data entry: $tmpAffectDatum"
+                )
                 continue
             }
 
@@ -312,7 +360,8 @@ class ModelService : Service() {
         val tmpHeartRateMeasurements = heartRateMeasurements.filter { it.hr in 40..200 }
 
         val meanHr = tmpHeartRateMeasurements.map { it.hr.toLong() }.average()
-        val stdHr = tmpHeartRateMeasurements.map { (it.hr.toLong() - meanHr).pow(2) }.average().pow(0.5)
+        val stdHr =
+            tmpHeartRateMeasurements.map { (it.hr.toLong() - meanHr).pow(2) }.average().pow(0.5)
 
         Log.d("ModelService", "Mean HR: $meanHr, Std HR: $stdHr")
 
@@ -321,10 +370,17 @@ class ModelService : Service() {
         val stdIbi = ibi.map { (it - meanIbi).pow(2) }.average().pow(0.5)
 
         Log.d("ModelService", "Mean IBI: $meanIbi, Std IBI: $stdIbi")
+        val heartRateMeasurementsFiltered: List<HeartRateMeasurement> = if(!debug){
+            tmpHeartRateMeasurements.filter { it.timestamp >= latestTimestamp - DATA_WINDOW_MS }
+        } else {
+            tmpHeartRateMeasurements
+        }
 
-        val heartRateMeasurementsFiltered = tmpHeartRateMeasurements.filter { it.timestamp >= latestTimestamp - DATA_WINDOW_MS }
 
-        Log.d("ModelService", "Filtered ${heartRateMeasurementsFiltered.size} heart rate measurements")
+        Log.d(
+            "ModelService",
+            "Filtered ${heartRateMeasurementsFiltered.size} heart rate measurements"
+        )
 
         if (heartRateMeasurementsFiltered.isEmpty()) {
             Log.d("ModelService", "No heart rate measurements found")
@@ -340,7 +396,7 @@ class ModelService : Service() {
         val rmssd = calculateRmssd(ibiNormalized)
         Log.d("ModelService", "RMSSD normalized: $rmssd")
 
-        val dummyAffect = IntArray(1) { 100000}
+        val dummyAffect = IntArray(1) { 100000 }
 
         return DataFrame.of(
             DoubleVector.of("meanHeartRateNormalized", doubleArrayOf(meanHrNormalized)),
@@ -376,6 +432,7 @@ class ModelService : Service() {
             Log.e("ModelTrainer", "Error storing model", e)
         }
     }
+
     private fun loadModel(): GradientTreeBoost? {
         Log.d("ModelTrainer", "Loading model...")
 

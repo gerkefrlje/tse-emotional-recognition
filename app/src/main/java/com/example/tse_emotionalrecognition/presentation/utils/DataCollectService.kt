@@ -49,6 +49,7 @@ class DataCollectService : Service() {
     private var isWatchWorn: Boolean = false
     private var sessionId: Long = 0L
     private var phase: AppPhase = AppPhase.INITIAL_COLLECTION
+    private var debug = false
 
     override fun onCreate() {
         super.onCreate()
@@ -73,6 +74,7 @@ class DataCollectService : Service() {
             }, applicationContext
         )
         healthTrackingService.connectService()
+
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -84,6 +86,9 @@ class DataCollectService : Service() {
         )
 
         phase = intent?.getSerializableExtra("PHASE") as? AppPhase ?: AppPhase.INITIAL_COLLECTION
+
+
+        debug = intent?.getBooleanExtra("debug", false) ?: false
 
         Log.v("DataCollectService", "Phase: $phase")
 
@@ -238,6 +243,7 @@ class DataCollectService : Service() {
     private fun launchFeedbackActivity() {
         //Launch ModelService with intent action = ACTION_TRAIN_MODEL
         val intent = Intent(applicationContext, ModelService::class.java)
+        intent.putExtra("debug", debug)
         intent.putExtra("sessionId", sessionId)
         intent.action = ModelService.ACTION_TRAIN_MODEL
         ContextCompat.startForegroundService(this, intent)
@@ -246,6 +252,7 @@ class DataCollectService : Service() {
     private fun launchPredictionService() {
         // Launch ModelService with intent action = ACTION_PREDICT
         val intent = Intent(applicationContext, ModelService::class.java)
+        intent.putExtra("debug", debug)
         intent.putExtra("sessionId", sessionId)
         intent.action = ModelService.ACTION_PREDICT
         ContextCompat.startForegroundService(this, intent)

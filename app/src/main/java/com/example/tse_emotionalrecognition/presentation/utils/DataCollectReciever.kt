@@ -13,6 +13,7 @@ class DataCollectReciever : BroadcastReceiver() {
                 putExtra("COLLECT_DATA", intent?.getBooleanExtra("COLLECT_DATA", false))
                 putExtra("PHASE", intent?.getSerializableExtra("PHASE"))
                 putExtra("sessionId", intent?.getLongExtra("sessionId", 0L))
+                putExtra("debug", intent?.getBooleanExtra("debug", false))
             }
             Log.d("DataCollectReciever", "Starting DataCollectService")
             it.startForegroundService(serviceIntent)  // Required for Android 8+

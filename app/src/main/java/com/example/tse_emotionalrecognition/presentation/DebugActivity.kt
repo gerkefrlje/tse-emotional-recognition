@@ -176,6 +176,7 @@ class DebugActivity : ComponentActivity() {
                                 intent.putExtra("COLLECT_DATA", true)
                                 intent.putExtra("PHASE", AppPhase.PREDICTION_WITH_FEEDBACK)
                                 intent.putExtra("sessionId", sessionId)
+                                intent.putExtra("debug", true)
 
                                 applicationContext.sendBroadcast(intent)
                             },
@@ -187,11 +188,14 @@ class DebugActivity : ComponentActivity() {
                     item {
                         Button(
                             onClick = {
+                                val sessionId = Calendar.getInstance().timeInMillis
+
                                 val intent =
                                     Intent(applicationContext, DataCollectReciever::class.java)
                                 intent.putExtra("COLLECT_DATA", true)
                                 intent.putExtra("PHASE", AppPhase.PREDICTION_ONLY)
-                                intent.putExtra("sessionId", 1L)
+                                intent.putExtra("sessionId", sessionId)
+                                intent.putExtra("debug", true)
 
                                 applicationContext.sendBroadcast(intent)
                             },
