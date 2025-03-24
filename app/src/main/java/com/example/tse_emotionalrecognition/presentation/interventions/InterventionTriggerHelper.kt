@@ -11,7 +11,6 @@ import androidx.core.app.NotificationManagerCompat
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import kotlin.time.Duration.Companion.seconds
 
 class InterventionTriggerHelper(private val context: Context) {
     companion object {

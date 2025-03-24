@@ -8,7 +8,6 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-import android.os.Build
 import android.os.IBinder
 import android.os.CountDownTimer
 import androidx.core.content.ContextCompat
@@ -22,7 +21,6 @@ import com.example.tse_emotionalrecognition.common.data.database.entities.Affect
 import com.example.tse_emotionalrecognition.common.data.database.entities.HeartRateMeasurement
 import com.example.tse_emotionalrecognition.common.data.database.entities.SkinTemperatureMeasurement
 import com.example.tse_emotionalrecognition.model.ModelService
-
 import com.example.tse_emotionalrecognition.presentation.AppPhase
 import com.example.tse_emotionalrecognition.presentation.LabelActivity
 import com.samsung.android.service.health.tracking.ConnectionListener

@@ -1,45 +1,30 @@
 package com.example.tse_emotionalrecognition.presentation
 
-import android.app.Activity
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
-import android.content.Intent.FLAG_ACTIVITY_NEW_TASK
-import android.icu.util.Calendar
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavHostController
 import androidx.wear.compose.material.Text
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import androidx.navigation.compose.*
-import androidx.wear.compose.material.Button
-import androidx.wear.compose.navigation.rememberSwipeDismissableNavController
 import androidx.wear.tooling.preview.devices.WearDevices
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns
-import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
 import com.example.tse_emotionalrecognition.presentation.utils.EmojiState
-import com.example.tse_emotionalrecognition.presentation.utils.FullText
-import com.example.tse_emotionalrecognition.presentation.utils.InterventionTriggerHelper
-import com.example.tse_emotionalrecognition.presentation.utils.RowButton
+import com.example.tse_emotionalrecognition.presentation.interventions.InterventionTriggerHelper
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
@@ -47,7 +32,7 @@ import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 
 class LabelActivity : ComponentActivity() {
     private val userRepository by lazy {
-        com.example.tse_emotionalrecognition.common.data.database.UserDataStore.getUserRepository(
+        UserDataStore.getUserRepository(
             application
         )
     }
