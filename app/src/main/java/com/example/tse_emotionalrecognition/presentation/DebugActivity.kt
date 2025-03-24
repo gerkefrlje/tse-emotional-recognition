@@ -30,7 +30,7 @@ import com.example.tse_emotionalrecognition.common.data.database.entities.Affect
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
 import com.example.tse_emotionalrecognition.presentation.MainActivity.Companion.getDetailedAppPhase
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
-import com.example.tse_emotionalrecognition.presentation.utils.DataCollectReciever
+import com.example.tse_emotionalrecognition.data.collection.DataCollectReciever
 import com.example.tse_emotionalrecognition.presentation.utils.EmojiState
 import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 import kotlinx.coroutines.CoroutineScope
