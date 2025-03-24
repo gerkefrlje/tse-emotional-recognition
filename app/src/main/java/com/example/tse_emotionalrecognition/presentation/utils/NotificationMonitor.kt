@@ -55,7 +55,7 @@ class NotificationMonitor() : BroadcastReceiver() {
     }
 
 
-}
+
 
 private fun updateNotificationTracker(userRepository: UserRepository, context: Context) {
 
