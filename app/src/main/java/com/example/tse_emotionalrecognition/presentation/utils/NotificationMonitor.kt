@@ -67,13 +67,13 @@ private fun updateNotificationTracker(userRepository: UserRepository, context: C
             )
             val sender = CommunicationDataSender(context)
 
-            delay(5000L)
+        delay(5000L)
 
-            val interventionStats = userRepository.getInterventionStatsById(MainActivity.trackerID)
-            val interventionStatsString = Json.encodeToString(interventionStats)
+        val interventionStats = userRepository.getInterventionStatsById(MainActivity.trackerID)
+        val interventionStatsString = Json.encodeToString(interventionStats)
 
-            sender.sendStringData("/phone/notification", interventionStatsString)
-        }
-
+        sender.sendStringData("/phone/notification", interventionStatsString)
     }
+
+}
 }

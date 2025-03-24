@@ -105,7 +105,6 @@ class MainActivity : ComponentActivity() {
     private lateinit var sharedPreferences: SharedPreferences
     private val FIRST_LAUNCH_KEY = "first_launch_time"
 
-
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             val allGranted = permissions.all { it.value }
@@ -256,20 +255,10 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
             }
             item {
                 Button(
-                    onClick = {  val newEmojiState = EmojiState.entries.random()
-                        updateEmoji(context, newEmojiState)
-
-                        // Force UI Update
-                        currentEmojiState = newEmojiState },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Randomize Emoji")
-                }
-            }
-            item {
-                Button(
                     onClick = {
                         val intent = Intent(context, InterventionOverviewActivity::class.java)
+                        val sessionId = Calendar.getInstance().timeInMillis
+
                         context.startActivity(intent)
                     },
                     modifier = Modifier.fillMaxWidth()
@@ -317,6 +306,10 @@ fun SelectIntervention(userRepository: com.example.tse_emotionalrecognition.comm
                     Text("Debug-Menu")
                 }
             }
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
         }
     }
 }

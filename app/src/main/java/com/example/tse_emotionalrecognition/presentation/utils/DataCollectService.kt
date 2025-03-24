@@ -119,10 +119,6 @@ class DataCollectService : Service() {
 
         Log.v("DataCollectService", "Phase: $phase")
 
-
-
-
-
         sessionId = intent?.getLongExtra("sessionId", 0L) ?: 0L
         val shouldCollectData = intent?.getBooleanExtra("COLLECT_DATA", false) ?: false
 
