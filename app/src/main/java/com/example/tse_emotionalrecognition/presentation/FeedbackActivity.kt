@@ -1,5 +1,6 @@
 package com.example.tse_emotionalrecognition.presentation
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -36,8 +37,12 @@ import com.example.tse_emotionalrecognition.common.data.database.UserRepository
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectColumns
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
+import com.example.tse_emotionalrecognition.presentation.utils.EmojiState
+import com.example.tse_emotionalrecognition.presentation.utils.InterventionTriggerHelper
+import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 
@@ -48,7 +53,6 @@ class FeedbackActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val predictionString = intent.getStringExtra("prediction")
-        // val prediction = intent.getSerializableExtra("prediction") as? AffectType
         val prediction = predictionString?.let { Json.decodeFromString<AffectType>(it) }
 
         if (prediction == null) {
@@ -56,6 +60,8 @@ class FeedbackActivity : ComponentActivity() {
             finish()
             return
         }
+
+        val interventionTriggerHelper = InterventionTriggerHelper(this)
 
         setContent {
             val affectDataId = intent.getLongExtra("affectDataId", -1)
@@ -74,6 +80,13 @@ class FeedbackActivity : ComponentActivity() {
                     finish()
                 },
                 onCorrect = {
+                    updateEmojiUi(this, prediction)
+                    CoroutineScope(Dispatchers.IO).launch {
+                        delay(5000)
+                        if(prediction == AffectType.NEGATIVE){
+                            interventionTriggerHelper.showRandomIntervention()
+                        }
+                    }
                     finish()
                 }
             )
@@ -104,6 +117,30 @@ class FeedbackActivity : ComponentActivity() {
 
     }
 
+    private fun updateEmojiUi(context: Context, affectType: AffectType) {
+        when (affectType) {
+            AffectType.POSITIVE -> {
+                updateEmoji(
+                    context,
+                    EmojiState.HAPPY
+                )
+            }
+            AffectType.NEGATIVE -> {
+                updateEmoji(
+                    context,
+                    EmojiState.UNHAPPY_ALERT
+                )
+            }
+            AffectType.NONE -> {
+                updateEmoji(
+                    context,
+                    EmojiState.NEUTRAL
+                )
+            }
+            AffectType.NULL -> {}
+        }
+    }
+
     @Composable
     fun FeedbackScreen(
         affectDataId: Long = -1,
@@ -111,7 +148,6 @@ class FeedbackActivity : ComponentActivity() {
         onIncorrect: () -> Unit,
         onCorrect: () -> Unit
     ) {
-        val context = LocalContext.current
         val predictionString = when (prediction) {
             AffectType.NEGATIVE -> "Angry or Sad"
             AffectType.POSITIVE -> "Happy or Relaxed"

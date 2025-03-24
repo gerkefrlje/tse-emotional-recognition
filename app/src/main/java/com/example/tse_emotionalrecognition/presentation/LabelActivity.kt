@@ -66,9 +66,6 @@ class LabelActivity : ComponentActivity() {
         }
     }
 
-    private fun insertAffect() {
-    }
-
     private fun insertEngagementTime(id: Long) {
         userRepository.updateAffectColumn(
             CoroutineScope(Dispatchers.IO),
@@ -176,7 +173,7 @@ class LabelActivity : ComponentActivity() {
                                     }
                                     CoroutineScope(Dispatchers.IO).launch {
                                         delay(1000)
-                                        startIntervention(context)
+                                        startIntervention(context, affectType)
                                     }
                                     finish()
                                 },
@@ -214,9 +211,11 @@ class LabelActivity : ComponentActivity() {
         }
     }
 
-    private fun startIntervention(context: Context) {
-        val triggerHelper = InterventionTriggerHelper(context)
-        triggerHelper.showRandomIntervention()
+    private fun startIntervention(context: Context, affectType: AffectType) {
+        if (affectType == AffectType.NEGATIVE) {
+            val triggerHelper = InterventionTriggerHelper(context)
+            triggerHelper.showRandomIntervention()
+        }
     }
 
     @Preview(device = WearDevices.SMALL_ROUND, showSystemUi = true)
