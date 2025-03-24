@@ -1,4 +1,4 @@
-package com.example.tse_emotionalrecognition.presentation.utils
+package com.example.tse_emotionalrecognition.presentation.interventions
 
 import android.app.PendingIntent
 import android.content.Context
@@ -8,9 +8,6 @@ import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
-import com.example.tse_emotionalrecognition.presentation.interventions.BreathingActivity
-import com.example.tse_emotionalrecognition.presentation.interventions.ContactActivity
-import com.example.tse_emotionalrecognition.presentation.interventions.MusicActivity
 import android.Manifest
 import android.app.NotificationChannel
 import android.app.NotificationManager

@@ -1,4 +1,4 @@
-package com.example.tse_emotionalrecognition.presentation.utils
+package com.example.tse_emotionalrecognition.data.collection
 
 import android.app.Notification
 import android.app.NotificationChannel

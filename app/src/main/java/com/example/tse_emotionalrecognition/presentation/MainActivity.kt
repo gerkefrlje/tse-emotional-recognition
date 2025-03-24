@@ -38,15 +38,14 @@ import androidx.work.WorkManager
 import com.example.tse_emotionalrecognition.common.data.database.UserDataStore
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectData
 import com.example.tse_emotionalrecognition.common.data.database.entities.AffectType
-import com.example.tse_emotionalrecognition.presentation.MainActivity.Companion.getAppPhase
 import com.example.tse_emotionalrecognition.presentation.interventions.InterventionOverviewActivity
 import com.example.tse_emotionalrecognition.presentation.theme.TSEEmotionalRecognitionTheme
 import com.example.tse_emotionalrecognition.presentation.utils.EmojiSelector
 import com.example.tse_emotionalrecognition.presentation.utils.EmojiState
 import com.example.tse_emotionalrecognition.presentation.utils.scheduleDailyEmojiUpdateWorkManager
 import com.example.tse_emotionalrecognition.presentation.utils.updateEmoji
-import com.example.tse_emotionalrecognition.presentation.utils.DataCollectReciever
-import com.example.tse_emotionalrecognition.presentation.utils.DataCollectWorker
+import com.example.tse_emotionalrecognition.data.collection.DataCollectReciever
+import com.example.tse_emotionalrecognition.data.collection.DataCollectWorker
 import com.example.tse_emotionalrecognition.presentation.utils.InfoActivity
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
