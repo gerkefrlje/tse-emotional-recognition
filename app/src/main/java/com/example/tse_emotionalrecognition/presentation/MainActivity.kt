@@ -172,7 +172,7 @@ class MainActivity : ComponentActivity() {
 
 
         val periodicWorkRequest =
-            PeriodicWorkRequest.Builder(DataCollectWorker::class.java, 15, TimeUnit.MINUTES)
+            PeriodicWorkRequest.Builder(DataCollectWorker::class.java, 30, TimeUnit.MINUTES)
                 .setConstraints(constraints).build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(

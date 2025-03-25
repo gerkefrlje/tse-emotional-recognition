@@ -73,7 +73,7 @@ class InterventionTriggerHelper(private val context: Context) {
     private fun selectRandomActivity(): Class<*> {
         val activities = listOf(
             BreathingActivity::class.java,
-            ContactActivity::class.java,
+            //ContactActivity::class.java,
             MusicActivity::class.java
         )
         val availableActivities = activities.filter { it != lastTriggeredActivity }
@@ -111,7 +111,6 @@ class InterventionTriggerHelper(private val context: Context) {
             pendingIntent
         ).build()
 
-        //Todo info button
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setSmallIcon(com.example.tse_emotionalrecognition.R.drawable.splash_icon) // Ersetze durch dein Icon
             .setContentTitle("Intervention suggested")
@@ -119,6 +118,7 @@ class InterventionTriggerHelper(private val context: Context) {
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setStyle(NotificationCompat.BigTextStyle().bigText(generalMessage)) // Full text when expanded
             .addAction(action)
+            .setTimeoutAfter(1000 * 60 * 2) // Timeout after 2 minutes2)
             .setAutoCancel(true)
 
         with(NotificationManagerCompat.from(context)) {
