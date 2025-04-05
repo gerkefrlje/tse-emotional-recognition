@@ -78,15 +78,33 @@ fun EmojiSelector(currentEmojiState: EmojiState) {
                 ) {
                     when (currentEmojiState) {
                         EmojiState.NEUTRAL_ALERT -> {
-                            Text(text = "aktuell bist du ausgegelichen", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                            Text(
+                                text = "Hey, du hast gestern ein paar Interventionen erledigt – das ist ein guter Anfang! Mit ein wenig mehr Einsatz schaffen wir es ganz nach oben.",
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
                         }
                         EmojiState.HAPPY_ALERT -> {
-                            Text(text = "aktuell bist du gut gelaunt", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                            Text(
+                                text = "Klasse! Gestern hast du alle Interventionen abgeschlossen. Dein Engagement ist inspirierend – weiter so!",
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
                         }
                         EmojiState.UNHAPPY_ALERT -> {
-                            Text(text = "bist du aktuell unzufrieden?", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)
+                            Text(
+                                text = "Oh oh, gestern hast du leider keine Interventionen durchgeführt. Aber keine Sorge, heute ist ein neuer Tag – ich weiß, du schaffst das!",
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
                         }
-                        else -> { Text(text = "aktuell bist du unzufrieden", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center)}
+                        else -> {
+                            Text(
+                                text = "",
+                                modifier = Modifier.fillMaxWidth(),
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
 
                 }
